@@ -1,32 +1,46 @@
-# React + TypeScript + Vite
+# Installer Management System (คิวช่าง · Skill · Penalty)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+ระบบบริหารจัดการคิวช่าง, Skill Matrix และระบบประเมิน/ลงโทษ (Penalty & E-CN Feedback Loop) ตามสถาปัตยกรรมระบบองค์กร (E-ordering ↔ KANNA ↔ STS ↔ QC ↔ E-CN)
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 ฟังก์ชันการใช้งานหลักใน Prototype
 
-## React Compiler
+1. **Dashboard & Live Queue**: หน้าจอแสดงคิวงานติดตั้งแบบเรียลไทม์ และจำลองการเชื่อมต่อเพื่อกดจ่ายงานไปยังระบบ KANNA
+2. **Smart Booking Engine**: ค้นหาและแนะนำทีมช่างพร้อมคำนวณ Match Score (%) โดยอิงจากหมวดหมู่ทักษะ (Skill Matrix Level 1-3), โซนที่ให้บริการ และประวัติการติด Penalty
+3. **Technician & Skill Matrix**: ระบบบริหารประวัติและระดับทักษะของช่างแต่ละทีม พร้อมทั้งประวัติคะแนน Penalty สะสม
+4. **End-to-End Integration Flow Simulator**: เครื่องมือจำลองวงจรการรับส่งข้อมูลทั้งระบบ ตั้งแต่การจอง (Selling Tools) -> งานระบบติดตั้ง (KANNA & STS) -> ตรวจสอบคุณภาพ (QC) และระบบออกใบเตือนค่าปรับ (Penalty E-CN) เพื่อจำลองผลตอบกลับ (Feedback Loop) เพื่อพักงานช่าง/ปรับลดสิทธิ์ในการรับงาน
+5. **Penalty & E-CN Audit Logs**: หน้าตารางแสดงรายละเอียดใบ E-CN, ค่าปรับ และผลกระทบต่อระดับคิวช่าง
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## 🛠️ วิธีการติดตั้งและรันแบบ Local
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+### Prerequisites
+- Node.js (v22+)
+- npm (v10+)
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+### Setup
+1. ติดตั้ง Dependencies:
+   ```bash
+   npm install
+   ```
+2. รันระบบสำหรับ Development:
+   ```bash
+   npm run dev
+   ```
+3. เข้าชมระบบผ่าน Browser: [http://localhost:5173/](http://localhost:5173/)
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+---
+
+## ☁️ วิธีการดีพลอยบน Coolify (Docker Deploy)
+
+โปรเจกต์นี้ได้รับการคอนฟิก Dockerfile และ Nginx เรียบร้อยแล้วสำหรับการนำไปรันบนระบบ Coolify:
+
+1. **เปิดหน้าแดชบอร์ด Coolify**
+2. กดสร้าง **New Resource** -> เลือก **Public/Private Repository**
+3. ใส่ลิงก์ GitHub: `https://github.com/isarachootip/vq` และเลือก Branch `main`
+4. ที่หน้าตั้งค่าการ Build (Build Configuration):
+   - เลือก **Build Pack**: `Dockerfile`
+   - กำหนด **Ports**: `80` (หรือ Coolify จะตรวจพบพอร์ต 80 อัตโนมัติจาก Dockerfile)
+5. กด **Save** และกด **Deploy** 🚀
