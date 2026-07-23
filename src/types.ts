@@ -1,0 +1,96 @@
+export type TierLevel = 'Gold' | 'Silver' | 'Bronze' | 'Cooldown' | 'Suspended';
+
+export type SkillCategory = 
+  | 'Built-in Furniture' 
+  | 'Flooring & Tile' 
+  | 'Electrical & Smart Home' 
+  | 'Plumbing & Sanitary' 
+  | 'Air Condition & HVAC' 
+  | 'Curtains & Wallpaper';
+
+export interface TechnicianSkill {
+  category: SkillCategory;
+  level: 1 | 2 | 3; // 1: Basic, 2: Advanced, 3: Master
+  isCertified: boolean;
+}
+
+export interface Technician {
+  id: string;
+  code: string;
+  name: string;
+  phone: string;
+  avatar: string;
+  tier: TierLevel;
+  rating: number; // e.g. 4.8
+  completedJobs: number;
+  penaltyPoints: number; // 0-100 (100 = suspended)
+  activePenaltiesCount: number;
+  primaryZone: string; // e.g. "Zone 1: สุขุมวิท-บางนา"
+  secondaryZones: string[];
+  skills: TechnicianSkill[];
+  dailyCapacityHours: number;
+  bookedHoursToday: number;
+  status: 'Available' | 'On Job' | 'In Cooldown' | 'Offline';
+}
+
+export interface InstallationTypeConfig {
+  id: string;
+  name: string;
+  category: SkillCategory;
+  minSkillLevel: 1 | 2 | 3;
+  requiredTeamSize: number;
+  estDurationHours: number;
+  description: string;
+  badgeColor: string;
+}
+
+export interface TimeSlot {
+  id: string;
+  startTime: string; // e.g. "09:00"
+  endTime: string;   // e.g. "12:00"
+  period: 'Morning' | 'Afternoon' | 'Full Day';
+}
+
+export interface QueueBooking {
+  id: string;
+  bookingRef: string;
+  customerName: string;
+  customerPhone: string;
+  addressZone: string;
+  installationTypeId: string;
+  installationTypeName: string;
+  requiredSkillLevel: 1 | 2 | 3;
+  assignedTechTeamId?: string;
+  assignedTechTeamName?: string;
+  bookingDate: string;
+  timeSlot: string;
+  status: 'Pending Dispatch' | 'Scheduled' | 'Dispatched to KANNA' | 'STS In-Progress' | 'QC Inspection' | 'Passed (Closed)' | 'Penalty E-CN Issued';
+  createdFrom: 'Selling Tools (E-ordering)' | 'Manual POS' | 'COOHOM Direct';
+  createdAt: string;
+  penaltyRef?: string;
+}
+
+export interface PenaltyRecord {
+  id: string;
+  eCnNumber: string;
+  bookingRef: string;
+  techId: string;
+  techName: string;
+  violationType: 'QC Defect / Failed Review' | 'Late Arrival (SLA Breach)' | 'Customer Complaint (<3 Stars)' | 'Property Damage' | 'Unapproved No-Show';
+  fineAmountTHB: number;
+  scoreDeduction: number;
+  tierImpact: string;
+  issuedAt: string;
+  status: 'Active Penalty' | 'Resolved / Fine Paid' | 'Appealed';
+  details: string;
+}
+
+export interface IntegrationEvent {
+  id: string;
+  timestamp: string;
+  sourceSystem: 'Selling Tools' | 'Installer Management' | 'KANNA' | 'STS' | 'QC' | '1308 Cust. Sat' | 'Penalty System (E-CN)' | 'E-billing';
+  targetSystem: 'Selling Tools' | 'Installer Management' | 'KANNA' | 'STS' | 'QC' | '1308 Cust. Sat' | 'Penalty System (E-CN)' | 'E-billing';
+  action: string;
+  payloadSummary: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+}
