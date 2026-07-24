@@ -5,6 +5,7 @@ import { SkillMatrixView } from './components/SkillMatrixView';
 import { IntegrationFlowView } from './components/IntegrationFlowView';
 import { PenaltyAuditView } from './components/PenaltyAuditView';
 import { BranchManager } from './components/BranchManager';
+import { BranchMapView } from './components/BranchMapView';
 import { ZoneManager } from './components/ZoneManager';
 import { SkillManager } from './components/SkillManager';
 
@@ -24,6 +25,7 @@ import {
   Building, 
   Users, 
   Map, 
+  MapPin,
   Wrench, 
   Cpu, 
   ShieldAlert, 
@@ -217,6 +219,7 @@ export function App() {
     { id: 'smart-booking', label: 'จองคิวช่างอัจฉริยะ', icon: Calendar },
     { id: 'divider-1', label: 'ข้อมูลระบบหลัก (Master)', isDivider: true },
     { id: 'branch-manager', label: 'ข้อมูลสาขา (Branch)', icon: Building },
+    { id: 'branch-map', label: 'แผนที่สาขา (All-Store Map)', icon: MapPin },
     { id: 'tech-manager', label: 'ข้อมูลช่าง & Skill Matrix', icon: Users },
     { id: 'zone-manager', label: 'ข้อมูลพื้นที่และโซน (Zone)', icon: Map },
     { id: 'skill-manager', label: 'ข้อมูลทักษะช่าง (Skill)', icon: Wrench },
@@ -369,6 +372,10 @@ export function App() {
               onAddMultipleBranches={handleAddMultipleBranches}
               onDeleteBranch={handleDeleteBranch}
             />
+          )}
+
+          {activeTab === 'branch-map' && (
+            <BranchMapView branches={branches} />
           )}
 
           {activeTab === 'tech-manager' && (
