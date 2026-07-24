@@ -1,28 +1,57 @@
 @import "tailwindcss";
 
+@theme {
+  --color-white: #121215;
+  --color-slate-50: #070709;
+  --color-slate-100: #16161b;
+  --color-slate-200: #2d2d37;
+  --color-slate-300: #424251;
+  --color-slate-400: #58586c;
+  --color-slate-500: #8888a0;
+  --color-slate-600: #cbd5e1;
+  --color-slate-700: #dfb750;
+  --color-slate-800: #f5eedc;
+  --color-slate-900: #ffffff;
+  
+  --color-blue-50: #1d1a12;
+  --color-blue-100: #332d1d;
+  --color-blue-600: #dfb750;
+  --color-blue-700: #e8c66e;
+  --color-blue-800: #ffd700;
+  
+  --color-indigo-50: #161520;
+  --color-indigo-100: #252438;
+  --color-indigo-700: #dfb750;
+  
+  --color-emerald-50: #0b1a12;
+  --color-emerald-100: #153322;
+  --color-emerald-700: #10b981;
+}
+
 @layer base {
   body {
-    background-color: #f8fafc;
-    color: #1e293b;
+    background-color: #070709;
+    color: #cbd5e1;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     min-height: 100vh;
   }
 }
 
-/* Custom vService Flat Light Components */
+/* Custom vService Flat Dark Components */
 .v-panel {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #16161b 0%, #0f0f11 100%);
+  border: 1px solid #2d2d37;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.6);
 }
 
 .v-panel-hover {
-  transition: all 0.2s ease-in-out;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .v-panel-hover:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  border-color: #dfb750;
+  box-shadow: 0 10px 30px -10px rgba(223, 183, 80, 0.12);
+  transform: translateY(-2px);
 }
 
 /* Table styling for Enterprise system */
@@ -31,22 +60,26 @@
   border-collapse: collapse;
 }
 .v-table th {
-  background-color: #f1f5f9;
-  color: #475569;
-  font-weight: 600;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: #17171c;
+  color: #dfb750;
+  font-weight: 700;
+  border-bottom: 2px solid #2d2d37;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 .v-table td {
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #1e1e24;
+  color: #cbd5e1;
 }
 .v-table tr:hover {
-  background-color: #f8fafc;
+  background-color: rgba(223, 183, 80, 0.02);
 }
 
 /* Sidebar Specifics */
 .v-sidebar {
-  background-color: #ffffff;
-  border-right: 1px solid #e2e8f0;
+  background-color: #111113;
+  border-right: 1px solid #2d2d37;
 }
 
 /* Custom Scrollbars */
@@ -55,54 +88,78 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #111113;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #2d2d37;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #dfb750;
 }
 
 /* Form Controls */
 .v-input {
-  background-color: #ffffff;
-  border: 1px solid #cbd5e1;
+  background-color: #0c0c0e;
+  border: 1px solid #3d3d4a;
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
-  color: #1e293b;
-  transition: border-color 0.15s ease-in-out;
+  color: #ffffff;
+  transition: all 0.2s ease-in-out;
 }
 .v-input:focus {
-  border-color: #3b82f6;
+  border-color: #dfb750;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 2px rgba(223, 183, 80, 0.2);
 }
 
 .v-btn-primary {
-  background-color: #2563eb;
-  color: #ffffff;
-  font-weight: 600;
+  background: linear-gradient(135deg, #c5a03d 0%, #dfb750 50%, #b89130 100%);
+  background-size: 200% auto;
+  color: #070709;
+  font-weight: 700;
   border-radius: 6px;
-  padding: 0.5rem 1rem;
-  transition: background-color 0.15s ease-in-out;
+  padding: 0.5rem 1.25rem;
+  box-shadow: 0 4px 15px -3px rgba(223, 183, 80, 0.35);
+  transition: all 0.3s ease-in-out;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
 }
 .v-btn-primary:hover {
-  background-color: #1d4ed8;
+  background-position: right center;
+  box-shadow: 0 6px 20px -3px rgba(223, 183, 80, 0.5);
+  transform: translateY(-1px);
 }
 
 .v-btn-secondary {
-  background-color: #f1f5f9;
-  color: #475569;
+  background-color: #1a1a21;
+  color: #dfb750;
   font-weight: 600;
   border-radius: 6px;
-  padding: 0.5rem 1rem;
-  border: 1px solid #e2e8f0;
-  transition: all 0.15s ease-in-out;
+  padding: 0.5rem 1.25rem;
+  border: 1px solid #3d3d4a;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
 }
 .v-btn-secondary:hover {
-  background-color: #e2e8f0;
-  color: #334155;
+  background-color: #23232c;
+  border-color: #dfb750;
+  color: #f7d57e;
+}
+
+/* Leaflet Map Dark Mode Filter */
+.leaflet-tile-container {
+  filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(85%) !important;
+}
+.leaflet-container {
+  background-color: #070709 !important;
+}
+.leaflet-bar a {
+  background-color: #16161b !important;
+  color: #dfb750 !important;
+  border-bottom: 1px solid #2d2d37 !important;
+}
+.leaflet-bar a:hover {
+  background-color: #23232c !important;
 }
