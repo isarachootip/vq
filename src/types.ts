@@ -14,6 +14,14 @@ export interface Branch {
   name: string;
   province: string;
   status: 'Active' | 'Inactive';
+  fullName?: string;
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  openTime?: string;
+  closeTime?: string;
+  phone?: string;
+  storeGroup?: string;
 }
 
 export interface Zone {

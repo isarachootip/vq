@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import type { Branch } from '../types';
-import { Building, Plus, Download, Upload, Trash, CheckCircle, Search } from 'lucide-react';
+import { Building, Plus, Download, Upload, Trash, CheckCircle, Search, Clock, Phone, MapPin } from 'lucide-react';
 
 interface BranchManagerProps {
   branches: Branch[];
@@ -17,22 +17,41 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  
+  // Form fields
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [province, setProvince] = useState('กรุงเทพมหานคร');
   const [status, setStatus] = useState<'Active' | 'Inactive'>('Active');
+  const [storeGroup, setStoreGroup] = useState<string>('TWD');
+  const [address, setAddress] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [openTime, setOpenTime] = useState('07:00');
+  const [closeTime, setCloseTime] = useState('21:00');
+  const [phone, setPhone] = useState('1308');
+
+  // Filters
+  const [selectedGroup, setSelectedGroup] = useState<string>('All');
   
   // Import variables
   const [importPreview, setImportPreview] = useState<Branch[] | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const filteredBranches = branches.filter(
-    (b) =>
+  const filteredBranches = branches.filter((b) => {
+    const matchesSearch =
       b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.province.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      b.province.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (b.address && b.address.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (b.fullName && b.fullName.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const matchesGroup = selectedGroup === 'All' || b.storeGroup === selectedGroup;
+
+    return matchesSearch && matchesGroup;
+  });
 
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,21 +70,78 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
       name,
       province,
       status,
+      fullName: fullName || undefined,
+      address: address || undefined,
+      latitude: latitude ? Number(latitude) : undefined,
+      longitude: longitude ? Number(longitude) : undefined,
+      openTime: openTime || '07:00',
+      closeTime: closeTime || '21:00',
+      phone: phone || '1308',
+      storeGroup: storeGroup || 'TWD',
     };
 
     onAddBranch(newBranch);
     setCode('');
     setName('');
+    setFullName('');
+    setAddress('');
+    setLatitude('');
+    setLongitude('');
+    setOpenTime('07:00');
+    setCloseTime('21:00');
+    setPhone('1308');
+    setStoreGroup('TWD');
     setShowAddForm(false);
   };
 
   // Preset quick importer
   const handleLoadSampleData = () => {
     const sampleBranches: Branch[] = [
-      { id: 'br-s1', code: 'B05', name: 'สาขารัตนาธิเบศร์', province: 'นนทบุรี', status: 'Active' },
-      { id: 'br-s2', code: 'B06', name: 'สาขาเชียงใหม่ (หางดง)', province: 'เชียงใหม่', status: 'Active' },
-      { id: 'br-s3', code: 'B07', name: 'สาขาพัทยา', province: 'ชลบุรี', status: 'Active' },
-      { id: 'br-s4', code: 'B08', name: 'สาขาภูเก็ต', province: 'ภูเก็ต', status: 'Inactive' },
+      {
+        id: 'br-s1',
+        code: 'B918',
+        name: 'สาขาบางบัวทอง',
+        province: 'นนทบุรี',
+        status: 'Active',
+        fullName: 'บริษัท ซีอาร์ซี ไทวัสดุ จำกัด (สาขาบางบัวทอง)',
+        address: '9/9 หมู่ 3 ตำบลบางบัวทอง อำเภอบางบัวทอง จังหวัดนนทบุรี 11110',
+        latitude: 13.9188,
+        longitude: 100.4188,
+        openTime: '07:00',
+        closeTime: '21:00',
+        phone: '1308',
+        storeGroup: 'HBY'
+      },
+      {
+        id: 'br-s2',
+        code: 'B934',
+        name: 'สาขาเชียงใหม่',
+        province: 'เชียงใหม่',
+        status: 'Active',
+        fullName: 'บริษัท ซีอาร์ซี ไทวัสดุ จำกัด (สาขาเชียงใหม่)',
+        address: '99/9 หมู่ 2 ตำบลท่าศาลา อำเภอเมืองเชียงใหม่ จังหวัดเชียงใหม่ 50000',
+        latitude: 18.7884,
+        longitude: 99.0156,
+        openTime: '08:00',
+        closeTime: '21:00',
+        phone: '1308',
+        storeGroup: 'TWD'
+      },
+      {
+        id: 'br-s3',
+        code: 'B954',
+        name: 'สาขาพัทยาใต้',
+        province: 'ชลบุรี',
+        status: 'Active',
+        fullName: 'บริษัท ซีอาร์ซี ไทวัสดุ จำกัด (สาขาพัทยาใต้)',
+        address: '555 หมู่ 12 ตำบลหนองปรือ อำเภอบางละมุง จังหวัดชลบุรี 20150',
+        latitude: 12.9084,
+        longitude: 100.8956,
+        openTime: '07:30',
+        closeTime: '21:00',
+        phone: '1308',
+        storeGroup: 'TWD'
+      }
     ];
     
     // Filter duplicates
@@ -113,19 +189,38 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
           return;
         }
 
-        // Validate structure
+        // Validate structure with fallbacks for Excel fields
         const validated: Branch[] = parsedData
-          .filter((item: any) => item.code && item.name)
-          .map((item: any, idx: number) => ({
-            id: `br-import-${Date.now()}-${idx}`,
-            code: String(item.code).toUpperCase().trim(),
-            name: String(item.name).trim(),
-            province: String(item.province || 'กรุงเทพมหานคร').trim(),
-            status: item.status === 'Inactive' ? 'Inactive' : 'Active',
-          }));
+          .filter((item: any) => (item.code || item.STCODE || item.STORE) && (item.name || item.SnameTH || item.SName))
+          .map((item: any, idx: number) => {
+            const rawCode = item.code || item.STCODE || item.STORE;
+            const code = String(rawCode).startsWith('B') ? String(rawCode).toUpperCase().trim() : `B${String(rawCode).trim()}`;
+            
+            let name = item.name || item.SnameTH || item.SName;
+            name = String(name).trim();
+            if (!name.startsWith('สาขา')) {
+              name = `สาขา${name}`;
+            }
+
+            return {
+              id: `br-import-${Date.now()}-${idx}`,
+              code,
+              name,
+              province: String(item.province || item.Province || 'กรุงเทพมหานคร').trim(),
+              status: item.status === 'Inactive' ? 'Inactive' : 'Active',
+              fullName: item.fullName || item.STTNAME ? String(item.fullName || item.STTNAME).trim() : undefined,
+              address: item.address || item.THADDRESS ? String(item.address || item.THADDRESS).trim() : undefined,
+              latitude: item.latitude || item.Lat ? Number(item.latitude || item.Lat) : undefined,
+              longitude: item.longitude || item.lng ? Number(item.longitude || item.lng) : undefined,
+              openTime: item.openTime || item.Opentime ? String(item.openTime || item.Opentime).trim() : undefined,
+              closeTime: item.closeTime || item.CloseTime ? String(item.closeTime || item.CloseTime).trim() : undefined,
+              phone: item.phone || item.STTEL ? String(item.phone || item.STTEL).trim() : undefined,
+              storeGroup: item.storeGroup || item.STOREGROUP ? String(item.storeGroup || item.STOREGROUP).trim() : undefined,
+            };
+          });
 
         if (validated.length === 0) {
-          setImportError('ไม่พบข้อมูลสาขาที่ถูกต้องในไฟล์ (ต้องการฟิลด์ code และ name)');
+          setImportError('ไม่พบข้อมูลสาขาที่ถูกต้องในไฟล์');
         } else {
           setImportPreview(validated);
           setImportError(null);
@@ -158,8 +253,20 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
   // Download template JSON
   const handleDownloadTemplate = () => {
     const template = [
-      { code: 'B90', name: 'สาขาทดลองนำเข้า 1', province: 'กรุงเทพมหานคร', status: 'Active' },
-      { code: 'B91', name: 'สาขาทดลองนำเข้า 2', province: 'นนทบุรี', status: 'Inactive' }
+      { 
+        code: 'B920', 
+        name: 'สาขาบางนา', 
+        province: 'สมุทรปราการ', 
+        status: 'Active',
+        fullName: 'บริษัท ซีอาร์ซี ไทวัสดุ จำกัด (สาขาบางนา)',
+        address: '9 หมู่ 7 ตำบลบางพลีใหญ่ อำเภอบางพลี จังหวัดสมุทรปราการ 10540',
+        latitude: 13.6118,
+        longitude: 100.6158,
+        openTime: '07:00',
+        closeTime: '21:00',
+        phone: '1308',
+        storeGroup: 'TWD'
+      }
     ];
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(template, null, 2));
     const downloadAnchor = document.createElement('a');
@@ -219,12 +326,12 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
 
       {/* Form / Import Previews */}
       {showAddForm && (
-        <form onSubmit={handleAddSubmit} className="v-panel p-5 grid grid-cols-1 md:grid-cols-4 gap-4 animate-fadeIn">
+        <form onSubmit={handleAddSubmit} className="v-panel p-5 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-fadeIn">
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">รหัสสาขา (Branch Code) *</label>
             <input
               type="text"
-              placeholder="เช่น B05"
+              placeholder="เช่น B920"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               className="v-input w-full"
@@ -234,11 +341,33 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
             <label className="block text-xs font-semibold text-slate-600 mb-1">ชื่อสาขา (Branch Name) *</label>
             <input
               type="text"
-              placeholder="เช่น สาขาแจ้งวัฒนะ"
+              placeholder="เช่น สาขาบางนา"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="v-input w-full"
             />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">ชื่อเต็มบริษัท (Corporate Name)</label>
+            <input
+              type="text"
+              placeholder="เช่น บริษัท ซีอาร์ซี ไทวัสดุ จำกัด (สาขาบางนา)"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="v-input w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">กลุ่มร้านค้า (Store Group)</label>
+            <select
+              value={storeGroup}
+              onChange={(e) => setStoreGroup(e.target.value)}
+              className="v-input w-full"
+            >
+              <option value="TWD">TWD (ไทวัสดุ)</option>
+              <option value="HBY">HBY (BnB Home)</option>
+              <option value="HO">HO (สำนักงานใหญ่)</option>
+            </select>
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">จังหวัด (Province)</label>
@@ -249,8 +378,70 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
               className="v-input w-full"
             />
           </div>
-          <div className="flex items-end justify-between gap-3">
-            <div className="flex-1">
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">เวลาเปิด (Open Time)</label>
+            <input
+              type="text"
+              placeholder="เช่น 07:00"
+              value={openTime}
+              onChange={(e) => setOpenTime(e.target.value)}
+              className="v-input w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">เวลาปิด (Close Time)</label>
+            <input
+              type="text"
+              placeholder="เช่น 21:00"
+              value={closeTime}
+              onChange={(e) => setCloseTime(e.target.value)}
+              className="v-input w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">เบอร์ติดต่อ (Phone)</label>
+            <input
+              type="text"
+              placeholder="เช่น 1308"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="v-input w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">พิกัด ละติจูด (Lat)</label>
+            <input
+              type="number"
+              step="any"
+              placeholder="เช่น 13.6118"
+              value={latitude}
+              onChange={(e) => setLatitude(e.target.value)}
+              className="v-input w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">พิกัด ลองจิจูด (Lng)</label>
+            <input
+              type="number"
+              step="any"
+              placeholder="เช่น 100.6158"
+              value={longitude}
+              onChange={(e) => setLongitude(e.target.value)}
+              className="v-input w-full"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-xs font-semibold text-slate-600 mb-1">ที่อยู่ตามทะเบียน (Address)</label>
+            <input
+              type="text"
+              placeholder="กรอกที่อยู่ของสาขา..."
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="v-input w-full"
+            />
+          </div>
+          <div className="flex items-end justify-between gap-3 md:col-span-2 lg:col-span-4 border-t border-slate-100 pt-3">
+            <div className="w-1/3">
               <label className="block text-xs font-semibold text-slate-600 mb-1">สถานะ</label>
               <select
                 value={status}
@@ -261,9 +452,18 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
                 <option value="Inactive">ปิดบริการ (Inactive)</option>
               </select>
             </div>
-            <button type="submit" className="v-btn-primary h-9 text-xs">
-              บันทึก
-            </button>
+            <div className="flex space-x-2">
+              <button
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                className="v-btn-secondary py-2 text-xs"
+              >
+                ยกเลิก
+              </button>
+              <button type="submit" className="v-btn-primary py-2 text-xs px-6">
+                บันทึกข้อมูลสาขา
+              </button>
+            </div>
           </div>
         </form>
       )}
@@ -296,6 +496,7 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
             <table className="w-full text-xs text-left">
               <thead className="bg-slate-50 text-slate-500">
                 <tr>
+                  <th className="p-2 border-b">กลุ่ม</th>
                   <th className="p-2 border-b">รหัสสาขา</th>
                   <th className="p-2 border-b">ชื่อสาขา</th>
                   <th className="p-2 border-b">จังหวัด</th>
@@ -305,6 +506,7 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
               <tbody>
                 {importPreview.map((item, idx) => (
                   <tr key={idx} className="hover:bg-slate-50">
+                    <td className="p-2 border-b font-mono font-bold text-slate-500">{item.storeGroup || '-'}</td>
                     <td className="p-2 border-b font-mono font-bold text-blue-600">{item.code}</td>
                     <td className="p-2 border-b text-slate-800">{item.name}</td>
                     <td className="p-2 border-b text-slate-600">{item.province}</td>
@@ -330,20 +532,35 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
       {/* Main Branch Directory Table */}
       <div className="v-panel overflow-hidden bg-white">
         <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="relative flex-1 max-w-md">
-            <input
-              type="text"
-              placeholder="ค้นหารหัสสาขา, ชื่อสาขา, หรือจังหวัด..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="v-input w-full pl-9"
-            />
-            <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
+          <div className="flex flex-col md:flex-row gap-3 flex-1 max-w-2xl">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                placeholder="ค้นหารหัสสาขา, ชื่อสาขา, จังหวัด หรือที่อยู่..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="v-input w-full pl-9"
+              />
+              <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
+            </div>
+            
+            <div className="w-full md:w-48">
+              <select
+                value={selectedGroup}
+                onChange={(e) => setSelectedGroup(e.target.value)}
+                className="v-input w-full"
+              >
+                <option value="All">กลุ่มร้านค้าทั้งหมด</option>
+                <option value="TWD">TWD (ไทวัสดุ)</option>
+                <option value="HBY">HBY (BnB Home)</option>
+                <option value="HO">HO (สำนักงานใหญ่)</option>
+              </select>
+            </div>
           </div>
 
           <button
             onClick={handleDownloadTemplate}
-            className="text-xs text-slate-500 hover:text-slate-700 flex items-center space-x-1"
+            className="text-xs text-slate-500 hover:text-slate-700 flex items-center space-x-1 shrink-0"
           >
             <Download className="h-3.5 w-3.5" />
             <span>ดาวน์โหลดเทมเพลต JSON</span>
@@ -353,9 +570,12 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
         <table className="v-table">
           <thead>
             <tr>
-              <th className="px-6 py-3 text-left">รหัสสาขา (Branch Code)</th>
-              <th className="px-6 py-3 text-left">ชื่อสาขา (Branch Name)</th>
+              <th className="px-6 py-3 text-left">กลุ่ม</th>
+              <th className="px-6 py-3 text-left">รหัสสาขา</th>
+              <th className="px-6 py-3 text-left">ชื่อสาขา</th>
               <th className="px-6 py-3 text-left">พื้นที่จังหวัด</th>
+              <th className="px-6 py-3 text-left">เวลาทำการ / เบอร์โทร</th>
+              <th className="px-6 py-3 text-left">พิกัด GPS (Google Maps)</th>
               <th className="px-6 py-3 text-center">สถานะ</th>
               <th className="px-6 py-3 text-right">ลบข้อมูล</th>
             </tr>
@@ -363,45 +583,98 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
           <tbody>
             {filteredBranches.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                <td colSpan={8} className="px-6 py-8 text-center text-slate-400">
                   ไม่พบข้อมูลสาขาในระบบ
                 </td>
               </tr>
             ) : (
-              filteredBranches.map((branch) => (
-                <tr key={branch.id}>
-                  <td className="px-6 py-3 font-mono font-bold text-slate-800">
-                    {branch.code}
-                  </td>
-                  <td className="px-6 py-3 text-slate-700 font-semibold">
-                    {branch.name}
-                  </td>
-                  <td className="px-6 py-3 text-slate-500">
-                    {branch.province}
-                  </td>
-                  <td className="px-6 py-3 text-center">
-                    <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
-                      branch.status === 'Active'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-rose-50 text-rose-700 border border-rose-200'
-                    }`}>
-                      {branch.status === 'Active' ? 'เปิดบริการ' : 'ปิดบริการ'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3 text-right">
-                    <button
-                      onClick={() => {
-                        if (confirm(`คุณต้องการลบสาขา ${branch.name} หรือไม่?`)) {
-                          onDeleteBranch(branch.id);
-                        }
-                      }}
-                      className="text-slate-400 hover:text-rose-600 transition-colors p-1"
-                    >
-                      <Trash className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))
+              filteredBranches.map((branch) => {
+                const getGroupBadge = (group?: string) => {
+                  if (!group) return <span className="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 border border-slate-200">N/A</span>;
+                  switch (group) {
+                    case 'HBY':
+                      return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">HBY</span>;
+                    case 'TWD':
+                      return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">TWD</span>;
+                    case 'HO':
+                      return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">HO</span>;
+                    default:
+                      return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-50 text-slate-700 border border-slate-200">{group}</span>;
+                  }
+                };
+
+                return (
+                  <tr key={branch.id} className="hover:bg-slate-50/50">
+                    <td className="px-6 py-3 text-slate-600">
+                      {getGroupBadge(branch.storeGroup)}
+                    </td>
+                    <td className="px-6 py-3 font-mono font-bold text-slate-800">
+                      {branch.code}
+                    </td>
+                    <td className="px-6 py-3 text-slate-700">
+                      <div>
+                        <div className="font-semibold text-slate-800">{branch.name}</div>
+                        {branch.address && (
+                          <div className="text-[11px] text-slate-400 max-w-[280px] truncate" title={branch.address}>
+                            {branch.address}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-3 text-slate-600 font-medium">
+                      {branch.province}
+                    </td>
+                    <td className="px-6 py-3 text-slate-600">
+                      <div className="text-xs space-y-0.5">
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-3.5 w-3.5 text-slate-400" />
+                          <span>{branch.openTime || '07:00'} - {branch.closeTime || '21:00'}</span>
+                        </div>
+                        <div className="flex items-center space-x-1 text-[11px] text-slate-400">
+                          <Phone className="h-3 w-3 text-slate-300" />
+                          <span>{branch.phone || '1308'}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-3">
+                      {branch.latitude && branch.longitude ? (
+                        <a
+                          href={`https://www.google.com/maps/search/?api=1&query=${branch.latitude},${branch.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center space-x-1 px-2 py-1 rounded bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-100 transition-colors text-xs font-semibold"
+                        >
+                          <MapPin className="h-3 w-3 text-blue-500" />
+                          <span className="font-mono text-[10px]">{branch.latitude.toFixed(5)}, {branch.longitude.toFixed(5)}</span>
+                        </a>
+                      ) : (
+                        <span className="text-slate-300 text-xs">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-3 text-center">
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                        branch.status === 'Active'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border border-rose-200'
+                      }`}>
+                        {branch.status === 'Active' ? 'เปิดบริการ' : 'ปิดบริการ'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3 text-right">
+                      <button
+                        onClick={() => {
+                          if (confirm(`คุณต้องการลบสาขา ${branch.name} หรือไม่?`)) {
+                            onDeleteBranch(branch.id);
+                          }
+                        }}
+                        className="text-slate-400 hover:text-rose-600 transition-colors p-1"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
