@@ -2,54 +2,107 @@
 
 @layer base {
   body {
-    background-color: #0f172a;
-    color: #f8fafc;
+    background-color: #f8fafc;
+    color: #1e293b;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     min-height: 100vh;
   }
 }
 
-/* Custom Glassmorphism & Animations */
-.glass-panel {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* Custom vService Flat Light Components */
+.v-panel {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
 }
 
-.glass-panel-hover {
-  transition: all 0.25s ease-in-out;
+.v-panel-hover {
+  transition: all 0.2s ease-in-out;
 }
-.glass-panel-hover:hover {
-  background: rgba(30, 41, 59, 0.85);
-  border-color: rgba(59, 130, 246, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+.v-panel-hover:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
-.glow-blue {
-  box-shadow: 0 0 20px -5px rgba(59, 130, 246, 0.4);
+/* Table styling for Enterprise system */
+.v-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.v-table th {
+  background-color: #f1f5f9;
+  color: #475569;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+}
+.v-table td {
+  border-bottom: 1px solid #f1f5f9;
+}
+.v-table tr:hover {
+  background-color: #f8fafc;
 }
 
-.glow-emerald {
-  box-shadow: 0 0 20px -5px rgba(16, 185, 129, 0.4);
+/* Sidebar Specifics */
+.v-sidebar {
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
 }
 
-.glow-rose {
-  box-shadow: 0 0 20px -5px rgba(244, 63, 94, 0.4);
-}
-
-/* Scrollbar Styling */
+/* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
+  background: #cbd5e1;
+  border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #94a3b8;
+}
+
+/* Form Controls */
+.v-input {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: #1e293b;
+  transition: border-color 0.15s ease-in-out;
+}
+.v-input:focus {
+  border-color: #3b82f6;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.v-btn-primary {
+  background-color: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  transition: background-color 0.15s ease-in-out;
+}
+.v-btn-primary:hover {
+  background-color: #1d4ed8;
+}
+
+.v-btn-secondary {
+  background-color: #f1f5f9;
+  color: #475569;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  transition: all 0.15s ease-in-out;
+}
+.v-btn-secondary:hover {
+  background-color: #e2e8f0;
+  color: #334155;
 }

@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import type { Technician, QueueBooking } from '../types';
+import type { Technician, QueueBooking, Branch } from '../types';
 import { INITIAL_INSTALLATION_TYPES, SERVICE_ZONES, AVAILABLE_TIME_SLOTS } from '../mockData';
 import { MapPin, CheckCircle2, ShieldAlert, UserCheck, Sparkles } from 'lucide-react';
 
 interface SmartBookingViewProps {
   technicians: Technician[];
+  branches: Branch[];
   onConfirmBooking: (newBooking: QueueBooking) => void;
 }
 
 export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
   technicians,
+  branches,
   onConfirmBooking,
 }) => {
   const [selectedInstId, setSelectedInstId] = useState<string>(INITIAL_INSTALLATION_TYPES[0].id);
@@ -21,9 +23,16 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
   const [selectedTechId, setSelectedTechId] = useState<string | null>(null);
   const [isBookedSuccess, setIsBookedSuccess] = useState<boolean>(false);
   const [lastBookingRef, setLastBookingRef] = useState<string>('');
+  const [selectedBranchId, setSelectedBranchId] = useState<string>(branches[0]?.id || '');
 
   const currentInst = INITIAL_INSTALLATION_TYPES.find((i) => i.id === selectedInstId) || INITIAL_INSTALLATION_TYPES[0];
   const currentSlot = AVAILABLE_TIME_SLOTS.find((s) => s.id === selectedSlotId) || AVAILABLE_TIME_SLOTS[0];
+
+  const getBranchName = (branchId?: string) => {
+    if (!branchId) return 'ไม่ระบุสาขา';
+    const br = branches.find((b) => b.id === branchId);
+    return br ? br.name : 'ไม่พบสาขา';
+  };
 
   // Smart Matching Engine Algorithm
   const evaluatedTechs = technicians.map((tech) => {
@@ -40,7 +49,10 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
     const isSecondaryZone = tech.secondaryZones.includes(selectedZone);
     const zoneSupported = isPrimaryZone || isSecondaryZone;
 
-    // 4. Calculate Score (0 - 100)
+    // 4. Branch Match (Optional weight bonus if technician is from the selected branch)
+    const isBranchMatch = tech.branchId === selectedBranchId;
+
+    // 5. Calculate Score (0 - 100)
     let score = 0;
 
     if (hasSkillCategory && hasRequiredLevel && !isPenaltyBlocked && zoneSupported) {
@@ -50,16 +62,18 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
       if (techSkill && techSkill.level > currentInst.minSkillLevel) score += 10;
 
       // Zone Bonus
-      if (isPrimaryZone) score += 20;
-      else if (isSecondaryZone) score += 10;
+      if (isPrimaryZone) score += 15;
+      else if (isSecondaryZone) score += 5;
+
+      // Branch Match Bonus
+      if (isBranchMatch) score += 15;
 
       // Tier Bonus
-      if (tech.tier === 'Gold') score += 15;
-      else if (tech.tier === 'Silver') score += 10;
-      else score += 5;
+      if (tech.tier === 'Gold') score += 10;
+      else if (tech.tier === 'Silver') score += 5;
 
       // Rating Bonus
-      score += Math.round((tech.rating / 5.0) * 15);
+      score += Math.round((tech.rating / 5.0) * 10);
 
       // Deduct for Penalty Points
       score -= Math.round(tech.penaltyPoints / 5);
@@ -75,6 +89,7 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
       hasRequiredLevel,
       isPenaltyBlocked,
       zoneSupported,
+      isBranchMatch,
       score,
       isEligible: hasSkillCategory && hasRequiredLevel && !isPenaltyBlocked && zoneSupported && score > 0,
     };
@@ -110,6 +125,7 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
       status: 'Scheduled',
       createdFrom: 'Selling Tools (E-ordering)',
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      branchId: selectedBranchId,
     };
 
     onConfirmBooking(newBooking);
@@ -120,63 +136,77 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Engine Banner */}
-      <div className="glass-panel p-6 rounded-2xl border border-slate-800 bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 relative overflow-hidden">
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-blue-600/10 to-transparent pointer-events-none" />
-        <div className="flex items-center space-x-3 mb-2">
-          <Sparkles className="h-6 w-6 text-blue-400" />
-          <h2 className="text-xl font-bold text-white">Smart Booking & Scheduling Engine</h2>
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-            Real-time Slot Matching Active
-          </span>
+      <div className="v-panel p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+        <div className="flex items-center space-x-2 mb-1.5">
+          <Sparkles className="h-5 w-5 text-blue-600" />
+          <h2 className="text-lg font-bold text-slate-800 font-sans">ระบบจัดคิวอัจฉริยะ (Smart Booking & Scheduling Engine)</h2>
         </div>
-        <p className="text-xs text-slate-300 max-w-3xl">
-          ระบบจับคู่ทีมช่างและเวลาติดตั้งอัจฉริยะ ทำงานประสานกับระบบ E-ordering เพื่อวิเคราะห์ Type of Installation, Skill Matrix Level, พื้นที่การให้บริการ (Zone), ภาระงานคงเหลือ และ Penalty Score ของช่างเพื่อแนะนำคิวที่ดีที่สุดให้อัตโนมัติ
+        <p className="text-xs text-slate-600 max-w-4xl leading-relaxed">
+          อัลกอริทึมวิเคราะห์หาทีมช่างโดยอัตโนมัติ โดยประเมินประเภทงานติดตั้ง ทักษะความเชี่ยวชาญ (Skill Level), พื้นที่ปฏิบัติการ (Zone), ความสอดคล้องของสาขา (Branch Connection) และคำนวณหักคะแนนความประพฤติ (Penalty Point) เพื่อป้องกันการจ่ายงานให้ช่างที่ถูกพักงานหรือมีคะแนนต่ำ
         </p>
       </div>
 
       {isBookedSuccess ? (
-        <div className="glass-panel p-8 rounded-2xl border border-emerald-500/40 bg-emerald-950/20 text-center space-y-4 glow-emerald">
-          <div className="h-16 w-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto border border-emerald-500/40">
-            <CheckCircle2 className="h-10 w-10" />
+        <div className="v-panel p-8 bg-emerald-50 border-emerald-300 text-center space-y-4 shadow-sm animate-scaleUp">
+          <div className="h-14 w-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-200">
+            <CheckCircle2 className="h-8 w-8" />
           </div>
-          <h3 className="text-2xl font-bold text-white">ยืนยันการจองคิวช่างสำเร็จ! (Booking Locked)</h3>
-          <p className="text-sm text-slate-300">
-            หมายเลขอ้างอิงการจอง: <span className="font-mono font-bold text-emerald-300 text-base">{lastBookingRef}</span>
+          <h3 className="text-xl font-bold text-slate-800">ลงทะเบียนจองคิวติดตั้งสำเร็จ! (Booking Registered)</h3>
+          <p className="text-xs text-slate-600">
+            หมายเลขอ้างอิงคิวงาน: <span className="font-mono font-bold text-blue-700 text-sm">{lastBookingRef}</span>
           </p>
-          <div className="max-w-md mx-auto p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-300 text-left space-y-2">
-            <div className="flex justify-between"><span className="text-slate-400">ลูกค้า:</span> <span className="font-semibold text-white">{customerName}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">งานติดตั้ง:</span> <span className="font-semibold text-white">{currentInst.name}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">วัน/เวลา:</span> <span className="font-semibold text-white">{bookingDate} ({currentSlot.startTime} - {currentSlot.endTime})</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">ทีมช่างที่ได้รับจัดคิว:</span> <span className="font-semibold text-emerald-400">{eligibleTechs[0]?.tech.name}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">สถานะ:</span> <span className="font-semibold text-indigo-400">พร้อม Dispatch ไปยัง KANNA System</span></div>
+          <div className="max-w-md mx-auto p-4 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 text-left space-y-2.5 shadow-xs">
+            <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500 font-semibold">ชื่อลูกค้า:</span> <span className="font-bold text-slate-800">{customerName}</span></div>
+            <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500 font-semibold">งานติดตั้ง:</span> <span className="font-semibold text-slate-800">{currentInst.name}</span></div>
+            <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500 font-semibold">วัน/เวลา:</span> <span className="font-semibold text-slate-800">{bookingDate} ({currentSlot.startTime} - {currentSlot.endTime})</span></div>
+            <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500 font-semibold">สังกัดสาขาดูแล:</span> <span className="font-semibold text-slate-800">{getBranchName(selectedBranchId)}</span></div>
+            <div className="flex justify-between"><span className="text-slate-500 font-semibold">ทีมช่างที่ได้รับเลือก:</span> <span className="font-bold text-emerald-600">{eligibleTechs[0]?.tech.name}</span></div>
           </div>
 
-          <div className="pt-4 flex justify-center space-x-3">
+          <div className="pt-3 flex justify-center">
             <button
               onClick={() => setIsBookedSuccess(false)}
-              className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-all shadow-lg shadow-blue-600/30"
+              className="v-btn-primary text-xs"
             >
-              ทำการจองงานใหม่ (Book Another Job)
+              จองคิวงานใหม่ถัดไป
             </button>
           </div>
         </div>
       ) : (
         <form onSubmit={handleBookingSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Booking Parameters Input */}
-          <div className="lg:col-span-5 space-y-5 glass-panel p-6 rounded-2xl border border-slate-800">
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider text-slate-300 pb-2 border-b border-slate-800">
-              1. ระบุเงื่อนไขงานติดตั้ง (Requirements)
+          {/* Left Column: Requirements Parameters */}
+          <div className="lg:col-span-5 space-y-4 v-panel p-5 bg-white">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider pb-1.5 border-b border-slate-100">
+              1. ระบุข้อกำหนดงานติดตั้ง (Specifications)
             </h3>
+
+            {/* Branch Selector */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">
+                สาขาผู้ดูแลการจอง (Booking Branch)
+              </label>
+              <select
+                value={selectedBranchId}
+                onChange={(e) => setSelectedBranchId(e.target.value)}
+                className="v-input w-full"
+              >
+                {branches.map((br) => (
+                  <option key={br.id} value={br.id}>
+                    [{br.code}] {br.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             {/* Installation Type Selection */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">
+              <label className="block text-xs font-semibold text-slate-600 mb-1">
                 ประเภทงานติดตั้ง (Type of Installation)
               </label>
               <select
                 value={selectedInstId}
                 onChange={(e) => setSelectedInstId(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500"
+                className="v-input w-full font-semibold"
               >
                 {INITIAL_INSTALLATION_TYPES.map((type) => (
                   <option key={type.id} value={type.id}>
@@ -186,41 +216,38 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
               </select>
             </div>
 
-            {/* Auto-Calculated Skill Specs Card */}
-            <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs space-y-2">
-              <div className="flex items-center justify-between text-slate-400">
-                <span>หมวดหมู่ทักษะ (Skill Category):</span>
-                <span className="font-semibold text-indigo-300">{currentInst.category}</span>
+            {/* Calculated Specs Card */}
+            <div className="p-3.5 rounded-lg bg-slate-50 border border-slate-100 text-xs space-y-2 shadow-xs">
+              <div className="flex items-center justify-between text-slate-600">
+                <span>ทักษะที่เกี่ยวข้อง:</span>
+                <span className="font-bold text-indigo-700">{currentInst.category}</span>
               </div>
-              <div className="flex items-center justify-between text-slate-400">
-                <span>ระดับทักษะขั้นต่ำ (Min Skill Level):</span>
-                <span className="px-2 py-0.5 rounded font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <div className="flex items-center justify-between text-slate-600">
+                <span>ความชำนาญขั้นต่ำ:</span>
+                <span className="px-2 py-0.5 rounded font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
                   Level {currentInst.minSkillLevel}
                 </span>
               </div>
-              <div className="flex items-center justify-between text-slate-400">
-                <span>จำนวนช่างที่ต้องการ (Team Size):</span>
-                <span className="font-semibold text-slate-200">{currentInst.requiredTeamSize} คน / ทีม</span>
+              <div className="flex items-center justify-between text-slate-600">
+                <span>จำนวนช่างที่ต้องการ:</span>
+                <span className="font-semibold text-slate-800">{currentInst.requiredTeamSize} คน / ทีม</span>
               </div>
-              <div className="flex items-center justify-between text-slate-400">
-                <span>ระยะเวลาติดตั้งโดยประมาณ:</span>
-                <span className="font-semibold text-slate-200">{currentInst.estDurationHours} ชั่วโมง</span>
+              <div className="flex items-center justify-between text-slate-600">
+                <span>ระยะเวลาติดตั้ง:</span>
+                <span className="font-semibold text-slate-800">{currentInst.estDurationHours} ชั่วโมง</span>
               </div>
-              <p className="text-[11px] text-slate-500 pt-1 border-t border-slate-800 italic">
-                "{currentInst.description}"
-              </p>
             </div>
 
-            {/* Service Zone Selection */}
+            {/* Zone Selection */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2 flex items-center space-x-1">
-                <MapPin className="h-3.5 w-3.5 text-blue-400" />
-                <span>พื้นที่บริการ (Service Zone / Address)</span>
+              <label className="block text-xs font-semibold text-slate-600 mb-1 flex items-center space-x-1">
+                <MapPin className="h-3.5 w-3.5 text-blue-500" />
+                <span>พื้นที่การติดตั้ง (Installation Zone)</span>
               </label>
               <select
                 value={selectedZone}
                 onChange={(e) => setSelectedZone(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500"
+                className="v-input w-full"
               >
                 {SERVICE_ZONES.map((zone) => (
                   <option key={zone} value={zone}>
@@ -233,25 +260,25 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
             {/* Preferred Date & Slot */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-2">
-                  วันที่ต้องการติดตั้ง
+                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                  วันที่จองติดตั้ง
                 </label>
                 <input
                   type="date"
                   value={bookingDate}
                   onChange={(e) => setBookingDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500"
+                  className="v-input w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-2">
-                  รอบช่วงเวลา (Time Slot)
+                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                  ช่วงเวลา (Time Slot)
                 </label>
                 <select
                   value={selectedSlotId}
                   onChange={(e) => setSelectedSlotId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500"
+                  className="v-input w-full"
                 >
                   {AVAILABLE_TIME_SLOTS.map((slot) => (
                     <option key={slot.id} value={slot.id}>
@@ -263,50 +290,50 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
             </div>
 
             {/* Customer Information Input */}
-            <div className="space-y-3 pt-2 border-t border-slate-800">
-              <label className="block text-xs font-semibold text-slate-400">ข้อมูลผู้ซื้อ / สถานที่ติดตั้ง (Customer Info)</label>
+            <div className="space-y-2 pt-2 border-t border-slate-100">
+              <label className="block text-xs font-semibold text-slate-500">ข้อมูลผู้รับบริการ (Customer Info)</label>
               <div className="grid grid-cols-2 gap-3">
                 <input
                   type="text"
                   placeholder="ชื่อ-นามสกุล ลูกค้า"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500"
+                  className="v-input w-full"
                 />
                 <input
                   type="text"
                   placeholder="เบอร์โทรศัพท์"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-blue-500"
+                  className="v-input w-full"
                 />
               </div>
             </div>
           </div>
 
-          {/* Right Column: Dynamic Technician & Slot Matching Recommendation */}
-          <div className="lg:col-span-7 space-y-5 glass-panel p-6 rounded-2xl border border-slate-800">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider text-slate-300">
-                2. ผลการแมตช์ทีมช่าง (Smart Skill & Queue Match Results)
+          {/* Right Column: Engine Recommendation Results */}
+          <div className="lg:col-span-7 space-y-4 v-panel p-5 bg-white">
+            <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                2. ผลการแมตช์ความเหมาะสมช่าง (Smart Match Results)
               </h3>
-              <span className="text-xs text-slate-400 font-mono">
-                พบช่างที่ตรงเงื่อนไข {eligibleTechs.length} / {technicians.length} ทีม
+              <span className="text-[11px] text-slate-500 font-bold bg-slate-50 border border-slate-100 px-2 py-0.5 rounded">
+                พบช่างที่พร้อมปฏิบัติงาน {eligibleTechs.length} / {technicians.length} ทีม
               </span>
             </div>
 
             {eligibleTechs.length === 0 ? (
-              <div className="p-8 text-center bg-slate-900/50 rounded-xl border border-slate-800 text-slate-400 space-y-2">
-                <ShieldAlert className="h-10 w-10 text-amber-400 mx-auto" />
-                <div className="font-semibold text-white">ไม่พบทีมช่างที่มี Skill Level และ Zone ครอบคลุมในขณะนี้</div>
-                <p className="text-xs">
-                  ช่างอาจติด Cooldown หรือมี Skill ไม่ถึง Level {currentInst.minSkillLevel} สำหรับงานหมวดนี้
+              <div className="p-8 text-center bg-slate-50 rounded-lg border border-slate-200 text-slate-500 space-y-2.5">
+                <ShieldAlert className="h-10 w-10 text-amber-500 mx-auto" />
+                <div className="font-bold text-slate-700">ไม่พบทีมช่างที่มีคุณสมบัติเหมาะสมในขณะนี้</div>
+                <p className="text-xs max-w-sm mx-auto text-slate-400">
+                  ทีมช่างที่มีความชำนาญตามเกณฑ์อาจติดภาระงานชิ้นอื่น อยู่ในโซนอื่น หรืออยู่ระหว่างการพักงานชั่วคราว (Cooldown)
                 </p>
               </div>
             ) : (
-              <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+              <div className="space-y-2.5 max-h-[480px] overflow-y-auto pr-1">
                 {sortedTechs.map((item, idx) => {
-                  const { tech, techSkill, score, isEligible, isPenaltyBlocked } = item;
+                  const { tech, techSkill, score, isEligible, isPenaltyBlocked, isBranchMatch } = item;
                   const isBestMatch = idx === 0 && isEligible;
                   const isSelected = selectedTechId ? selectedTechId === tech.id : isBestMatch;
 
@@ -314,12 +341,12 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
                     <div
                       key={tech.id}
                       onClick={() => isEligible && setSelectedTechId(tech.id)}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                      className={`p-3.5 rounded-lg border transition-all cursor-pointer ${
                         !isEligible
-                          ? 'opacity-40 bg-slate-900/30 border-slate-800/50 cursor-not-allowed'
+                          ? 'opacity-40 bg-slate-50 border-slate-100 cursor-not-allowed'
                           : isSelected
-                          ? 'bg-blue-950/40 border-blue-500/80 glow-blue shadow-lg'
-                          : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                          ? 'bg-blue-50/50 border-blue-500/80 ring-2 ring-blue-500/10'
+                          : 'bg-white border-slate-200 hover:border-slate-300'
                       }`}
                     >
                       <div className="flex items-start justify-between">
@@ -327,57 +354,65 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
                           <img
                             src={tech.avatar}
                             alt={tech.name}
-                            className="h-10 w-10 rounded-full object-cover border border-slate-700"
+                            className="h-10 w-10 rounded-lg object-cover border border-slate-200"
                           />
                           <div>
                             <div className="flex items-center space-x-2">
-                              <span className="font-bold text-white text-sm">{tech.name}</span>
+                              <span className="font-bold text-slate-800 text-xs md:text-sm">{tech.name}</span>
                               {isBestMatch && (
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center space-x-1">
-                                  <Sparkles className="h-3 w-3 text-amber-400" />
+                                <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200 flex items-center space-x-0.5">
+                                  <Sparkles className="h-3 w-3 text-amber-600 fill-amber-500" />
                                   <span>แนะนำอันดับ 1</span>
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center space-x-3 text-xs text-slate-400 mt-0.5">
-                              <span>โค้ด: <strong className="font-mono text-slate-300">{tech.code}</strong></span>
-                              <span>• Tier: <strong className={tech.tier === 'Gold' ? 'text-amber-400' : tech.tier === 'Silver' ? 'text-slate-300' : 'text-rose-400'}>{tech.tier}</strong></span>
-                              <span>• Rating: <strong className="text-amber-400">⭐ {tech.rating}</strong></span>
+                            <div className="flex items-center space-x-2.5 text-[11px] text-slate-500 mt-1">
+                              <span>รหัส: <strong className="font-mono text-slate-700">{tech.code}</strong></span>
+                              <span>•</span>
+                              <span>สังกัด: <strong className="text-slate-700">{getBranchName(tech.branchId)}</strong></span>
+                              <span>•</span>
+                              <span>เรตติ้ง: <strong className="text-amber-600 font-bold">⭐ {tech.rating}</strong></span>
                             </div>
                           </div>
                         </div>
 
                         {/* Match Score Badge */}
                         <div className="text-right">
-                          <div className={`text-xl font-extrabold font-mono ${isEligible ? 'text-emerald-400' : 'text-slate-600'}`}>
+                          <div className={`text-lg font-black font-mono ${isEligible ? 'text-blue-600' : 'text-slate-400'}`}>
                             {score}%
                           </div>
-                          <div className="text-[10px] text-slate-500">Match Score</div>
+                          <div className="text-[10px] text-slate-400 font-semibold">Match Weight</div>
                         </div>
                       </div>
 
                       {/* Technical Details & Penalty status */}
-                      <div className="mt-3 pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between text-xs gap-2">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-slate-400">ทักษะตรงหมวด:</span>
+                      <div className="mt-3 pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs gap-2">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-slate-400 font-medium">ระดับทักษะ:</span>
                           {techSkill ? (
-                            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                              {techSkill.category} (L{techSkill.level})
+                            <span className="px-2 py-0.2 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              {techSkill.category} (Level {techSkill.level})
                             </span>
                           ) : (
-                            <span className="text-rose-400 font-semibold">ไม่มี Skill หมวดนี้</span>
+                            <span className="text-rose-600 font-semibold">ขาดทักษะตรงสาย</span>
+                          )}
+                          
+                          {isBranchMatch && (
+                            <span className="px-2 py-0.2 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                              สาขาตรงกัน (+15%)
+                            </span>
                           )}
                         </div>
 
-                        <div className="flex items-center space-x-2 text-[11px]">
+                        <div className="flex items-center space-x-1">
                           {isPenaltyBlocked ? (
-                            <span className="text-rose-400 font-semibold flex items-center space-x-1">
+                            <span className="text-rose-600 font-semibold flex items-center space-x-0.5 bg-rose-50 px-2 py-0.5 rounded border border-rose-100 text-[10px]">
                               <ShieldAlert className="h-3.5 w-3.5" />
-                              <span>ติด Penalty Cooldown (ห้ามจ่ายงาน)</span>
+                              <span>ติด Penalty Cooldown (ระงับงาน)</span>
                             </span>
                           ) : (
-                            <span className="text-slate-400">
-                              Penalty Score: <strong className={tech.penaltyPoints > 0 ? 'text-amber-400' : 'text-emerald-400'}>{tech.penaltyPoints} คะแนน</strong>
+                            <span className="text-slate-500 font-medium">
+                              Penalty Point: <strong className={tech.penaltyPoints > 0 ? 'text-rose-600' : 'text-emerald-600'}>{tech.penaltyPoints} คะแนน</strong>
                             </span>
                           )}
                         </div>
@@ -388,15 +423,15 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
               </div>
             )}
 
-            {/* Confirm Submit Button */}
-            <div className="pt-4 border-t border-slate-800 flex justify-end">
+            {/* Submit button */}
+            <div className="pt-3 border-t border-slate-100 flex justify-end">
               <button
                 type="submit"
                 disabled={eligibleTechs.length === 0}
-                className="w-full md:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs md:text-sm transition-all shadow-lg shadow-blue-600/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="w-full md:w-auto px-6 py-2.5 rounded bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs md:text-sm transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center space-x-1.5"
               >
                 <UserCheck className="h-4 w-4" />
-                <span>ยืนยันการจองคิวช่าง & ล็อค Slot (Hold 15 mins)</span>
+                <span>ยืนยันการจัดคิวช่าง & ล็อคคิวทันที (Hold 15 mins)</span>
               </button>
             </div>
           </div>

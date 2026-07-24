@@ -1,4 +1,26 @@
-import type { Technician, InstallationTypeConfig, QueueBooking, PenaltyRecord, TimeSlot } from './types';
+import type { Technician, InstallationTypeConfig, QueueBooking, PenaltyRecord, TimeSlot, Branch, Zone, Skill } from './types';
+
+export const INITIAL_BRANCHES: Branch[] = [
+  { id: 'br-01', code: 'B01', name: 'สาขาพระราม 9', province: 'กรุงเทพมหานคร', status: 'Active' },
+  { id: 'br-02', code: 'B02', name: 'สาขาเอกมัย-รามอินทรา', province: 'กรุงเทพมหานคร', status: 'Active' },
+  { id: 'br-03', code: 'B03', name: 'สาขาราชพฤกษ์', province: 'นนทบุรี', status: 'Active' },
+  { id: 'br-04', code: 'B04', name: 'สาขาบางนา', province: 'สมุทรปราการ', status: 'Active' },
+];
+
+export const INITIAL_ZONES: Zone[] = [
+  { id: 'zone-01', code: 'Z01', name: 'กรุงเทพฯ ตะวันออก (สุขุมวิท - บางนา - ประเวศ)', description: 'ครอบคลุมโซนเศรษฐกิจและที่อยู่อาศัยฝั่งตะวันออก', coverageZipcodes: ['10260', '10250', '10110'] },
+  { id: 'zone-02', code: 'Z02', name: 'นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ - บางบัวทอง)', description: 'ครอบคลุมโซนที่อยู่อาศัยแนวราบฝั่งตะวันตก', coverageZipcodes: ['11000', '11120', '11110'] },
+  { id: 'zone-03', code: 'Z03', name: 'ปทุมธานี (รังสิต - ลำลูกกา - คลองหลวง)', description: 'ครอบคลุมพื้นที่กรุงเทพฯ ตอนเหนือและปริมณฑล', coverageZipcodes: ['12130', '12150', '12120'] },
+  { id: 'zone-04', code: 'Z04', name: 'สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์ - สำโรง)', description: 'ครอบคลุมพื้นที่อุตสาหกรรมและที่อยู่อาศัยตอนใต้', coverageZipcodes: ['10270', '10280', '10540'] },
+];
+
+export const INITIAL_SKILLS: Skill[] = [
+  { id: 'sk-01', code: 'SK-BUILTIN', category: 'Built-in Furniture', name: 'ประกอบและติดตั้งเฟอร์นิเจอร์ Built-in', description: 'ความเชี่ยวชาญในการติดตั้งตู้ ชั้นวางของ ชุดครัว และปรับระนาบหน้าบานระดับสูง', certificationRequired: true },
+  { id: 'sk-02', code: 'SK-FLOOR', category: 'Flooring & Tile', name: 'ปูพื้นไม้ SPC / Laminate / กระเบื้อง', description: 'งานปรับระดับพื้นผิว ติดตั้งแผ่นรองกันชื้น และตัดต่อแผ่นพื้นขอบบัวอย่างประณีต', certificationRequired: false },
+  { id: 'sk-03', code: 'SK-SMART', category: 'Electrical & Smart Home', name: 'ติดตั้งระบบ Smart Home & Electrical', description: 'เดินสายไฟแรงดันต่ำ ติดตั้งกลอนประตูดิจิทัล สวิตช์อัจฉริยะ และตั้งค่า Gateway', certificationRequired: true },
+  { id: 'sk-04', code: 'SK-HVAC', category: 'Air Condition & HVAC', name: 'ติดตั้งและบำรุงรักษาเครื่องปรับอากาศ', description: 'งานเดินท่อน้ำยา R32 บานแฟลร์ แขวนคอยล์ร้อน-เย็น และทดสอบแรงดันระบบระบายความร้อน', certificationRequired: true },
+  { id: 'sk-05', code: 'SK-CURTAIN', category: 'Curtains & Wallpaper', name: 'ติดตั้งรางม่านไฟฟ้าและปูวอลเปเปอร์', description: 'ติดตั้งรางม่านมอเตอร์ เซ็ตอัพรีโมทควบคุม และงานปูวอลเปเปอร์เนียนเรียบไม่มีรอยต่อ', certificationRequired: false },
+];
 
 export const INITIAL_INSTALLATION_TYPES: InstallationTypeConfig[] = [
   {
@@ -9,7 +31,7 @@ export const INITIAL_INSTALLATION_TYPES: InstallationTypeConfig[] = [
     requiredTeamSize: 3,
     estDurationHours: 6,
     description: 'ประกอบตู้ Built-in, หินท็อปครัว, งานเจาะท่อดูดควัน และปรับระดับบานตู้ไฮกวน',
-    badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+    badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   },
   {
     id: 'inst-built-closet',
@@ -19,7 +41,7 @@ export const INITIAL_INSTALLATION_TYPES: InstallationTypeConfig[] = [
     requiredTeamSize: 2,
     estDurationHours: 4,
     description: 'ติดตั้งโครงตู้เสื้อผ้า Built-in อะลูมิเนียม หน้าบานกระจก และไฟ LED ซ่อนตู้',
-    badgeColor: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+    badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
   },
   {
     id: 'inst-flooring-laminate',
@@ -29,7 +51,7 @@ export const INITIAL_INSTALLATION_TYPES: InstallationTypeConfig[] = [
     requiredTeamSize: 2,
     estDurationHours: 4,
     description: 'ปรับระดับพื้น ปูแผ่นรองกันความชื้น และติดตั้งแผ่น SPC พร้อมบัวพื้นรอบห้อง',
-    badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+    badgeColor: 'bg-amber-50 text-amber-700 border-amber-200',
   },
   {
     id: 'inst-smart-home',
@@ -39,7 +61,7 @@ export const INITIAL_INSTALLATION_TYPES: InstallationTypeConfig[] = [
     requiredTeamSize: 1,
     estDurationHours: 2,
     description: 'เจาะประตูติดตั้ง Digital Lock, สวิตช์ไฟอัจฉริยะ และเซ็ตอัประบบ Gateway',
-    badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+    badgeColor: 'bg-cyan-50 text-cyan-700 border-cyan-200',
   },
   {
     id: 'inst-aircon-multi',
@@ -49,7 +71,7 @@ export const INITIAL_INSTALLATION_TYPES: InstallationTypeConfig[] = [
     requiredTeamSize: 2,
     estDurationHours: 5,
     description: 'เดินท่อน้ำยาคอมเพรสเซอร์ภายนอก แขวนคอยล์เย็น และทดสอบแรงดันระบบน้ำยา R32',
-    badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+    badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
   },
   {
     id: 'inst-curtains-motor',
@@ -59,7 +81,7 @@ export const INITIAL_INSTALLATION_TYPES: InstallationTypeConfig[] = [
     requiredTeamSize: 2,
     estDurationHours: 3,
     description: 'ติดตั้งรางม่านไฟฟ้า ต่อสายสัญญาณ และปูวอลเปเปอร์ไวนิลเกรดพรีเมียม',
-    badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   },
 ];
 
@@ -98,6 +120,7 @@ export const INITIAL_TECHNICIANS: Technician[] = [
     dailyCapacityHours: 8,
     bookedHoursToday: 2,
     status: 'Available',
+    branchId: 'br-01', // Rama 9
   },
   {
     id: 'tech-02',
@@ -120,6 +143,7 @@ export const INITIAL_TECHNICIANS: Technician[] = [
     dailyCapacityHours: 8,
     bookedHoursToday: 5,
     status: 'Available',
+    branchId: 'br-03', // Ratchaphruek
   },
   {
     id: 'tech-03',
@@ -141,6 +165,7 @@ export const INITIAL_TECHNICIANS: Technician[] = [
     dailyCapacityHours: 8,
     bookedHoursToday: 4,
     status: 'Available',
+    branchId: 'br-02', // Ekkamai-Ramintra
   },
   {
     id: 'tech-04',
@@ -162,6 +187,7 @@ export const INITIAL_TECHNICIANS: Technician[] = [
     dailyCapacityHours: 8,
     bookedHoursToday: 0,
     status: 'Available',
+    branchId: 'br-01', // Rama 9
   },
   {
     id: 'tech-05',
@@ -183,6 +209,7 @@ export const INITIAL_TECHNICIANS: Technician[] = [
     dailyCapacityHours: 8,
     bookedHoursToday: 0,
     status: 'In Cooldown',
+    branchId: 'br-04', // Bangna
   },
 ];
 
@@ -203,6 +230,7 @@ export const INITIAL_BOOKINGS: QueueBooking[] = [
     status: 'Dispatched to KANNA',
     createdFrom: 'Selling Tools (E-ordering)',
     createdAt: '2026-07-23 08:30',
+    branchId: 'br-01',
   },
   {
     id: 'bk-1002',
@@ -220,6 +248,7 @@ export const INITIAL_BOOKINGS: QueueBooking[] = [
     status: 'STS In-Progress',
     createdFrom: 'Selling Tools (E-ordering)',
     createdAt: '2026-07-23 09:15',
+    branchId: 'br-03',
   },
   {
     id: 'bk-1003',
@@ -237,6 +266,7 @@ export const INITIAL_BOOKINGS: QueueBooking[] = [
     status: 'Scheduled',
     createdFrom: 'COOHOM Direct',
     createdAt: '2026-07-23 10:00',
+    branchId: 'br-02',
   },
   {
     id: 'bk-1004',
@@ -255,6 +285,7 @@ export const INITIAL_BOOKINGS: QueueBooking[] = [
     createdFrom: 'Manual POS',
     createdAt: '2026-07-22 14:00',
     penaltyRef: 'ECN-2026-0722-09',
+    branchId: 'br-04',
   },
 ];
 
@@ -268,7 +299,7 @@ export const INITIAL_PENALTIES: PenaltyRecord[] = [
     violationType: 'QC Defect / Failed Review',
     fineAmountTHB: 3500,
     scoreDeduction: 25,
-    tierImpact: 'ปรับลดจาก Silver $\\rightarrow$ Cooldown (พักการจ่ายคิวงาน 7 วัน)',
+    tierImpact: 'ปรับลดจาก Silver -> Cooldown (พักการจ่ายคิวงาน 7 วัน)',
     issuedAt: '2026-07-22 17:30',
     status: 'Active Penalty',
     details: 'งานประกอบโครงตู้ Walk-in Closet ไม่ได้ระดับ ฉากเอียง 5 องศา และบานตู้ตก QC ตรวจพบรอยขูดขีดบนแผงไม้',

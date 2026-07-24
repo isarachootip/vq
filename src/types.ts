@@ -8,6 +8,31 @@ export type SkillCategory =
   | 'Air Condition & HVAC' 
   | 'Curtains & Wallpaper';
 
+export interface Branch {
+  id: string;
+  code: string;
+  name: string;
+  province: string;
+  status: 'Active' | 'Inactive';
+}
+
+export interface Zone {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  coverageZipcodes: string[];
+}
+
+export interface Skill {
+  id: string;
+  code: string;
+  category: SkillCategory;
+  name: string;
+  description: string;
+  certificationRequired: boolean;
+}
+
 export interface TechnicianSkill {
   category: SkillCategory;
   level: 1 | 2 | 3; // 1: Basic, 2: Advanced, 3: Master
@@ -31,6 +56,7 @@ export interface Technician {
   dailyCapacityHours: number;
   bookedHoursToday: number;
   status: 'Available' | 'On Job' | 'In Cooldown' | 'Offline';
+  branchId?: string; // Connected branch
 }
 
 export interface InstallationTypeConfig {
@@ -68,6 +94,7 @@ export interface QueueBooking {
   createdFrom: 'Selling Tools (E-ordering)' | 'Manual POS' | 'COOHOM Direct';
   createdAt: string;
   penaltyRef?: string;
+  branchId?: string; // Branch associated with booking
 }
 
 export interface PenaltyRecord {
