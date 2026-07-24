@@ -8,6 +8,7 @@ import { BranchManager } from './components/BranchManager';
 import { BranchMapView } from './components/BranchMapView';
 import { ZoneManager } from './components/ZoneManager';
 import { SkillManager } from './components/SkillManager';
+import { KmHubView } from './components/KmHubView';
 
 import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill } from './types';
 import { 
@@ -31,7 +32,8 @@ import {
   ShieldAlert, 
   RefreshCw, 
   Menu,
-  ChevronRight
+  ChevronRight,
+  BookOpen
 } from 'lucide-react';
 
 export function App() {
@@ -226,6 +228,8 @@ export function App() {
     { id: 'divider-2', label: 'จำลองผลลัพธ์', isDivider: true },
     { id: 'integration-flow', label: 'Integration Simulator', icon: Cpu },
     { id: 'penalty-audit', label: 'รายการลงโทษ E-CN', icon: ShieldAlert },
+    { id: 'divider-3', label: 'เอกสารเรียนรู้', isDivider: true },
+    { id: 'km-hub', label: 'คู่มือระบบ & FAQ (KM)', icon: BookOpen },
   ];
 
   return (
@@ -417,6 +421,10 @@ export function App() {
 
           {activeTab === 'penalty-audit' && (
             <PenaltyAuditView penalties={penalties} />
+          )}
+
+          {activeTab === 'km-hub' && (
+            <KmHubView />
           )}
         </main>
       </div>
