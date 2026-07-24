@@ -9,6 +9,7 @@ import { BranchMapView } from './components/BranchMapView';
 import { ZoneManager } from './components/ZoneManager';
 import { SkillManager } from './components/SkillManager';
 import { KmHubView } from './components/KmHubView';
+import { QChangPortalView } from './components/QChangPortalView';
 
 import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill } from './types';
 import { 
@@ -33,7 +34,8 @@ import {
   RefreshCw, 
   Menu,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  ShoppingBag
 } from 'lucide-react';
 
 export function App() {
@@ -218,6 +220,7 @@ export function App() {
   // Sidebar Menu Items Definition
   const menuItems = [
     { id: 'dashboard', label: 'ตารางคิวงานติดตั้ง', icon: LayoutDashboard },
+    { id: 'qchang-portal', label: 'จองบริการ (Q-Chang style)', icon: ShoppingBag },
     { id: 'smart-booking', label: 'จองคิวช่างอัจฉริยะ', icon: Calendar },
     { id: 'divider-1', label: 'ข้อมูลระบบหลัก (Master)', isDivider: true },
     { id: 'branch-manager', label: 'ข้อมูลสาขา (Branch)', icon: Building },
@@ -425,6 +428,14 @@ export function App() {
 
           {activeTab === 'km-hub' && (
             <KmHubView />
+          )}
+
+          {activeTab === 'qchang-portal' && (
+            <QChangPortalView
+              branches={branches}
+              onConfirmBooking={handleConfirmBooking}
+              onNavigateToTab={(tabId) => setActiveTab(tabId)}
+            />
           )}
         </main>
       </div>
