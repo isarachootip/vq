@@ -13,19 +13,45 @@
   --color-slate-800: #f5eedc;
   --color-slate-900: #ffffff;
   
-  --color-blue-50: #1d1a12;
-  --color-blue-100: #332d1d;
+  /* Primary Accent: Gold */
   --color-blue-600: #dfb750;
-  --color-blue-700: #e8c66e;
-  --color-blue-800: #ffd700;
   
-  --color-indigo-50: #161520;
-  --color-indigo-100: #252438;
-  --color-indigo-700: #dfb750;
+  /* Badge/Status Dark Mode Theme Mappings */
+  --color-amber-50: #1d1508;
+  --color-amber-200: #3f290d;
+  --color-amber-700: #f59e0b;
+  --color-amber-800: #fbbf24;
   
-  --color-emerald-50: #0b1a12;
-  --color-emerald-100: #153322;
-  --color-emerald-700: #10b981;
+  --color-blue-50: #0d1527;
+  --color-blue-100: #15223c;
+  --color-blue-200: #1c2e50;
+  --color-blue-700: #60a5fa;
+  --color-blue-800: #93c5fd;
+  
+  --color-indigo-50: #110e24;
+  --color-indigo-100: #1d183d;
+  --color-indigo-200: #282154;
+  --color-indigo-700: #818cf8;
+  
+  --color-cyan-50: #061824;
+  --color-cyan-100: #0e293c;
+  --color-cyan-200: #143953;
+  --color-cyan-700: #22d3ee;
+  
+  --color-purple-50: #150d24;
+  --color-purple-100: #25163d;
+  --color-purple-200: #331e54;
+  --color-purple-700: #c084fc;
+  
+  --color-emerald-50: #081a11;
+  --color-emerald-100: #102d1f;
+  --color-emerald-200: #173f2b;
+  --color-emerald-700: #34d399;
+  
+  --color-rose-50: #220910;
+  --color-rose-100: #3d0f1c;
+  --color-rose-200: #541526;
+  --color-rose-700: #f87171;
 }
 
 @layer base {
