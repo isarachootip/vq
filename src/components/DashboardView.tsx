@@ -1,6 +1,18 @@
 import React, { useState } from 'react';
 import type { QueueBooking, Technician } from '../types';
-import { Clock, CheckCircle2, AlertTriangle, Send, Filter, MapPin, ShieldAlert, ArrowRight, Layers } from 'lucide-react';
+import { 
+  Clock, 
+  CheckCircle2, 
+  AlertTriangle, 
+  Send, 
+  Filter, 
+  MapPin, 
+  ShieldAlert, 
+  ArrowRight, 
+  Layers, 
+  Calendar as CalendarIcon,
+  Info
+} from 'lucide-react';
 
 interface DashboardViewProps {
   bookings: QueueBooking[];
@@ -15,18 +27,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onDispatchToKanna,
   onSelectBookingForSim,
 }) => {
+  const [selectedDate, setSelectedDate] = useState<string | null>('2026-07-24'); // Default to 24th to highlight demo data
   const [selectedZone, setSelectedZone] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  // 1. Filter bookings
   const filteredBookings = bookings.filter((b) => {
+    const matchesDate = !selectedDate || b.bookingDate === selectedDate;
     const matchesZone = selectedZone === 'ALL' || b.addressZone.includes(selectedZone);
     const matchesStatus = selectedStatus === 'ALL' || b.status === selectedStatus;
     const matchesSearch =
       b.bookingRef.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.installationTypeName.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesZone && matchesStatus && matchesSearch;
+    return matchesDate && matchesZone && matchesStatus && matchesSearch;
   });
 
   const getStatusBadge = (status: QueueBooking['status']) => {
@@ -50,11 +65,39 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
   };
 
+  // Calendar parameters for July 2026 (Wednesday is 1st, 31 days)
+  const calendarDays = Array.from({ length: 31 }, (_, i) => i + 1);
+  const paddingDays = Array.from({ length: 3 }); // Wednesday offset (Sun, Mon, Tue empty)
+  const weekdays = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+
+  const getBookingsCountForDate = (dateStr: string) => {
+    return bookings.filter((b) => b.bookingDate === dateStr).length;
+  };
+
+  const getBookingsStatusSummary = (dateStr: string) => {
+    const list = bookings.filter((b) => b.bookingDate === dateStr);
+    const pending = list.filter(b => b.status === 'Pending Dispatch' || b.status === 'Scheduled').length;
+    const active = list.filter(b => b.status === 'Dispatched to KANNA' || b.status === 'STS In-Progress').length;
+    const closed = list.filter(b => b.status === 'Passed (Closed)').length;
+    return { pending, active, closed };
+  };
+
+  const formatDateThai = (dateStr: string | null) => {
+    if (!dateStr) return 'คิวงานทั้งหมดทุกวัน';
+    const [year, month, day] = dateStr.split('-');
+    const thaiMonths = [
+      'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    ];
+    return `คิวติดตั้งประจำวันที่ ${parseInt(day)} ${thaiMonths[parseInt(month) - 1]} ${parseInt(year) + 543}`;
+  };
+
   return (
     <div className="space-y-6">
-      {/* Top Banner KPI Grid */}
+      
+      {/* 1. Top KPI Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="v-panel p-4 flex items-center space-x-4 bg-white">
+        <div className="v-panel p-4 flex items-center space-x-4 bg-white border border-slate-200">
           <div className="p-3 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
             <Clock className="h-6 w-6" />
           </div>
@@ -66,7 +109,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        <div className="v-panel p-4 flex items-center space-x-4 bg-white">
+        <div className="v-panel p-4 flex items-center space-x-4 bg-white border border-slate-200">
           <div className="p-3 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
             <Send className="h-6 w-6" />
           </div>
@@ -78,7 +121,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        <div className="v-panel p-4 flex items-center space-x-4 bg-white">
+        <div className="v-panel p-4 flex items-center space-x-4 bg-white border border-slate-200">
           <div className="p-3 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
             <CheckCircle2 className="h-6 w-6" />
           </div>
@@ -90,7 +133,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        <div className="v-panel p-4 flex items-center space-x-4 bg-white">
+        <div className="v-panel p-4 flex items-center space-x-4 bg-white border border-slate-200">
           <div className="p-3 rounded-lg bg-rose-50 text-rose-600 border border-rose-100">
             <AlertTriangle className="h-6 w-6" />
           </div>
@@ -103,11 +146,106 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* Filter & Search Bar */}
-      <div className="v-panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white">
+      {/* 2. Interactive Calendar Panel */}
+      <div className="v-panel p-5 bg-white border border-slate-200 space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-100 pb-3">
+          <div className="flex items-center space-x-2">
+            <CalendarIcon className="h-5 w-5 text-amber-500" />
+            <h3 className="font-bold text-slate-800 text-sm">📅 ปฏิทินกำหนดการงานติดตั้ง (July 2026)</h3>
+          </div>
+          
+          <button
+            onClick={() => setSelectedDate(null)}
+            className={`px-3 py-1.5 rounded-full font-bold text-xs cursor-pointer border transition flex items-center gap-1.5 ${
+              selectedDate === null 
+                ? 'bg-amber-500 border-amber-600 text-slate-900 shadow-sm'
+                : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+            }`}
+          >
+            📋 แสดงงานติดตั้งทั้งหมดทุกวัน
+          </button>
+        </div>
+
+        {/* Calendar Grid wrapper */}
+        <div className="max-w-3xl mx-auto">
+          {/* Weekday headers */}
+          <div className="grid grid-cols-7 text-center font-bold text-[11px] text-slate-400 uppercase tracking-wider py-1 border-b border-slate-100">
+            {weekdays.map((w, idx) => (
+              <span key={w} className={idx === 0 ? 'text-rose-500' : idx === 6 ? 'text-blue-500' : ''}>
+                {w}
+              </span>
+            ))}
+          </div>
+
+          {/* Grid Cells */}
+          <div className="grid grid-cols-7 gap-1.5 pt-2 text-xs">
+            {/* Blank padding cells */}
+            {paddingDays.map((_, i) => (
+              <div key={`pad-${i}`} className="min-h-16 bg-slate-50/50 rounded-lg border border-transparent"></div>
+            ))}
+
+            {/* July 1 to 31 cells */}
+            {calendarDays.map((day) => {
+              const dateStr = `2026-07-${String(day).padStart(2, '0')}`;
+              const count = getBookingsCountForDate(dateStr);
+              const summary = getBookingsStatusSummary(dateStr);
+              const isSelected = selectedDate === dateStr;
+
+              return (
+                <div
+                  key={day}
+                  onClick={() => setSelectedDate(dateStr)}
+                  className={`min-h-16 p-1.5 rounded-lg border flex flex-col justify-between transition cursor-pointer select-none ${
+                    isSelected
+                      ? 'bg-amber-500 border-amber-600 text-slate-900 shadow-md scale-103 font-bold ring-1 ring-amber-400'
+                      : count > 0
+                      ? 'bg-amber-500/5 hover:bg-amber-500/10 border-amber-500/30 text-slate-800'
+                      : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-400'
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className={`text-[11px] font-bold ${isSelected ? 'text-slate-900' : 'text-slate-600'}`}>{day}</span>
+                    {count > 0 && !isSelected && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    )}
+                  </div>
+
+                  {count > 0 ? (
+                    <div className="space-y-0.5 mt-1 text-center">
+                      <span className={`px-1 py-0.5 rounded text-[8px] font-black tracking-wide block border ${
+                        isSelected 
+                          ? 'bg-slate-950 text-amber-400 border-slate-950 shadow-inner' 
+                          : 'bg-amber-500 text-slate-900 border-amber-500/30'
+                      }`}>
+                        {count} คิวงาน
+                      </span>
+                      {/* Mini breakdown dots */}
+                      <div className="flex justify-center gap-0.5 text-[7px] font-bold">
+                        {summary.pending > 0 && <span className={isSelected ? 'text-slate-900' : 'text-amber-600'}>⏳{summary.pending}</span>}
+                        {summary.active > 0 && <span className={isSelected ? 'text-slate-900' : 'text-indigo-600'}>🏃{summary.active}</span>}
+                        {summary.closed > 0 && <span className={isSelected ? 'text-slate-900' : 'text-emerald-600'}>✅{summary.closed}</span>}
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-[8px] text-slate-300 italic block text-right">ว่าง</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 justify-center">
+          <Info className="h-3.5 w-3.5 text-slate-400" />
+          <span>คลิกเลือกวันที่ในตารางปฏิทินด้านบน เพื่อเจาะลึกคิวงานและใช้ตัวกรองสืบค้นเฉพาะวันนั้น ๆ</span>
+        </div>
+      </div>
+
+      {/* 3. Filter & Search Bar */}
+      <div className="v-panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-slate-200">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500">
-            <Filter className="h-4 w-4 text-blue-600" />
+          <div className="flex items-center space-x-2 text-xs font-bold text-slate-500">
+            <Filter className="h-4 w-4 text-amber-500" />
             <span>ตัวกรองคิวติดตั้ง:</span>
           </div>
 
@@ -129,9 +267,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             className="v-input py-1 text-xs"
           >
             <option value="ALL">ทุกสถานะงาน</option>
+            <option value="Pending Dispatch">Pending Dispatch</option>
             <option value="Scheduled">Scheduled</option>
             <option value="Dispatched to KANNA">Dispatched to KANNA</option>
             <option value="STS In-Progress">STS In-Progress</option>
+            <option value="QC Inspection">QC Inspection</option>
             <option value="Passed (Closed)">Passed (Closed)</option>
             <option value="Penalty E-CN Issued">Penalty E-CN Issued</option>
           </select>
@@ -143,26 +283,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             placeholder="ค้นหา Ref, ชื่อลูกค้า, หรือประเภทงาน..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="v-input w-full md:w-72 pl-9 py-1 text-xs"
+            className="v-input w-full md:w-72 pl-9 py-1 text-xs rounded-full"
           />
-          <Layers className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
+          <Layers className="h-4 w-4 text-slate-400 absolute left-3 top-2" />
         </div>
       </div>
 
-      {/* Main Queue List Table */}
-      <div className="v-panel overflow-hidden bg-white">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+      {/* 4. Main Queue List Table */}
+      <div className="v-panel overflow-hidden bg-white border border-slate-200">
+        <div className="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
-            <h2 className="text-base font-bold text-slate-800">ตารางรายการคิวงานติดตั้ง (Real-Time Installation Queue)</h2>
-            <span className="px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-600 font-semibold border border-slate-200">
+            <h2 className="text-sm md:text-base font-bold text-slate-800">{formatDateThai(selectedDate)}</h2>
+            <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-500 text-slate-900 font-bold border border-amber-500/20">
               {filteredBookings.length} รายการ
             </span>
           </div>
-          <span className="text-xs text-slate-400">ข้อมูลเชื่อมโยงเรียลไทม์</span>
+          <span className="text-[10px] text-slate-400 font-medium">ข้อมูลอิงตามวันที่เลือกและตัวกรองค้นหาด้านบน</span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="v-table text-xs">
+        <div className="overflow-x-auto text-xs">
+          <table className="v-table">
             <thead>
               <tr>
                 <th className="px-4 py-3 text-left">Booking Ref / วันเวลา</th>
@@ -178,7 +318,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               {filteredBookings.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-8 text-center text-slate-400 italic">
-                    ไม่พบรายการคิวงานติดตั้งในระบบ
+                    ไม่พบรายการคิวงานติดตั้งสำหรับตัวกรองและวันที่เลือก
                   </td>
                 </tr>
               ) : (
@@ -188,15 +328,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <tr key={b.id} className="hover:bg-slate-50">
                       <td className="px-4 py-3 font-mono">
                         <div className="font-bold text-slate-800">{b.bookingRef}</div>
-                        <div className="text-[11px] text-slate-500 mt-0.5">{b.bookingDate} | {b.timeSlot}</div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">จาก {b.createdFrom}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">{b.bookingDate} | {b.timeSlot}</div>
+                        <div className="text-[9px] text-slate-400 mt-0.5">จาก {b.createdFrom}</div>
                       </td>
 
                       <td className="px-4 py-3">
                         <div className="font-semibold text-slate-800">{b.customerName}</div>
-                        <div className="text-[11px] text-slate-500 flex items-center space-x-1 mt-0.5">
+                        <div className="text-[10px] text-slate-500 flex items-center space-x-1 mt-0.5">
                           <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
-                          <span className="truncate max-w-[180px]">{b.addressZone}</span>
+                          <span className="truncate max-w-[160px]">{b.addressZone}</span>
                         </div>
                       </td>
 
@@ -205,7 +345,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </td>
 
                       <td className="px-4 py-3">
-                        <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
                           Skill Level {b.requiredSkillLevel}
                         </span>
                       </td>
@@ -219,8 +359,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                               className="h-7 w-7 rounded-lg object-cover border border-slate-200"
                             />
                             <div>
-                              <div className="font-semibold text-slate-800 text-[11px]">{assignedTech.name}</div>
-                              <div className="flex items-center space-x-2 text-[10px] text-slate-500">
+                              <div className="font-semibold text-slate-800 text-[10px]">{assignedTech.name}</div>
+                              <div className="flex items-center space-x-2 text-[9px] text-slate-500">
                                 <span className={
                                   assignedTech.tier === 'Gold' ? 'text-amber-600 font-bold' :
                                   assignedTech.tier === 'Silver' ? 'text-slate-500 font-bold' :
@@ -238,12 +378,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </td>
 
                       <td className="px-4 py-3">
-                        <span className={`px-2.5 py-0.5 rounded text-[11px] font-semibold border ${getStatusBadge(b.status)}`}>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${getStatusBadge(b.status)}`}>
                           {b.status}
                         </span>
                         {b.penaltyRef && (
-                          <div className="text-[10px] text-rose-600 font-mono mt-1 flex items-center space-x-0.5">
-                            <ShieldAlert className="h-3 w-3" />
+                          <div className="text-[9px] text-rose-600 font-mono mt-1 flex items-center space-x-0.5">
+                            <ShieldAlert className="h-3 w-3 animate-pulse" />
                             <span>{b.penaltyRef}</span>
                           </div>
                         )}
@@ -251,10 +391,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end space-x-1.5">
-                           {b.status === 'Scheduled' && (
+                          {b.status === 'Scheduled' && (
                             <button
                               onClick={() => onDispatchToKanna(b.id)}
-                              className="px-2 py-1 rounded bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-[11px] transition flex items-center space-x-1 shadow-sm border-0 cursor-pointer"
+                              className="px-2 py-1 rounded bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-[10px] transition flex items-center space-x-1 shadow-sm border-0 cursor-pointer"
                             >
                               <Send className="h-3 w-3" />
                               <span>ส่ง KANNA</span>
@@ -263,7 +403,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                           <button
                             onClick={() => onSelectBookingForSim(b)}
-                            className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-[11px] transition flex items-center space-x-1 font-semibold cursor-pointer"
+                            className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-[10px] transition flex items-center space-x-1 font-semibold cursor-pointer"
                           >
                             <span>จำลอง Flow</span>
                             <ArrowRight className="h-3 w-3" />
