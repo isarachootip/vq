@@ -88,6 +88,8 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
   const [techAppExperience, setTechAppExperience] = useState<string>('1-3 ปี');
   const [isTechAppSuccess, setIsTechAppSuccess] = useState<boolean>(false);
   const [techAppRef, setTechAppRef] = useState<string>('');
+  const [techAppLineId, setTechAppLineId] = useState<string>('');
+  const [techAppImage, setTechAppImage] = useState<string>('');
 
   // Customer Webchat states
   const [showWebchat, setShowWebchat] = useState<boolean>(false);
@@ -1092,6 +1094,18 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
                   </div>
 
                   <div>
+                    <label className="block font-bold text-slate-600 mb-1">LINE ID ผู้ประสานงาน:</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="ระบุ LINE ID (เช่น @vfixq_chang)"
+                      value={techAppLineId}
+                      onChange={(e) => setTechAppLineId(e.target.value)}
+                      className="v-input w-full py-2"
+                    />
+                  </div>
+
+                  <div>
                     <label className="block font-bold text-slate-600 mb-1">โซนหลักที่รับปฏิบัติงาน:</label>
                     <select
                       value={techAppZone}
@@ -1153,6 +1167,40 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
                 </div>
 
                 <div className="space-y-1.5 text-xs">
+                  <label className="block font-bold text-slate-600">รูปภาพหัวหน้าทีมช่าง (Profile Picture):</label>
+                  <div className="flex items-center gap-4 p-3 bg-slate-100/50 rounded-xl border border-slate-200">
+                    <div className="w-14 h-14 rounded-lg bg-slate-200 border border-slate-300 overflow-hidden shrink-0 flex items-center justify-center text-slate-400 font-mono text-[9px] relative">
+                      {techAppImage ? (
+                        <img src={techAppImage} alt="Profile preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <span>ไม่มีรูป</span>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        required
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              if (event.target?.result) {
+                                setTechAppImage(event.target.result as string);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="text-[10px] text-slate-500 w-full file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-600 file:cursor-pointer"
+                      />
+                      <p className="text-[8px] text-slate-400">รองรับไฟล์ PNG, JPG หรือ JPEG ขนาดไม่เกิน 5MB</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-xs">
                   <label className="block font-bold text-slate-600">เอกสารแนบผู้สมัคร (รูปถ่ายบัตร ปชช. / บัตรวิชาชีพช่างไฟฟ้า):</label>
                   <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
                     <p className="text-[10px] text-slate-400 font-bold">📄 ลากรูปไฟล์เอกสารใบรับรองฝีมือแรงงานช่างมาวางที่นี่ (Simulated Upload)</p>
@@ -1183,19 +1231,31 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
                 <div className="mx-auto w-14 h-14 bg-emerald-950/40 rounded-full border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-2xl font-bold">
                   ✓
                 </div>
+                
+                {techAppImage && (
+                  <div className="mx-auto w-20 h-20 rounded-full border-2 border-amber-500 overflow-hidden shadow-md">
+                    <img src={techAppImage} alt="tech avatar" className="w-full h-full object-cover" />
+                  </div>
+                )}
+
                 <div className="space-y-1">
                   <h3 className="font-bold text-slate-800 text-sm md:text-base">ยื่นใบสมัครร่วมเป็นช่างสำเร็จ!</h3>
                   <p className="text-xs text-slate-500">
-                    ... สิทธิ์คำขอตรวจสอบการสมัคร: <span className="font-mono font-bold text-amber-500">{techAppRef}</span>
+                    เลขที่ใบสมัครตรวจสอบของคุณ: <span className="font-mono font-bold text-amber-500">{techAppRef}</span>
                   </p>
                 </div>
                 <p className="text-[11px] text-slate-400 leading-normal">
-                  ข้อมูลประวัติของทีมช่าง {techAppName} ได้ถูกจัดเก็บเข้าคลังตรวจสอบของระบบ vFixQ เรียบร้อยแล้ว ทีมผู้ควบคุมการรับช่างจะติดต่อกลับผ่านเบอร์มือถือ {techAppPhone} ของคุณภายใน 3 วันทำการ
+                  ข้อมูลประวัติของทีมช่าง {techAppName} (LINE ID: {techAppLineId || 'ไม่ระบุ'}) ได้ถูกจัดเก็บเข้าคลังตรวจสอบของระบบ vFixQ เรียบร้อยแล้ว ทีมผู้ควบคุมการรับช่างจะติดต่อกลับผ่านเบอร์มือถือ {techAppPhone} ของคุณภายใน 3 วันทำการ
                 </p>
                 <button
                   onClick={() => {
                     setShowTechAppModal(false);
                     setIsTechAppSuccess(false);
+                    // Reset fields
+                    setTechAppLineId('');
+                    setTechAppImage('');
+                    setTechAppName('');
+                    setTechAppPhone('');
                   }}
                   className="w-full v-btn-secondary py-2 text-xs cursor-pointer"
                 >
