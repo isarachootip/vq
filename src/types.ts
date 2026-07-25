@@ -188,3 +188,17 @@ export interface PortalBanner {
   campaignTag: string;
   isActive: boolean;
 }
+
+export interface TechnicianApplication {
+  id: string;
+  refNum: string;
+  name: string;
+  phone: string;
+  lineId: string;
+  zone: string;
+  skills: string[];
+  experience: string;
+  avatarUrl?: string;
+  status: 'reject' | 'accept' | 'approve' | 'sign contract' | 'employee';
+  appliedAt: string;
+}

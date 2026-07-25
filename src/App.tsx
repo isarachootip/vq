@@ -14,8 +14,9 @@ import { BackendSettingsView } from './components/BackendSettingsView';
 import { BranchAnnouncementsView } from './components/BranchAnnouncementsView';
 import { InternalChatView } from './components/InternalChatView';
 import { BannerManagerView } from './components/BannerManagerView';
+import { TechApplicationsView } from './components/TechApplicationsView';
 
-import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner } from './types';
+import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner, TechnicianApplication, TechnicianSkill, SkillCategory } from './types';
 import { 
   INITIAL_TECHNICIANS, 
   INITIAL_BOOKINGS, 
@@ -43,7 +44,8 @@ import {
   Settings,
   Megaphone,
   MessageSquare,
-  Image as ImageIcon
+  Image as ImageIcon,
+  FileText
 } from 'lucide-react';
 
 const INITIAL_BANNERS: PortalBanner[] = [
@@ -54,6 +56,35 @@ const INITIAL_BANNERS: PortalBanner[] = [
     description: 'รับโปรโมชันจองช่างขยายประกันเพิ่ม 365 วัน ฟรีบริการพ่นน้ำยาโอโซนฆ่าเชื้อโรค มูลค่า 350.-',
     campaignTag: 'Campaign',
     isActive: true
+  }
+];
+
+const INITIAL_TECH_APPLICATIONS: TechnicianApplication[] = [
+  {
+    id: 'app-1',
+    refNum: 'AP-T-582012',
+    name: 'ช่างอำนาจ ยอดฝีมือ',
+    phone: '0899998888',
+    lineId: 'amnart_cool',
+    zone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)',
+    skills: ['ระบบปรับอากาศ (ล้าง/ติดตั้ง)', 'งานไฟฟ้าและเครื่องใช้ไฟฟ้า'],
+    experience: '3-5 ปี',
+    avatarUrl: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150',
+    status: 'accept',
+    appliedAt: '2026-07-24 14:30'
+  },
+  {
+    id: 'app-2',
+    refNum: 'AP-T-239108',
+    name: 'ช่างสมหมาย การไฟฟ้า',
+    phone: '0851112222',
+    lineId: 'sommai_volt',
+    zone: 'Zone 2: นนทบุรี - ปทุมธานี (ราชพฤกษ์ - แจ้งวัฒนะ)',
+    skills: ['งานไฟฟ้าและเครื่องใช้ไฟฟ้า', 'งานประปาและห้องน้ำ'],
+    experience: 'มากกว่า 5 ปี',
+    avatarUrl: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150',
+    status: 'approve',
+    appliedAt: '2026-07-25 09:15'
   }
 ];
 
@@ -123,6 +154,7 @@ export function App() {
   const [announcements, setAnnouncements] = useState<BranchAnnouncement[]>(INITIAL_ANNOUNCEMENTS);
   const [chatChannels, setChatChannels] = useState<ChatChannel[]>(INITIAL_CHANNELS);
   const [banners, setBanners] = useState<PortalBanner[]>(INITIAL_BANNERS);
+  const [techApplications, setTechApplications] = useState<TechnicianApplication[]>(INITIAL_TECH_APPLICATIONS);
 
   // Configuration States
   const [matchWeights, setMatchWeights] = useState<any>({
@@ -202,6 +234,91 @@ export function App() {
   const handleDeleteBanner = (id: string) => {
     setBanners((prev) => prev.filter((b) => b.id !== id));
     showToast('ลบแบนเนอร์ออกเรียบร้อยแล้ว');
+  };
+
+  const handleRegisterTechnician = (appData: {
+    name: string;
+    phone: string;
+    lineId: string;
+    zone: string;
+    skills: string[];
+    experience: string;
+    avatarUrl?: string;
+    refNum: string;
+  }) => {
+    const newApp: TechnicianApplication = {
+      id: `app-${Date.now()}`,
+      refNum: appData.refNum,
+      name: appData.name,
+      phone: appData.phone,
+      lineId: appData.lineId,
+      zone: appData.zone,
+      skills: appData.skills,
+      experience: appData.experience,
+      avatarUrl: appData.avatarUrl || 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150',
+      status: 'accept',
+      appliedAt: new Date().toISOString().replace('T', ' ').substring(0, 16)
+    };
+    setTechApplications((prev) => [newApp, ...prev]);
+  };
+
+  const handleUpdateTechAppStatus = (id: string, newStatus: TechnicianApplication['status']) => {
+    setTechApplications((prev) => 
+      prev.map((app) => {
+        if (app.id === id) {
+          if (newStatus === 'employee' && app.status !== 'employee') {
+            // Promoted to active technician
+            const mappedSkills: TechnicianSkill[] = app.skills.map((s) => {
+              let category: SkillCategory = 'Electrical & Smart Home';
+              if (s.includes('ปรับอากาศ')) category = 'Air Condition & HVAC';
+              else if (s.includes('ไฟฟ้า')) category = 'Electrical & Smart Home';
+              else if (s.includes('บิลต์อิน') || s.includes('เฟอร์นิเจอร์')) category = 'Built-in Furniture';
+              else if (s.includes('ปูพื้น') || s.includes('ผนัง')) category = 'Flooring & Tile';
+              else if (s.includes('ประปา') || s.includes('ห้องน้ำ')) category = 'Plumbing & Sanitary';
+              else if (s.includes('รีโนเวท') || s.includes('ต่อเติม')) category = 'Built-in Furniture';
+
+              return {
+                category,
+                level: 2,
+                isCertified: true
+              };
+            });
+
+            const techNum = Math.floor(100 + Math.random() * 900);
+            const newTech: Technician = {
+              id: `tech-${techNum}`,
+              code: `T-${techNum}`,
+              name: app.name,
+              phone: app.phone,
+              avatar: app.avatarUrl || 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=150',
+              rating: 4.5,
+              skills: mappedSkills,
+              status: 'Available',
+              tier: 'Silver',
+              completedJobs: 0,
+              penaltyPoints: 0,
+              activePenaltiesCount: 0,
+              primaryZone: app.zone,
+              secondaryZones: [],
+              dailyCapacityHours: 8,
+              bookedHoursToday: 0,
+              branchId: 'br-1', // Default Bangkok head branch
+            };
+            setTechnicians((prevTechs) => [...prevTechs, newTech]);
+            showToast(`🎉 บรรจุช่าง ${app.name} เข้าระบบและอัปเดตรายชื่อในทะเบียนช่างเรียบร้อย!`);
+          } else {
+            showToast(`ปรับปรุงสถานะใบสมัครช่างเป็น ${newStatus} เรียบร้อยแล้ว`);
+          }
+          return { ...app, status: newStatus };
+        }
+        return app;
+      })
+    );
+  };
+
+  const handleDeleteTechApplication = (id: string) => {
+    setTechApplications((prev) => prev.filter((a) => a.id !== id));
+    showToast('ลบเอกสารใบสมัครช่างเรียบร้อยแล้ว');
   };
 
   const handleDeleteAnnouncement = (id: string) => {
@@ -391,6 +508,7 @@ export function App() {
     { id: 'branch-manager', label: 'ข้อมูลสาขา (Branch)', icon: Building },
     { id: 'branch-map', label: 'แผนที่สาขา (All-Store Map)', icon: MapPin },
     { id: 'tech-manager', label: 'ข้อมูลช่าง & Skill Matrix', icon: Users },
+    { id: 'tech-applications', label: 'จัดการใบสมัครช่าง (Recruitment)', icon: FileText },
     { id: 'zone-manager', label: 'ข้อมูลพื้นที่และโซน (Zone)', icon: Map },
     { id: 'skill-manager', label: 'ข้อมูลทักษะช่าง (Skill)', icon: Wrench },
     { id: 'divider-2', label: 'จำลองผลลัพธ์', isDivider: true },
@@ -419,6 +537,7 @@ export function App() {
           <VfixqPortalView
             branches={branches}
             banners={banners}
+            onRegisterTechnician={handleRegisterTechnician}
             onConfirmBooking={(b) => {
               handleConfirmBooking(b);
               showToast('สร้างคิวติดตั้งงานและคำนวณ Match Score สำเร็จ!');
@@ -651,6 +770,7 @@ export function App() {
             <VfixqPortalView
               branches={branches}
               banners={banners}
+              onRegisterTechnician={handleRegisterTechnician}
               onConfirmBooking={handleConfirmBooking}
               onNavigateToTab={(tabId) => setActiveTab(tabId)}
             />
@@ -662,6 +782,14 @@ export function App() {
               onUpdateMatchWeights={setMatchWeights}
               systemConfig={systemConfig}
               onUpdateSystemConfig={setSystemConfig}
+            />
+          )}
+
+          {activeTab === 'tech-applications' && (
+            <TechApplicationsView
+              applications={techApplications}
+              onUpdateStatus={handleUpdateTechAppStatus}
+              onDeleteApplication={handleDeleteTechApplication}
             />
           )}
 

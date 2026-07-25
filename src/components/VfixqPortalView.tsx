@@ -25,6 +25,16 @@ interface VfixqPortalViewProps {
   onConfirmBooking: (newBooking: QueueBooking) => void;
   onNavigateToTab: (tabId: string) => void;
   banners: PortalBanner[];
+  onRegisterTechnician: (app: {
+    name: string;
+    phone: string;
+    lineId: string;
+    zone: string;
+    skills: string[];
+    experience: string;
+    avatarUrl?: string;
+    refNum: string;
+  }) => void;
 }
 
 interface ServiceItem {
@@ -42,7 +52,8 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
   branches,
   onConfirmBooking,
   onNavigateToTab,
-  banners
+  banners,
+  onRegisterTechnician
 }) => {
   const [activeCategory, setActiveCategory] = useState<string>('ทั้งหมด');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -1055,9 +1066,20 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
             {!isTechAppSuccess ? (
               <form onSubmit={(e) => {
                 e.preventDefault();
-                const refNum = Math.floor(100000 + Math.random() * 900000);
-                setTechAppRef(`AP-T-${refNum}`);
+                const num = Math.floor(100000 + Math.random() * 900000);
+                const generatedRef = `AP-T-${num}`;
+                setTechAppRef(generatedRef);
                 setIsTechAppSuccess(true);
+                onRegisterTechnician({
+                  name: techAppName,
+                  phone: techAppPhone,
+                  lineId: techAppLineId,
+                  zone: techAppZone,
+                  skills: techAppSkills,
+                  experience: techAppExperience,
+                  avatarUrl: techAppImage,
+                  refNum: generatedRef
+                });
               }} className="space-y-4">
                 <div className="border-b border-slate-200 pb-2">
                   <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
