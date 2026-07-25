@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Branch, QueueBooking, PortalBanner, ServiceItem } from '../types';
 import { SERVICE_ZONES } from '../mockData';
 import { 
@@ -53,6 +53,15 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
   
   const activeBanners = banners.filter(b => b.isActive);
   const safeBannerIdx = activeBannerIdx >= activeBanners.length ? 0 : activeBannerIdx;
+
+  // Auto-slide effect for banners
+  useEffect(() => {
+    if (activeBanners.length <= 1) return;
+    const interval = setInterval(() => {
+      setActiveBannerIdx((prev) => (prev + 1) % activeBanners.length);
+    }, 5000); // Slide every 5 seconds
+    return () => clearInterval(interval);
+  }, [activeBanners.length]);
   
   const handleNextBanner = () => {
     if (activeBanners.length <= 1) return;
@@ -345,7 +354,7 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
           
           {/* Dynamic Panorama Banner Slider */}
           <div className="v-panel p-1 bg-gradient-to-r from-amber-500/25 via-slate-900 to-amber-500/25 rounded-2xl overflow-hidden border border-amber-500/30 shadow-lg">
-            <div className="relative rounded-xl overflow-hidden bg-slate-950 h-72 sm:h-80 md:h-96 w-full flex flex-col justify-end shadow-2xl">
+            <div className="relative rounded-xl overflow-hidden bg-slate-950 h-80 sm:h-96 md:h-[400px] lg:h-[460px] w-full flex flex-col justify-end shadow-2xl transition-all duration-500">
               
               {/* Slide image */}
               <img 
