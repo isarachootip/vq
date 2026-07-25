@@ -1309,20 +1309,24 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
           </div>
         </div>
 
-        <div className="space-y-2.5">
-          <h4 className="font-bold text-slate-800">ติดต่อสมัครร่วมเป็นช่างกับเรา</h4>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            สำหรับการติดต่อประสานงานเรื่องการสมัครบริการช่างของ vFixQ เพื่อรับงานติดตั้งสินค้า
-          </p>
+        <div className="space-y-3">
+          <h4 className="font-bold text-slate-800">ขั้นตอนการสมัครร่วมเป็นทีมช่าง vFixQ</h4>
+          <div className="text-[10px] text-slate-500 space-y-1 bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs leading-relaxed">
+            <div className="flex items-center gap-1.5"><span className="w-4 h-4 bg-amber-500 text-slate-900 rounded-full flex items-center justify-center font-bold text-[8px] shrink-0">1</span> <span>ส่งข้อมูลสมัคร & รูปถ่ายช่าง (Accept)</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-4 h-4 bg-amber-500 text-slate-900 rounded-full flex items-center justify-center font-bold text-[8px] shrink-0">2</span> <span>ประเมินระดับฝีมือช่าง (Approve)</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-4 h-4 bg-amber-500 text-slate-900 rounded-full flex items-center justify-center font-bold text-[8px] shrink-0">3</span> <span>ลงนามสัญญาปฏิบัติงาน (Sign Contract)</span></div>
+            <div className="flex items-center gap-1.5"><span className="w-4 h-4 bg-amber-500 text-slate-900 rounded-full flex items-center justify-center font-bold text-[8px] shrink-0">4</span> <span>บรรจุขึ้นระบบทะเบียนช่าง (Employee)</span></div>
+          </div>
+          
           <button
             onClick={() => setShowTechAppModal(true)}
-            className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-slate-900 font-bold text-xs rounded-lg transition shadow-md border-0 cursor-pointer text-center block mt-1"
+            className="w-full sm:w-auto px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs rounded-lg transition shadow-md border-0 cursor-pointer text-center block mt-2"
           >
             📋 กรอกใบสมัครร่วมเป็นช่าง vFixQ
           </button>
           <ul className="space-y-1.5 font-medium pt-1.5">
-            <li><button onClick={() => setInfoModalTab('terms')} className="hover:text-amber-500 cursor-pointer">ข้อกำหนดเงื่อนไขประกันงานติดตั้ง</button></li>
-            <li><button onClick={() => onNavigateToTab('km-hub')} className="hover:text-amber-500 cursor-pointer">ศูนย์สืบค้นองค์ความรู้ (KM Hub)</button></li>
+            <li><button onClick={() => setInfoModalTab('terms')} className="hover:text-amber-500 cursor-pointer text-slate-500 bg-transparent border-0 p-0 text-left">ข้อกำหนดเงื่อนไขประกันงานติดตั้ง</button></li>
+            <li><button onClick={() => onNavigateToTab('km-hub')} className="hover:text-amber-500 cursor-pointer text-slate-500 bg-transparent border-0 p-0 text-left">ศูนย์สืบค้นองค์ความรู้ (KM Hub)</button></li>
           </ul>
         </div>
 
