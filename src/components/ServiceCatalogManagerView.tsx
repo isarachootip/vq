@@ -34,9 +34,9 @@ const CATEGORY_PRESETS = [
 ];
 
 const PRESET_SERVICE_IMAGES = [
-  { name: 'เครื่องปรับอากาศ (AC)', url: '/ac_service_1784935924336.jpg' },
-  { name: 'ชุดครัวและบิลต์อิน (Kitchen)', url: '/kitchen_service_1784935953733.jpg' },
-  { name: 'งานพื้นไม้และเซรามิก (Flooring)', url: '/flooring_service_1784935940227.jpg' }
+  { name: 'เครื่องปรับอากาศ (AC)', url: '/ac_service.jpg' },
+  { name: 'ชุดครัวและบิลต์อิน (Kitchen)', url: '/kitchen_service.jpg' },
+  { name: 'งานพื้นไม้และเซรามิก (Flooring)', url: '/flooring_service.jpg' }
 ];
 
 export const ServiceCatalogManagerView: React.FC<ServiceCatalogManagerViewProps> = ({

@@ -97,7 +97,7 @@ const INITIAL_SERVICES: ServiceItem[] = [
     category: 'ระบบปรับอากาศ',
     priceText: 'เริ่มต้น 3,500 บาท',
     priceNumber: 3500,
-    image: '/ac_service_1784935924336.jpg',
+    image: '/ac_service.jpg',
     description: 'บริการเดินท่อน้ำยาคอมเพรสเซอร์ แขวนคอยล์เย็น ติดตั้งขาแขวนแอร์ภายนอก และเทสแรงดันระบบน้ำยาแอร์ R32 ประกันการทำงาน 180 วัน',
     requiredSkillLevel: 3
   },
@@ -107,7 +107,7 @@ const INITIAL_SERVICES: ServiceItem[] = [
     category: 'เฟอร์นิเจอร์ Fit-In',
     priceText: 'เริ่มต้น 12,000 บาท',
     priceNumber: 12000,
-    image: '/kitchen_service_1784935953733.jpg',
+    image: '/kitchen_service.jpg',
     description: 'ประกอบตู้ลอยและตู้ตั้งพื้น Built-in, ติดตั้งหินแกรนิตท็อปครัว, ต่อช่องดูดควันเจาะหน้ากากระบาย และจัดบานพับ Soft-close ตั้งองศาระดับสูงสุด',
     requiredSkillLevel: 3
   },
@@ -117,7 +117,7 @@ const INITIAL_SERVICES: ServiceItem[] = [
     category: 'เฟอร์นิเจอร์ Fit-In',
     priceText: 'เริ่มต้น 4,500 บาท',
     priceNumber: 4500,
-    image: '/kitchen_service_1784935953733.jpg',
+    image: '/kitchen_service.jpg',
     description: 'ประกอบตู้เสื้อโครงสร้างอะลูมิเนียม หน้ากระจกเทมเปอร์ แขวนรางเลื่อน และซ่อนระบบไฟ LED หรูหราส่องสว่างใต้ชั้นวาง',
     requiredSkillLevel: 2
   },
@@ -127,7 +127,7 @@ const INITIAL_SERVICES: ServiceItem[] = [
     category: 'พื้น ผนัง และฝ้าเพดาน',
     priceText: 'เริ่มต้น 450 บาท / ตร.ม.',
     priceNumber: 450,
-    image: '/flooring_service_1784935940227.jpg',
+    image: '/flooring_service.jpg',
     description: 'ปรับระดับหน้าดิน/ปูนเดิม รองแผ่นโฟมหนากันความชื้น ติดตั้งแผ่นพื้น SPC แบรนด์นำเข้า ล็อกแน่นสนิท ทนน้ำและรอยขีดข่วน 100%',
     requiredSkillLevel: 2
   },
@@ -137,7 +137,7 @@ const INITIAL_SERVICES: ServiceItem[] = [
     category: 'Smart living',
     priceText: 'เริ่มต้น 1,800 บาท',
     priceNumber: 1800,
-    image: '/ac_service_1784935924336.jpg',
+    image: '/ac_service.jpg',
     description: 'ติดตั้งระบบล็อกประตูดิจิทัล (Digital Door Lock) บนประตูชนิดไม้หรือโลหะ เซ็ตระบบ Wi-Fi และเชื่อมเกตเวย์ผ่านสมาร์ทโฟน',
     requiredSkillLevel: 2
   },
@@ -147,8 +147,8 @@ const INITIAL_SERVICES: ServiceItem[] = [
     category: 'อื่น ๆ',
     priceText: 'เริ่มต้น 3,200 บาท',
     priceNumber: 3200,
-    image: '/flooring_service_1784935940227.jpg',
-    description: 'ติดตั้งผ้าม่านพับ/ผ้าม่านรางมอเตอร์ เชื่อมต่อ Smart Home สั่งงานด้วยเสียง พร้อมปูวอลเปเปอร์กาวในตัวเกรดพรีเมียม',
+    image: '/flooring_service.jpg',
+    description: 'ติดตั้งผ้าม่านพับ/ผ้าม่านรางมอเตอร์ เชื่อมต่อ Smart Home สั่งงานด้วยเสียง พร้อมปูวอลเปเปอร์กาวในตัวเกรดพเกรดพรีเมียม',
     requiredSkillLevel: 1
   }
 ];
