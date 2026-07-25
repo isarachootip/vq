@@ -11,8 +11,10 @@ import { SkillManager } from './components/SkillManager';
 import { KmHubView } from './components/KmHubView';
 import { VfixqPortalView } from './components/VfixqPortalView';
 import { BackendSettingsView } from './components/BackendSettingsView';
+import { BranchAnnouncementsView } from './components/BranchAnnouncementsView';
+import { InternalChatView } from './components/InternalChatView';
 
-import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill } from './types';
+import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel } from './types';
 import { 
   INITIAL_TECHNICIANS, 
   INITIAL_BOOKINGS, 
@@ -37,8 +39,61 @@ import {
   ChevronRight,
   BookOpen,
   ShoppingBag,
-  Settings
+  Settings,
+  Megaphone,
+  MessageSquare
 } from 'lucide-react';
+
+const INITIAL_ANNOUNCEMENTS: BranchAnnouncement[] = [
+  {
+    id: 'ann-1',
+    title: 'ด่วนที่สุด! ต้องการทีมช่างแอร์ 2 ทีม ประจำโซนบางนา-ประเวศ',
+    content: 'มีงานติดตั้งคิวงานแอร์ Multi-Split ค้างจ่ายงานด่วน ช่างที่มีทักษะติดตั้งเลเวล 3 และมีเครื่องมือพร้อมเข้างาน โพสต์จองคิวชาร์จงานได้ทันที ติดต่อ Call Center 1308 หรือแอดมินสาขาบางนา',
+    category: 'งานด่วน',
+    priority: 'สูง',
+    branchName: 'ไทวัสดุ บางนา',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'ann-2',
+    title: 'ประกาศแจ้งการลงสนามอบรมโปรแกรม STS เวอร์ชัน 2.0 สัปดาห์หน้า',
+    content: 'ขอเชิญหัวหน้าทีมช่างติดตั้งเข้าร่วมอบรมทดสอบการบันทึกสถานะ Check-in และถ่ายภาพส่งมอบงานในระบบ STS เพื่อหลีกเลี่ยงการโดนหักแต้ม E-CN วันพฤหัสบดีนี้ ณ ห้องประชุมชั้น 6 เกตเวย์ บางซื่อ',
+    category: 'อบรมระบบ',
+    priority: 'ปกติ',
+    branchName: 'สำนักงานใหญ่',
+    createdAt: new Date(Date.now() - 86400000).toISOString()
+  }
+];
+
+const INITIAL_CHANNELS: ChatChannel[] = [
+  {
+    id: 'ch-1',
+    name: 'ช่างประวิทย์ (แอร์ด่วน AC-01)',
+    type: 'technician',
+    avatarInitials: 'PW',
+    lastMessage: 'ผมกำลังเดินทางเข้าหน้านัดหมายติดตั้งครับ',
+    unreadCount: 1,
+    techId: 'tech-01',
+    messages: [
+      { id: 'm1', sender: 'technician', senderName: 'ช่างประวิทย์', text: 'สวัสดีครับแอดมิน มีใบสั่งงานติดตั้งเข้ามาในระบบ STS แล้วครับ', timestamp: '10:15' },
+      { id: 'm2', sender: 'coordinator', senderName: 'Coordinator 1308', text: 'สวัสดีค่ะช่างประวิทย์ งานติดตั้งแอร์ Multi-Split มีการแนบชุดประกันและพ่นฆ่าเชื้อฆ่าแบคทีเรียด้วยนะคะ รบกวนตรวจเช็กรายการด้วยค่ะ', timestamp: '10:20' },
+      { id: 'm3', sender: 'technician', senderName: 'ช่างประวิทย์', text: 'รับทราบครับ กำลังเดินทางเข้าหน้านัดหมายติดตั้งครับ', timestamp: '10:25' }
+    ]
+  },
+  {
+    id: 'ch-2',
+    name: 'คุณวิมล (แอดมินสาขาบางนา)',
+    type: 'branch',
+    avatarInitials: 'WM',
+    lastMessage: 'ระบบตรวจสอบการชาร์จงานจาก Vfixq Portal เข้ามาเรียบร้อยแล้วค่ะ',
+    unreadCount: 0,
+    messages: [
+      { id: 'm4', sender: 'branch_manager', senderName: 'แอดมินวิมล', text: 'ประสานงานค่ะ ใบสั่งงานคิวติดตั้ง SPC Flooring มีช่างรับหรือยังคะ?', timestamp: '09:00' },
+      { id: 'm5', sender: 'coordinator', senderName: 'Coordinator 1308', text: 'กำลังรันระบบจับคู่ Match Score อัจฉริยะค่ะ ช่างสมคิดตอบรับแล้วค่ะ', timestamp: '09:10' },
+      { id: 'm6', sender: 'branch_manager', senderName: 'แอดมินวิมล', text: 'โอเคค่ะ ระบบตรวจสอบการชาร์จงานจาก Vfixq Portal เข้ามาเรียบร้อยแล้วค่ะ', timestamp: '09:15' }
+    ]
+  }
+];
 
 export function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
@@ -50,6 +105,10 @@ export function App() {
   const [technicians, setTechnicians] = useState<Technician[]>(INITIAL_TECHNICIANS);
   const [bookings, setBookings] = useState<QueueBooking[]>(INITIAL_BOOKINGS);
   const [penalties, setPenalties] = useState<PenaltyRecord[]>(INITIAL_PENALTIES);
+
+  // Communication States
+  const [announcements, setAnnouncements] = useState<BranchAnnouncement[]>(INITIAL_ANNOUNCEMENTS);
+  const [chatChannels, setChatChannels] = useState<ChatChannel[]>(INITIAL_CHANNELS);
 
   // Configuration States
   const [matchWeights, setMatchWeights] = useState<any>({
@@ -106,7 +165,40 @@ export function App() {
   // Handlers for Branch
   const handleAddBranch = (branch: Branch) => {
     setBranches((prev) => [...prev, branch]);
-    showToast(`เพิ่มสาขา ${branch.name} เรียบร้อยแล้ว`);
+    showToast(`เพิ่มสาขา ${branch.name} สำเร็จ`);
+  };
+
+  const handleAddAnnouncement = (newAnn: BranchAnnouncement) => {
+    setAnnouncements((prev) => [newAnn, ...prev]);
+    showToast('เผยแพร่ประกาศสาขาสำเร็จ!');
+  };
+
+  const handleDeleteAnnouncement = (id: string) => {
+    setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+    showToast('ลบประกาศสาขาเรียบร้อยแล้ว');
+  };
+
+  const handleSendMessage = (channelId: string, text: string) => {
+    setChatChannels((prev) => 
+      prev.map((c) => {
+        if (c.id === channelId) {
+          const newMsg: ChatMessage = {
+            id: `msg-${Date.now()}`,
+            sender: 'coordinator',
+            senderName: 'Coordinator 1308',
+            text,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+          return {
+            ...c,
+            lastMessage: text,
+            unreadCount: 0,
+            messages: [...c.messages, newMsg]
+          };
+        }
+        return c;
+      })
+    );
   };
 
   const handleAddMultipleBranches = (newBranches: Branch[]) => {
@@ -273,6 +365,8 @@ export function App() {
     { id: 'divider-2', label: 'จำลองผลลัพธ์', isDivider: true },
     { id: 'integration-flow', label: 'Integration Simulator', icon: Cpu },
     { id: 'penalty-audit', label: 'รายการลงโทษ E-CN', icon: ShieldAlert },
+    { id: 'branch-announcements', label: 'ประกาศสาขา (Board)', icon: Megaphone },
+    { id: 'internal-chat', label: 'ห้องแชทประสานงาน', icon: MessageSquare },
     { id: 'settings', label: 'การตั้งค่าระบบ (Configs)', icon: Settings },
     { id: 'divider-3', label: 'เอกสารเรียนรู้', isDivider: true },
     { id: 'km-hub', label: 'คู่มือระบบ & FAQ (KM)', icon: BookOpen },
@@ -534,6 +628,24 @@ export function App() {
               onUpdateMatchWeights={setMatchWeights}
               systemConfig={systemConfig}
               onUpdateSystemConfig={setSystemConfig}
+            />
+          )}
+
+          {activeTab === 'branch-announcements' && (
+            <BranchAnnouncementsView
+              announcements={announcements}
+              onAddAnnouncement={handleAddAnnouncement}
+              onDeleteAnnouncement={handleDeleteAnnouncement}
+              branches={branches}
+            />
+          )}
+
+          {activeTab === 'internal-chat' && (
+            <InternalChatView
+              channels={chatChannels}
+              onSendMessage={handleSendMessage}
+              technicians={technicians}
+              branches={branches}
             />
           )}
         </main>

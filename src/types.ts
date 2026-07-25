@@ -150,3 +150,32 @@ export interface SystemConfig {
   qcInspectorUrl: string;
   eCnErpUrl: string;
 }
+
+export interface BranchAnnouncement {
+  id: string;
+  title: string;
+  content: string;
+  category: 'งานด่วน' | 'แจ้งเตือน' | 'อบรมระบบ' | 'ข่าวสาร';
+  priority: 'สูง' | 'ปกติ';
+  branchName: string;
+  createdAt: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  sender: 'coordinator' | 'technician' | 'branch_manager' | 'customer';
+  senderName: string;
+  text: string;
+  timestamp: string;
+}
+
+export interface ChatChannel {
+  id: string;
+  name: string;
+  type: 'technician' | 'branch' | 'hotline';
+  avatarInitials: string;
+  lastMessage: string;
+  unreadCount: number;
+  messages: ChatMessage[];
+  techId?: string;
+}

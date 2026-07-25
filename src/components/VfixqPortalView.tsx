@@ -13,7 +13,9 @@ import {
   ArrowRight,
   ShieldCheck,
   CreditCard,
-  Sparkles
+  Sparkles,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 
 interface VfixqPortalViewProps {
@@ -68,6 +70,56 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
   const [techAppExperience, setTechAppExperience] = useState<string>('1-3 ปี');
   const [isTechAppSuccess, setIsTechAppSuccess] = useState<boolean>(false);
   const [techAppRef, setTechAppRef] = useState<string>('');
+
+  // Customer Webchat states
+  const [showWebchat, setShowWebchat] = useState<boolean>(false);
+  const [webchatMessages, setWebchatMessages] = useState<any[]>([
+    { id: '1', sender: 'agent', name: 'ช่างเทคนิค vFixQ', text: 'สวัสดีครับ! ยินดีต้อนรับสู่ศูนย์บริการช่าง vFixQ มีคำถามเกี่ยวกับบริการติดตั้ง ทักษะช่าง หรือการจองคิว สอบถามได้เลยครับ 🛠️', timestamp: '11:00' }
+  ]);
+  const [webchatInput, setWebchatInput] = useState<string>('');
+
+  const handleSendWebchat = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!webchatInput.trim()) return;
+
+    const userMsg = {
+      id: Date.now().toString(),
+      sender: 'user',
+      name: 'ลูกค้า',
+      text: webchatInput,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setWebchatMessages((prev) => [...prev, userMsg]);
+    const typedText = webchatInput.toLowerCase();
+    setWebchatInput('');
+
+    // Simulate Agent response
+    setTimeout(() => {
+      let replyText = 'ได้รับเรื่องแล้วครับ! หากต้องการสอบถามวันนัดหมายจัดส่งคิวงานด่วน หรือมีปัญหารูปแบบทักษะงานติดตั้งใด ๆ สามารถติดต่อประสานงานผ่านช่องทาง Line OA: @vfixq_line หรือโทรสายด่วน 1308 ได้เลยครับ';
+      
+      if (typedText.includes('แอร์') || typedText.includes('ปรับอากาศ') || typedText.includes('ac')) {
+        replyText = 'สำหรับบริการติดตั้งเครื่องปรับอากาศ Multi-Split จะรวมการเดินท่อน้ำยาไม่เกิน 4 เมตร พร้อมขาแขวนเหล็กหนา และรับประกันผลงานติดตั้งซ่อมแอร์รั่ว 180 วันครับ!';
+      } else if (typedText.includes('พื้น') || typedText.includes('spc')) {
+        replyText = 'งานปูพื้น SPC ทางเราคัดสรรวัสดุหนาพิเศษกันกระแทก ปูทับโฟมหนา 1.5 มม. เพื่อป้องกันความชื้นและเสียงสะท้อน รับประกันผลงานยุบขอบ 1 ปีเต็มครับ!';
+      } else if (typedText.includes('ครัว') || typedText.includes('built')) {
+        replyText = 'งานติดตั้งตู้ลอยและบิลต์อินชุดครัว จะมีการใช้ระบบเลเซอร์วัดระดับน้ำ ติดตั้งท่อระบายลมดูดควันออกนอกอาคาร และเช็กหน้าบานตู้แบบ Soft-close ทุกชิ้นครับ';
+      } else if (typedText.includes('สมัคร') || typedText.includes('งานช่าง') || typedText.includes('สมัครช่าง')) {
+        replyText = 'สนใจร่วมงานกับทีมช่าง vFixQ เพื่อรับงานติดตั้งสินค้าใช่ไหมครับ? สามารถเลื่อนหน้าเว็บลงไปด้านล่างสุดของเว็บ แล้วกดปุ่ม "กรอกใบสมัครร่วมเป็นช่าง vFixQ" เพื่อกรอกข้อมูลได้เลยครับ!';
+      } else if (typedText.includes('ราคา') || typedText.includes('เท่าไหร่') || typedText.includes('กี่บาท')) {
+        replyText = 'ราคางานบริการเบื้องต้น: ติดตั้งแอร์เริ่มต้น 3,500 บาท, ปูพื้น SPC ตารางเมตรละ 450 บาท, บิลต์อินครัวเริ่มต้น 12,000 บาทครับ สามารถเลือกชมแพ็กเกจได้บนหน้าหลักได้เลยครับ';
+      }
+
+      const agentReply = {
+        id: (Date.now() + 1).toString(),
+        sender: 'agent',
+        name: 'ช่างเทคนิค vFixQ',
+        text: replyText,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setWebchatMessages((prev) => [...prev, agentReply]);
+    }, 1000);
+  };
 
   // Home Service Packages Config (Fits the category structure)
   const services: ServiceItem[] = [
@@ -1142,6 +1194,84 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
           </div>
         </div>
       </footer>
+
+      {/* Floating Webchat Button */}
+      <div className="fixed bottom-5 right-5 z-150">
+        <button
+          onClick={() => setShowWebchat(!showWebchat)}
+          className="w-14 h-14 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-full flex items-center justify-center shadow-2xl transition hover:scale-105 border-2 border-slate-900 cursor-pointer relative"
+        >
+          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-slate-900 animate-ping"></span>
+          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-slate-900"></span>
+          <MessageSquare className="h-6 w-6 stroke-[2.5]" />
+        </button>
+      </div>
+
+      {/* Webchat Drawer Panel */}
+      {showWebchat && (
+        <div className="fixed bottom-22 right-5 z-150 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl flex flex-col max-h-120 animate-fadeIn text-xs">
+          {/* Header */}
+          <div className="bg-slate-900 p-3.5 rounded-t-2xl flex justify-between items-center border-b border-slate-800">
+            <div className="flex items-center space-x-2">
+              <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-100 leading-none">ห้องแชทช่างเทคนิค vFixQ</h4>
+                <p className="text-[9px] text-slate-400 font-semibold mt-0.5">ออนไลน์พร้อมช่วยเหลือเรื่องงานติดตั้ง</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowWebchat(false)}
+              className="text-slate-400 hover:text-white font-bold text-xs p-1 rounded-md hover:bg-slate-800 transition cursor-pointer border-0"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Message Feed */}
+          <div className="flex-1 p-3 overflow-y-auto space-y-2.5 max-h-80 bg-slate-50 min-h-60 text-xs">
+            {webchatMessages.map((msg) => {
+              const isUser = msg.sender === 'user';
+              return (
+                <div
+                  key={msg.id}
+                  className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
+                >
+                  <span className="text-[9px] font-bold text-slate-400 mb-0.5 px-1">{msg.name} ({msg.timestamp})</span>
+                  <div
+                    className={`p-2.5 rounded-2xl max-w-[80%] leading-relaxed ${
+                      isUser
+                        ? 'bg-amber-500 text-slate-900 font-medium rounded-tr-none'
+                        : 'bg-white border border-slate-200 text-slate-700 rounded-tl-none shadow-xs'
+                    }`}
+                  >
+                    {msg.text}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Input Composer */}
+          <form
+            onSubmit={handleSendWebchat}
+            className="p-2.5 border-t border-slate-200 bg-white rounded-b-2xl flex items-center gap-2"
+          >
+            <input
+              type="text"
+              placeholder="พิมพ์ข้อความคุยกับช่างติดตั้ง..."
+              value={webchatInput}
+              onChange={(e) => setWebchatInput(e.target.value)}
+              className="flex-1 v-input py-1.5 text-xs border-slate-200 bg-slate-100 rounded-lg"
+            />
+            <button
+              type="submit"
+              className="bg-amber-500 hover:bg-amber-600 text-slate-900 p-2 rounded-lg transition border-0 cursor-pointer shadow-xs"
+            >
+              <Send className="h-3.5 w-3.5" />
+            </button>
+          </form>
+        </div>
+      )}
 
     </div>
   );
