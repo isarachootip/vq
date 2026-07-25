@@ -9,7 +9,8 @@ import { BranchMapView } from './components/BranchMapView';
 import { ZoneManager } from './components/ZoneManager';
 import { SkillManager } from './components/SkillManager';
 import { KmHubView } from './components/KmHubView';
-import { QChangPortalView } from './components/QChangPortalView';
+import { VfixqPortalView } from './components/VfixqPortalView';
+import { BackendSettingsView } from './components/BackendSettingsView';
 
 import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill } from './types';
 import { 
@@ -35,7 +36,8 @@ import {
   Menu,
   ChevronRight,
   BookOpen,
-  ShoppingBag
+  ShoppingBag,
+  Settings
 } from 'lucide-react';
 
 export function App() {
@@ -48,6 +50,28 @@ export function App() {
   const [technicians, setTechnicians] = useState<Technician[]>(INITIAL_TECHNICIANS);
   const [bookings, setBookings] = useState<QueueBooking[]>(INITIAL_BOOKINGS);
   const [penalties, setPenalties] = useState<PenaltyRecord[]>(INITIAL_PENALTIES);
+
+  // Configuration States
+  const [matchWeights, setMatchWeights] = useState<any>({
+    baseMatch: 40,
+    levelBonus: 10,
+    primaryZone: 15,
+    secondaryZone: 5,
+    branchSync: 15,
+    goldTier: 10,
+    silverTier: 5,
+    ratingMultiplier: 10,
+    penaltyDivisor: 5
+  });
+
+  const [systemConfig, setSystemConfig] = useState<any>({
+    cooldownThreshold: 45,
+    suspensionThreshold: 90,
+    kannaApiUrl: 'https://api.kanna.io/v1/projects',
+    stsWebhookUrl: 'https://sts-api.vservice.co.th/webhooks/checkin',
+    qcInspectorUrl: 'https://qc-inspect.vservice.co.th/api/audits',
+    eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing'
+  });
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -220,7 +244,7 @@ export function App() {
   // Sidebar Menu Items Definition
   const menuItems = [
     { id: 'dashboard', label: 'ตารางคิวงานติดตั้ง', icon: LayoutDashboard },
-    { id: 'qchang-portal', label: 'จองบริการ (Q-Chang style)', icon: ShoppingBag },
+    { id: 'vfixq-portal', label: 'จองบริการ (Vfixq Portal)', icon: ShoppingBag },
     { id: 'smart-booking', label: 'จองคิวช่างอัจฉริยะ', icon: Calendar },
     { id: 'divider-1', label: 'ข้อมูลระบบหลัก (Master)', isDivider: true },
     { id: 'branch-manager', label: 'ข้อมูลสาขา (Branch)', icon: Building },
@@ -231,6 +255,7 @@ export function App() {
     { id: 'divider-2', label: 'จำลองผลลัพธ์', isDivider: true },
     { id: 'integration-flow', label: 'Integration Simulator', icon: Cpu },
     { id: 'penalty-audit', label: 'รายการลงโทษ E-CN', icon: ShieldAlert },
+    { id: 'settings', label: 'การตั้งค่าระบบ (Configs)', icon: Settings },
     { id: 'divider-3', label: 'เอกสารเรียนรู้', isDivider: true },
     { id: 'km-hub', label: 'คู่มือระบบ & FAQ (KM)', icon: BookOpen },
   ];
@@ -365,6 +390,8 @@ export function App() {
             <SmartBookingView
               technicians={technicians}
               branches={branches}
+              matchWeights={matchWeights}
+              systemConfig={systemConfig}
               onConfirmBooking={(b) => {
                 handleConfirmBooking(b);
                 setActiveTab('dashboard');
@@ -430,11 +457,20 @@ export function App() {
             <KmHubView />
           )}
 
-          {activeTab === 'qchang-portal' && (
-            <QChangPortalView
+          {activeTab === 'vfixq-portal' && (
+            <VfixqPortalView
               branches={branches}
               onConfirmBooking={handleConfirmBooking}
               onNavigateToTab={(tabId) => setActiveTab(tabId)}
+            />
+          )}
+
+          {activeTab === 'settings' && (
+            <BackendSettingsView
+              matchWeights={matchWeights}
+              onUpdateMatchWeights={setMatchWeights}
+              systemConfig={systemConfig}
+              onUpdateSystemConfig={setSystemConfig}
             />
           )}
         </main>

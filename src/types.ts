@@ -99,7 +99,7 @@ export interface QueueBooking {
   bookingDate: string;
   timeSlot: string;
   status: 'Pending Dispatch' | 'Scheduled' | 'Dispatched to KANNA' | 'STS In-Progress' | 'QC Inspection' | 'Passed (Closed)' | 'Penalty E-CN Issued';
-  createdFrom: 'Selling Tools (E-ordering)' | 'Manual POS' | 'COOHOM Direct' | 'Q-Chang Portal';
+  createdFrom: 'Selling Tools (E-ordering)' | 'Manual POS' | 'COOHOM Direct' | 'Vfixq Portal';
   createdAt: string;
   penaltyRef?: string;
   branchId?: string; // Branch associated with booking
@@ -128,4 +128,25 @@ export interface IntegrationEvent {
   action: string;
   payloadSummary: string;
   type: 'info' | 'success' | 'warning' | 'error';
+}
+
+export interface MatchWeights {
+  baseMatch: number;
+  levelBonus: number;
+  primaryZone: number;
+  secondaryZone: number;
+  branchSync: number;
+  goldTier: number;
+  silverTier: number;
+  ratingMultiplier: number;
+  penaltyDivisor: number;
+}
+
+export interface SystemConfig {
+  cooldownThreshold: number;
+  suspensionThreshold: number;
+  kannaApiUrl: string;
+  stsWebhookUrl: string;
+  qcInspectorUrl: string;
+  eCnErpUrl: string;
 }

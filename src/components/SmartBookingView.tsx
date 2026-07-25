@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Technician, QueueBooking, Branch } from '../types';
+import type { Technician, QueueBooking, Branch, MatchWeights, SystemConfig } from '../types';
 import { INITIAL_INSTALLATION_TYPES, SERVICE_ZONES, AVAILABLE_TIME_SLOTS } from '../mockData';
 import { MapPin, CheckCircle2, ShieldAlert, UserCheck, Sparkles } from 'lucide-react';
 
@@ -7,12 +7,16 @@ interface SmartBookingViewProps {
   technicians: Technician[];
   branches: Branch[];
   onConfirmBooking: (newBooking: QueueBooking) => void;
+  matchWeights?: MatchWeights;
+  systemConfig?: SystemConfig;
 }
 
 export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
   technicians,
   branches,
   onConfirmBooking,
+  matchWeights,
+  systemConfig,
 }) => {
   const [selectedInstId, setSelectedInstId] = useState<string>(INITIAL_INSTALLATION_TYPES[0].id);
   const [selectedZone, setSelectedZone] = useState<string>(SERVICE_ZONES[0]);
@@ -34,6 +38,24 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
     return br ? br.name : 'ไม่พบสาขา';
   };
 
+  // Define default values if not passed
+  const weights = matchWeights || {
+    baseMatch: 40,
+    levelBonus: 10,
+    primaryZone: 15,
+    secondaryZone: 5,
+    branchSync: 15,
+    goldTier: 10,
+    silverTier: 5,
+    ratingMultiplier: 10,
+    penaltyDivisor: 5
+  };
+
+  const sysConfig = systemConfig || {
+    cooldownThreshold: 45,
+    suspensionThreshold: 90
+  };
+
   // Smart Matching Engine Algorithm
   const evaluatedTechs = technicians.map((tech) => {
     // 1. Skill Match Check
@@ -42,7 +64,11 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
     const hasRequiredLevel = techSkill ? techSkill.level >= currentInst.minSkillLevel : false;
 
     // 2. Status & Penalty Check
-    const isPenaltyBlocked = tech.status === 'In Cooldown' || tech.tier === 'Cooldown' || tech.tier === 'Suspended';
+    const isPenaltyBlocked = 
+      tech.status === 'In Cooldown' || 
+      tech.tier === 'Cooldown' || 
+      tech.tier === 'Suspended' ||
+      tech.penaltyPoints >= sysConfig.cooldownThreshold;
 
     // 3. Zone Match
     const isPrimaryZone = tech.primaryZone === selectedZone;
@@ -56,27 +82,27 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
     let score = 0;
 
     if (hasSkillCategory && hasRequiredLevel && !isPenaltyBlocked && zoneSupported) {
-      score += 40; // Base match
+      score += weights.baseMatch; // Base match
 
       // Skill Level Bonus
-      if (techSkill && techSkill.level > currentInst.minSkillLevel) score += 10;
+      if (techSkill && techSkill.level > currentInst.minSkillLevel) score += weights.levelBonus;
 
       // Zone Bonus
-      if (isPrimaryZone) score += 15;
-      else if (isSecondaryZone) score += 5;
+      if (isPrimaryZone) score += weights.primaryZone;
+      else if (isSecondaryZone) score += weights.secondaryZone;
 
       // Branch Match Bonus
-      if (isBranchMatch) score += 15;
+      if (isBranchMatch) score += weights.branchSync;
 
       // Tier Bonus
-      if (tech.tier === 'Gold') score += 10;
-      else if (tech.tier === 'Silver') score += 5;
+      if (tech.tier === 'Gold') score += weights.goldTier;
+      else if (tech.tier === 'Silver') score += weights.silverTier;
 
       // Rating Bonus
-      score += Math.round((tech.rating / 5.0) * 10);
+      score += Math.round((tech.rating / 5.0) * weights.ratingMultiplier);
 
       // Deduct for Penalty Points
-      score -= Math.round(tech.penaltyPoints / 5);
+      score -= Math.round(tech.penaltyPoints / weights.penaltyDivisor);
 
       // Ensure clamp 0-100
       score = Math.max(0, Math.min(100, score));
