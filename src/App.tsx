@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardView } from './components/DashboardView';
 import { SmartBookingView } from './components/SmartBookingView';
 import { SkillMatrixView } from './components/SkillMatrixView';
@@ -74,6 +74,24 @@ export function App() {
   });
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const [isBackend, setIsBackend] = useState<boolean>(() => {
+    return window.location.pathname.startsWith('/backend');
+  });
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      setIsBackend(window.location.pathname.startsWith('/backend'));
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
+
+  const navigateToBackend = (route: boolean) => {
+    const path = route ? '/backend' : '/';
+    window.history.pushState({}, '', path);
+    setIsBackend(route);
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -260,6 +278,34 @@ export function App() {
     { id: 'km-hub', label: 'คู่มือระบบ & FAQ (KM)', icon: BookOpen },
   ];
 
+  if (!isBackend) {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans flex flex-col">
+        {/* Toast Notification */}
+        {toastMessage && (
+          <div className="fixed bottom-5 right-5 z-50 px-4 py-3 rounded bg-blue-600 text-white font-bold text-xs shadow-lg border border-blue-400 animate-slideUp">
+            {toastMessage}
+          </div>
+        )}
+        
+        {/* Vfixq Portal view (Full Screen) */}
+        <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
+          <VfixqPortalView
+            branches={branches}
+            onConfirmBooking={(b) => {
+              handleConfirmBooking(b);
+              showToast('สร้างคิวติดตั้งงานและคำนวณ Match Score สำเร็จ!');
+            }}
+            onNavigateToTab={(tabId) => {
+              setActiveTab(tabId);
+              navigateToBackend(true);
+            }}
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row text-slate-800 antialiased font-sans">
       {/* Toast Notification */}
@@ -299,6 +345,17 @@ export function App() {
             </div>
           </div>
 
+          {/* Go to storefront button */}
+          <div className="px-3 mb-2">
+            <button
+              onClick={() => navigateToBackend(false)}
+              className="w-full py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 transition shadow-sm cursor-pointer"
+            >
+              <ShoppingBag className="h-3.5 w-3.5" />
+              <span>ดูหน้าเว็บลูกค้า (Storefront)</span>
+            </button>
+          </div>
+
           {/* Menu Items List */}
           <nav className="px-3 py-2 space-y-0.5">
             {menuItems.map((item) => {
@@ -316,7 +373,13 @@ export function App() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => {
+                    if (item.id === 'vfixq-portal') {
+                      navigateToBackend(false);
+                    } else {
+                      setActiveTab(item.id);
+                    }
+                  }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded text-xs md:text-sm font-medium transition-all ${
                     isActive
                       ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600 font-bold'

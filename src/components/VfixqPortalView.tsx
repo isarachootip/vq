@@ -239,7 +239,12 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
 
         <div className="flex items-center space-x-4 text-xs font-bold text-slate-500">
           <span className="hover:text-amber-500 cursor-pointer">🛒 ตะกร้าสินค้า</span>
-          <span className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-full cursor-pointer">👤 บัญชีช่าง</span>
+          <button 
+            onClick={() => onNavigateToTab('dashboard')} 
+            className="bg-amber-500 hover:bg-amber-600 text-slate-900 px-3.5 py-1.5 rounded-full cursor-pointer font-bold transition flex items-center gap-1 shadow-md border-0"
+          >
+            ⚙️ เข้าระบบหลังบ้าน (1308 Console)
+          </button>
         </div>
       </header>
 
