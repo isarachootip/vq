@@ -204,26 +204,60 @@ export const BannerManagerView: React.FC<BannerManagerViewProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-slate-600 mb-1">รูปภาพแบนเนอร์ (Image URL):</label>
-                <input
-                  type="url"
-                  required
-                  placeholder="ใส่ที่อยู่รูปภาพโฆษณา (HTTPS URL)"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className="v-input w-full py-2 font-mono"
-                />
+                <label className="block font-bold text-slate-600 mb-1">รูปภาพแบนเนอร์ (อัปโหลดรูปภาพ / หรือกรอก URL):</label>
+                
+                {/* Image File Uploader */}
+                <div className="flex items-center gap-4 p-3 bg-slate-100/50 rounded-xl border border-slate-200 mb-2">
+                  <div className="w-16 h-10 rounded bg-slate-200 border border-slate-300 overflow-hidden shrink-0 flex items-center justify-center text-slate-400 font-mono text-[9px] relative shadow-inner">
+                    {imageUrl ? (
+                      <img src={imageUrl} alt="Banner Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <span>ไม่มีรูป</span>
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            if (event.target?.result) {
+                              setImageUrl(event.target.result as string);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="text-[10px] text-slate-500 w-full file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-600 file:cursor-pointer"
+                    />
+                    <p className="text-[8px] text-slate-400">อัปรูปภาพแบนเนอร์ขนาดใหญ่พรีเมียมจากเครื่องคอมพิวเตอร์ของคุณ</p>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">หรือกรอกลิ้งก์ภาพ URL:</span>
+                  <input
+                    type="url"
+                    placeholder="ใส่ที่อยู่รูปภาพโฆษณา (HTTPS URL)"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    className="v-input w-full py-2 font-mono"
+                  />
+                </div>
                 
                 {/* Preset Recommendations */}
                 <div className="mt-2.5 space-y-1.5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">รูปตัวอย่างแนะนำ:</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">หรือเลือกรูปตัวอย่างแนะนำ:</span>
                   <div className="flex flex-col gap-1">
                     {PRESET_BANNER_IMAGES.map((preset) => (
                       <button
                         key={preset.name}
                         type="button"
                         onClick={() => setImageUrl(preset.url)}
-                        className="text-left text-[10px] text-blue-600 hover:text-blue-800 truncate border-0 cursor-pointer block p-1 rounded hover:bg-slate-50"
+                        className="text-left text-[10px] text-blue-600 hover:text-blue-800 truncate border-0 cursor-pointer block p-1 rounded hover:bg-slate-50 font-semibold bg-transparent"
                       >
                         🔗 {preset.name}
                       </button>
