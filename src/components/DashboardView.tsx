@@ -251,10 +251,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end space-x-1.5">
-                          {b.status === 'Scheduled' && (
+                           {b.status === 'Scheduled' && (
                             <button
                               onClick={() => onDispatchToKanna(b.id)}
-                              className="px-2 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[11px] transition-colors flex items-center space-x-1 shadow-sm"
+                              className="px-2 py-1 rounded bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-[11px] transition flex items-center space-x-1 shadow-sm border-0 cursor-pointer"
                             >
                               <Send className="h-3 w-3" />
                               <span>ส่ง KANNA</span>
@@ -263,7 +263,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                           <button
                             onClick={() => onSelectBookingForSim(b)}
-                            className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-[11px] transition-colors flex items-center space-x-1 font-semibold"
+                            className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-[11px] transition flex items-center space-x-1 font-semibold cursor-pointer"
                           >
                             <span>จำลอง Flow</span>
                             <ArrowRight className="h-3 w-3" />

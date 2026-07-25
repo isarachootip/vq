@@ -447,8 +447,8 @@ export function App() {
         <div>
           {/* Top Logo Panel */}
           <div className="p-5 border-b border-slate-200 flex items-center space-x-2.5">
-            <div className="h-8 w-8 rounded bg-blue-600 flex items-center justify-center shadow-sm">
-              <Wrench className="h-4.5 w-4.5 text-white" />
+            <div className="h-8 w-8 rounded bg-amber-500 flex items-center justify-center shadow-sm">
+              <Wrench className="h-4.5 w-4.5 text-slate-900" />
             </div>
             <div>
               <h1 className="text-sm font-bold text-slate-800 leading-tight">vService</h1>
@@ -509,15 +509,15 @@ export function App() {
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded text-xs md:text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600 font-bold'
+                      ? 'bg-amber-500/10 text-amber-700 border-l-4 border-amber-500 font-bold'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
                   <div className="flex items-center space-x-2.5">
-                    <Icon className={`h-4 w-4 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                    <Icon className={`h-4 w-4 ${isActive ? 'text-amber-600' : 'text-slate-400'}`} />
                     <span>{item.label}</span>
                   </div>
-                  {isActive && <ChevronRight className="h-3 w-3 text-blue-500" />}
+                  {isActive && <ChevronRight className="h-3 w-3 text-amber-500" />}
                 </button>
               );
             })}
