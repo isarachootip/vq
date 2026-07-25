@@ -149,6 +149,7 @@ export interface SystemConfig {
   stsWebhookUrl: string;
   qcInspectorUrl: string;
   eCnErpUrl: string;
+  googleMapsApiKey?: string;
 }
 
 export interface BranchAnnouncement {

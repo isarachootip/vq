@@ -396,6 +396,22 @@ export const BackendSettingsView: React.FC<BackendSettingsViewProps> = ({
                   className="v-input w-full py-1 text-[11px] font-mono"
                 />
               </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                <label className="block font-bold text-slate-800 mb-1 flex items-center gap-1.5">
+                  <span>🔑 Google Maps API Key (สำหรับอนาคต):</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="เช่น AIzaSy..."
+                  value={systemConfig.googleMapsApiKey || ''}
+                  onChange={(e) => handleConfigChange('googleMapsApiKey', e.target.value)}
+                  className="v-input w-full py-1.5 text-[11px] font-mono font-bold text-blue-700 bg-amber-500/5 border-amber-500/30"
+                />
+                <span className="text-[9px] text-slate-400 block mt-1 leading-relaxed">
+                  *กุญแจสำคัญสำหรับเปิดฟังก์ชัน Autocomplete ช่วยแนะนำการสะกดที่อยู่ลูกค้า และวัดระยะเดินทางขับขี่จริงผ่าน Google Cloud ในการคำนวณ Match Score
+                </span>
+              </div>
             </div>
           </div>
 

@@ -241,7 +241,8 @@ export function App() {
     kannaApiUrl: 'https://api.kanna.io/v1/projects',
     stsWebhookUrl: 'https://sts-api.vservice.co.th/webhooks/checkin',
     qcInspectorUrl: 'https://qc-inspect.vservice.co.th/api/audits',
-    eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing'
+    eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing',
+    googleMapsApiKey: 'AIzaSyA1-DemoMapsKey-2026July'
   });
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);
