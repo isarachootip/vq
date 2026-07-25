@@ -59,6 +59,16 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
   // Info Modal Drawers
   const [infoModalTab, setInfoModalTab] = useState<'how-to-buy' | 'payment' | 'terms' | null>(null);
 
+  // Technician Application Form Modal states
+  const [showTechAppModal, setShowTechAppModal] = useState<boolean>(false);
+  const [techAppName, setTechAppName] = useState<string>('');
+  const [techAppPhone, setTechAppPhone] = useState<string>('');
+  const [techAppZone, setTechAppZone] = useState<string>('Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)');
+  const [techAppSkills, setTechAppSkills] = useState<string[]>([]);
+  const [techAppExperience, setTechAppExperience] = useState<string>('1-3 ปี');
+  const [isTechAppSuccess, setIsTechAppSuccess] = useState<boolean>(false);
+  const [techAppRef, setTechAppRef] = useState<string>('');
+
   // Home Service Packages Config (Fits the category structure)
   const services: ServiceItem[] = [
     {
@@ -907,6 +917,177 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
         </div>
       )}
 
+      {/* 5.5 TECHNICIAN APPLICATION FORM MODAL */}
+      {showTechAppModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 z-200 animate-fadeIn overflow-y-auto">
+          <div className="v-panel p-6 bg-white max-w-xl w-full space-y-4 relative border border-slate-200 shadow-2xl my-8">
+            <button
+              onClick={() => {
+                setShowTechAppModal(false);
+                setIsTechAppSuccess(false);
+              }}
+              className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 cursor-pointer border-0"
+            >
+              ✕
+            </button>
+
+            {!isTechAppSuccess ? (
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const refNum = Math.floor(100000 + Math.random() * 900000);
+                setTechAppRef(`AP-T-${refNum}`);
+                setIsTechAppSuccess(true);
+              }} className="space-y-4">
+                <div className="border-b border-slate-200 pb-2">
+                  <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
+                    <span className="text-xl">🛠️</span>
+                    <span>ใบสมัครร่วมเป็นทีมช่าง vFixQ</span>
+                  </h3>
+                  <p className="text-[10px] text-slate-400">กรอกข้อมูลผู้สมัครเพื่อส่งประเมินและจัดสรรสายงานติดตั้ง</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <label className="block font-bold text-slate-600 mb-1">ชื่อ-นามสกุล หัวหน้าทีมช่าง:</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="ระบุชื่อจริงและนามสกุล"
+                      value={techAppName}
+                      onChange={(e) => setTechAppName(e.target.value)}
+                      className="v-input w-full py-2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-600 mb-1">เบอร์โทรศัพท์มือถือติดต่อ:</label>
+                    <input
+                      type="text"
+                      required
+                      pattern="[0-9]{10}"
+                      placeholder="ระบุเบอร์โทร 10 หลัก (เช่น 0812345678)"
+                      value={techAppPhone}
+                      onChange={(e) => setTechAppPhone(e.target.value)}
+                      className="v-input w-full py-2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-600 mb-1">โซนหลักที่รับปฏิบัติงาน:</label>
+                    <select
+                      value={techAppZone}
+                      onChange={(e) => setTechAppZone(e.target.value)}
+                      className="v-input w-full py-2"
+                    >
+                      {SERVICE_ZONES.map((zone) => (
+                        <option key={zone} value={zone}>{zone}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-600 mb-1">ประสบการณ์หน้างานช่าง:</label>
+                    <select
+                      value={techAppExperience}
+                      onChange={(e) => setTechAppExperience(e.target.value)}
+                      className="v-input w-full py-2"
+                    >
+                      <option value="น้อยกว่า 1 ปี">น้อยกว่า 1 ปี</option>
+                      <option value="1-3 ปี">1-3 ปี</option>
+                      <option value="3-5 ปี">3-5 ปี</option>
+                      <option value="มากกว่า 5 ปี">มากกว่า 5 ปี</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <label className="block font-bold text-slate-600">ทักษะ/ประเภทงานติดตั้งที่ทีมมีความชำนาญ (เลือกได้หลายข้อ):</label>
+                  <div className="grid grid-cols-2 gap-2 p-3 bg-slate-100/50 rounded-xl border border-slate-200">
+                    {[
+                      'ระบบปรับอากาศ (ล้าง/ติดตั้ง)',
+                      'งานไฟฟ้าและเครื่องใช้ไฟฟ้า',
+                      'งานบิลต์อิน / เฟอร์นิเจอร์ Fit-In',
+                      'งานปูพื้น ผนัง และฝ้าเพดาน',
+                      'งานประปาและห้องน้ำ',
+                      'งานรีโนเวทและต่อเติมโครงสร้าง'
+                    ].map((skill) => {
+                      const hasSkill = techAppSkills.includes(skill);
+                      return (
+                        <label key={skill} className="flex items-center gap-2 cursor-pointer py-1">
+                          <input
+                            type="checkbox"
+                            checked={hasSkill}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTechAppSkills([...techAppSkills, skill]);
+                              } else {
+                                setTechAppSkills(techAppSkills.filter((s) => s !== skill));
+                              }
+                            }}
+                            className="accent-blue-600"
+                          />
+                          <span className="text-[10px] text-slate-600">{skill}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-xs">
+                  <label className="block font-bold text-slate-600">เอกสารแนบผู้สมัคร (รูปถ่ายบัตร ปชช. / บัตรวิชาชีพช่างไฟฟ้า):</label>
+                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
+                    <p className="text-[10px] text-slate-400 font-bold">📄 ลากรูปไฟล์เอกสารใบรับรองฝีมือแรงงานช่างมาวางที่นี่ (Simulated Upload)</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-3 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowTechAppModal(false);
+                      setIsTechAppSuccess(false);
+                    }}
+                    className="flex-1 v-btn-secondary py-2 text-xs"
+                  >
+                    ยกเลิก
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 v-btn-primary py-2 text-xs"
+                  >
+                    ส่งใบสมัครเข้าระบบ
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="text-center p-6 space-y-4 animate-fadeIn">
+                <div className="mx-auto w-14 h-14 bg-emerald-950/40 rounded-full border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-2xl font-bold">
+                  ✓
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-bold text-slate-800 text-sm md:text-base">ยื่นใบสมัครร่วมเป็นช่างสำเร็จ!</h3>
+                  <p className="text-xs text-slate-500">
+                    ... สิทธิ์คำขอตรวจสอบการสมัคร: <span className="font-mono font-bold text-amber-500">{techAppRef}</span>
+                  </p>
+                </div>
+                <p className="text-[11px] text-slate-400 leading-normal">
+                  ข้อมูลประวัติของทีมช่าง {techAppName} ได้ถูกจัดเก็บเข้าคลังตรวจสอบของระบบ vFixQ เรียบร้อยแล้ว ทีมผู้ควบคุมการรับช่างจะติดต่อกลับผ่านเบอร์มือถือ {techAppPhone} ของคุณภายใน 3 วันทำการ
+                </p>
+                <button
+                  onClick={() => {
+                    setShowTechAppModal(false);
+                    setIsTechAppSuccess(false);
+                  }}
+                  className="w-full v-btn-secondary py-2 text-xs cursor-pointer"
+                >
+                  ปิดหน้าต่างนี้
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 6. VSERVICE OFFICIAL CORPORATE FOOTER (designed clean with 1308 hotline) */}
       <footer className="v-panel p-6 bg-slate-100 border border-slate-200 mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-500 leading-relaxed">
         <div className="space-y-3">
@@ -927,12 +1108,17 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <h4 className="font-bold text-slate-800">ศูนย์ประสานงานข้อมูล</h4>
-          <p className="text-[11px] text-slate-400">
-            บริษัท เน็กซเตอร์ ดิจิตอล แอนด์ โซลูชั่น จำกัด (สำนักงานใหญ่)<br/>
-            ศูนย์การค้าเกตเวย์ บางซื่อ ชั้น 6, เลขที่ 162/1-2 ถนนประชาราษฎร์ 2 เขตบางซื่อ กรุงเทพฯ 10800
+        <div className="space-y-2.5">
+          <h4 className="font-bold text-slate-800">ติดต่อสมัครร่วมเป็นช่างกับเรา</h4>
+          <p className="text-[11px] text-slate-400 leading-relaxed">
+            สำหรับการติดต่อประสานงานเรื่องการสมัครบริการช่างของ vFixQ เพื่อรับงานติดตั้งสินค้าไทวัสดุ และ BnB Home
           </p>
+          <button
+            onClick={() => setShowTechAppModal(true)}
+            className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-slate-900 font-bold text-xs rounded-lg transition shadow-md border-0 cursor-pointer text-center block mt-1"
+          >
+            📋 กรอกใบสมัครร่วมเป็นช่าง vFixQ
+          </button>
           <ul className="space-y-1.5 font-medium pt-1.5">
             <li><button onClick={() => setInfoModalTab('terms')} className="hover:text-amber-500 cursor-pointer">ข้อกำหนดเงื่อนไขประกันงานติดตั้ง</button></li>
             <li><button onClick={() => onNavigateToTab('km-hub')} className="hover:text-amber-500 cursor-pointer">ศูนย์สืบค้นองค์ความรู้ (KM Hub)</button></li>
