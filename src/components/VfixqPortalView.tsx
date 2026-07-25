@@ -902,26 +902,35 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
         </div>
       )}
 
-      {/* 6. VSERVICE OFFICIAL CORPORATE FOOTER (designed clean) */}
+      {/* 6. VSERVICE OFFICIAL CORPORATE FOOTER (designed clean with 1308 hotline) */}
       <footer className="v-panel p-6 bg-slate-100 border border-slate-200 mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-500 leading-relaxed">
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="text-amber-500 font-extrabold text-sm tracking-widest flex items-center gap-1.5">
             <ShoppingBag className="h-4 w-4" />
-            <span>vService Enterprise</span>
+            <span>vService & Vfixq Network</span>
           </div>
           <p className="text-[11px] text-slate-400">
-            ระบบบริหารจัดการคิวและจับคู่ทีมช่างคุณภาพครบวงจร (Vfixq Engine)<br/>
-            พัฒนาและลิขสิทธิ์โดย บริษัท เน็กซเตอร์ ดิจิตอล แอนด์ โซลูชั่น จำกัด (สำนักงานใหญ่)<br/>
-            ศูนย์การค้าเกตเวย์ บางซื่อ ชั้น 6 เลขที่ 162/1-2 ถนนประชาราษฎร์ 2 เขตบางซื่อ กรุงเทพฯ 10800
+            ระบบจัดคิวช่างอัจฉริยะและสั่งจองบริการติดตั้งสินค้าครบวงจร<br/>
+            ประสานงานบริการโดยตรงเพื่อให้การส่งมอบงานหน้างานมีมาตรฐานสูงสุด
           </p>
+          <div className="flex items-center space-x-2.5 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-500 w-fit">
+            <Phone className="h-4 w-4 animate-bounce shrink-0" />
+            <div>
+              <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Vfix Call Center (สายด่วน)</div>
+              <div className="text-xs font-black tracking-wider">โทร. 1308</div>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-2">
-          <h4 className="font-bold text-slate-800">ลิงก์ข้อมูลเพิ่มเติม</h4>
-          <ul className="space-y-1.5 font-medium">
-            <li><button onClick={() => setInfoModalTab('terms')} className="hover:text-amber-500 cursor-pointer">ข้อกำหนดและเงื่อนไขการใช้บริการ</button></li>
-            <li><button onClick={() => setInfoModalTab('how-to-buy')} className="hover:text-amber-500 cursor-pointer">ขั้นตอนขอเคลมประกันและตรวจสอบ QC</button></li>
-            <li><button onClick={() => onNavigateToTab('km-hub')} className="hover:text-amber-500 cursor-pointer">ศูนย์สืบค้นข้อมูล KM Portal</button></li>
+          <h4 className="font-bold text-slate-800">ศูนย์ประสานงานข้อมูล</h4>
+          <p className="text-[11px] text-slate-400">
+            บริษัท เน็กซเตอร์ ดิจิตอล แอนด์ โซลูชั่น จำกัด (สำนักงานใหญ่)<br/>
+            ศูนย์การค้าเกตเวย์ บางซื่อ ชั้น 6, เลขที่ 162/1-2 ถนนประชาราษฎร์ 2 เขตบางซื่อ กรุงเทพฯ 10800
+          </p>
+          <ul className="space-y-1.5 font-medium pt-1.5">
+            <li><button onClick={() => setInfoModalTab('terms')} className="hover:text-amber-500 cursor-pointer">ข้อกำหนดเงื่อนไขประกันงานติดตั้ง</button></li>
+            <li><button onClick={() => onNavigateToTab('km-hub')} className="hover:text-amber-500 cursor-pointer">ศูนย์สืบค้นองค์ความรู้ (KM Hub)</button></li>
           </ul>
         </div>
 
