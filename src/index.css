@@ -1,74 +1,74 @@
 @import "tailwindcss";
 
 @theme {
-  --color-white: #121215;
-  --color-slate-50: #070709;
-  --color-slate-100: #16161b;
-  --color-slate-200: #2d2d37;
-  --color-slate-300: #424251;
-  --color-slate-400: #58586c;
-  --color-slate-500: #8888a0;
-  --color-slate-600: #cbd5e1;
-  --color-slate-700: #dfb750;
-  --color-slate-800: #f5eedc;
-  --color-slate-900: #ffffff;
+  --color-white: #ffffff;
+  --color-slate-50: #f8f9fa;
+  --color-slate-100: #ffffff;
+  --color-slate-200: #e9ecef;
+  --color-slate-300: #dee2e6;
+  --color-slate-400: #ced4da;
+  --color-slate-500: #6c757d;
+  --color-slate-600: #495057;
+  --color-slate-700: #343a40;
+  --color-slate-800: #212529;
+  --color-slate-900: #111115;
   
-  /* Primary Accent: Gold */
-  --color-blue-600: #dfb750;
+  /* Primary Accent: Gold-Yellow */
+  --color-blue-600: #b89130;
   
-  /* Badge/Status Dark Mode Theme Mappings */
-  --color-amber-50: #1d1508;
-  --color-amber-200: #3f290d;
-  --color-amber-700: #f59e0b;
-  --color-amber-800: #fbbf24;
+  /* Badge/Status Bright Theme Mappings */
+  --color-amber-50: #fffbeb;
+  --color-amber-200: #fde68a;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
   
-  --color-blue-50: #0d1527;
-  --color-blue-100: #15223c;
-  --color-blue-200: #1c2e50;
-  --color-blue-700: #60a5fa;
-  --color-blue-800: #93c5fd;
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
   
-  --color-indigo-50: #110e24;
-  --color-indigo-100: #1d183d;
-  --color-indigo-200: #282154;
-  --color-indigo-700: #818cf8;
+  --color-indigo-50: #e0e7ff;
+  --color-indigo-100: #c7d2fe;
+  --color-indigo-200: #a5b4fc;
+  --color-indigo-700: #4338ca;
   
-  --color-cyan-50: #061824;
-  --color-cyan-100: #0e293c;
-  --color-cyan-200: #143953;
-  --color-cyan-700: #22d3ee;
+  --color-cyan-50: #ecfeff;
+  --color-cyan-100: #cffafe;
+  --color-cyan-200: #a5f3fc;
+  --color-cyan-700: #0e7490;
   
-  --color-purple-50: #150d24;
-  --color-purple-100: #25163d;
-  --color-purple-200: #331e54;
-  --color-purple-700: #c084fc;
+  --color-purple-50: #faf5ff;
+  --color-purple-100: #f3e8ff;
+  --color-purple-200: #e9d5ff;
+  --color-purple-700: #6b21a8;
   
-  --color-emerald-50: #081a11;
-  --color-emerald-100: #102d1f;
-  --color-emerald-200: #173f2b;
-  --color-emerald-700: #34d399;
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-700: #047857;
   
-  --color-rose-50: #220910;
-  --color-rose-100: #3d0f1c;
-  --color-rose-200: #541526;
-  --color-rose-700: #f87171;
+  --color-rose-50: #fff1f2;
+  --color-rose-100: #ffe4e6;
+  --color-rose-200: #fecdd3;
+  --color-rose-700: #be123c;
 }
 
 @layer base {
   body {
-    background-color: #070709;
-    color: #cbd5e1;
+    background-color: #f8f9fa;
+    color: #343a40;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     min-height: 100vh;
   }
 }
 
-/* Custom vService Flat Dark Components */
+/* Custom vService Flat Light/Gold Components */
 .v-panel {
-  background: linear-gradient(135deg, #16161b 0%, #0f0f11 100%);
-  border: 1px solid #2d2d37;
+  background: #ffffff;
+  border: 1px solid #e9ecef;
   border-radius: 12px;
-  box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.05);
 }
 
 .v-panel-hover {
@@ -76,7 +76,7 @@
 }
 .v-panel-hover:hover {
   border-color: #dfb750;
-  box-shadow: 0 10px 30px -10px rgba(223, 183, 80, 0.12);
+  box-shadow: 0 10px 20px -10px rgba(184, 145, 48, 0.15);
   transform: translateY(-2px);
 }
 
@@ -86,26 +86,26 @@
   border-collapse: collapse;
 }
 .v-table th {
-  background-color: #17171c;
-  color: #dfb750;
+  background-color: #f8f9fa;
+  color: #b89130;
   font-weight: 700;
-  border-bottom: 2px solid #2d2d37;
+  border-bottom: 2px solid #e9ecef;
   font-size: 0.8rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 .v-table td {
-  border-bottom: 1px solid #1e1e24;
-  color: #cbd5e1;
+  border-bottom: 1px solid #e9ecef;
+  color: #343a40;
 }
 .v-table tr:hover {
-  background-color: rgba(223, 183, 80, 0.02);
+  background-color: rgba(184, 145, 48, 0.04);
 }
 
 /* Sidebar Specifics */
 .v-sidebar {
-  background-color: #111113;
-  border-right: 1px solid #2d2d37;
+  background-color: #111115;
+  border-right: 1px solid #1f2937;
 }
 
 /* Custom Scrollbars */
@@ -114,78 +114,75 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #111113;
+  background: #f8f9fa;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2d2d37;
+  background: #ced4da;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #dfb750;
+  background: #b89130;
 }
 
 /* Form Controls */
 .v-input {
-  background-color: #0c0c0e;
-  border: 1px solid #3d3d4a;
+  background-color: #ffffff;
+  border: 1px solid #ced4da;
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
-  color: #ffffff;
+  color: #111115;
   transition: all 0.2s ease-in-out;
 }
 .v-input:focus {
-  border-color: #dfb750;
+  border-color: #b89130;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(223, 183, 80, 0.2);
+  box-shadow: 0 0 0 2px rgba(184, 145, 48, 0.15);
 }
 
 .v-btn-primary {
-  background: linear-gradient(135deg, #c5a03d 0%, #dfb750 50%, #b89130 100%);
-  background-size: 200% auto;
-  color: #070709;
+  background: linear-gradient(135deg, #111115 0%, #212529 100%);
+  color: #dfb750;
   font-weight: 700;
   border-radius: 6px;
   padding: 0.5rem 1.25rem;
-  box-shadow: 0 4px 15px -3px rgba(223, 183, 80, 0.35);
+  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease-in-out;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #b89130;
   cursor: pointer;
 }
 .v-btn-primary:hover {
-  background-position: right center;
-  box-shadow: 0 6px 20px -3px rgba(223, 183, 80, 0.5);
+  background: linear-gradient(135deg, #c5a03d 0%, #dfb750 50%, #b89130 100%);
+  color: #111115;
+  box-shadow: 0 6px 20px -3px rgba(184, 145, 48, 0.3);
   transform: translateY(-1px);
 }
 
 .v-btn-secondary {
-  background-color: #1a1a21;
-  color: #dfb750;
+  background-color: #ffffff;
+  color: #111115;
   font-weight: 600;
   border-radius: 6px;
   padding: 0.5rem 1.25rem;
-  border: 1px solid #3d3d4a;
+  border: 1px solid #ced4da;
   transition: all 0.2s ease-in-out;
   cursor: pointer;
 }
 .v-btn-secondary:hover {
-  background-color: #23232c;
-  border-color: #dfb750;
-  color: #f7d57e;
+  background-color: #f8f9fa;
+  border-color: #b89130;
+  color: #b89130;
 }
 
-/* Leaflet Map Dark Mode Filter */
-.leaflet-tile-container {
-  filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(85%) !important;
-}
+/* Leaflet Map (Bright Mode matches bright gold-yellow theme) */
 .leaflet-container {
-  background-color: #070709 !important;
+  background-color: #f8f9fa !important;
 }
 .leaflet-bar a {
-  background-color: #16161b !important;
-  color: #dfb750 !important;
-  border-bottom: 1px solid #2d2d37 !important;
+  background-color: #ffffff !important;
+  color: #b89130 !important;
+  border-bottom: 1px solid #e9ecef !important;
 }
 .leaflet-bar a:hover {
-  background-color: #23232c !important;
+  background-color: #f8f9fa !important;
 }
