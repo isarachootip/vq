@@ -179,3 +179,12 @@ export interface ChatChannel {
   messages: ChatMessage[];
   techId?: string;
 }
+
+export interface PortalBanner {
+  id: string;
+  imageUrl: string;
+  title: string;
+  description: string;
+  campaignTag: string;
+  isActive: boolean;
+}

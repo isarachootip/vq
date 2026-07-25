@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Branch, QueueBooking } from '../types';
+import type { Branch, QueueBooking, PortalBanner } from '../types';
 import { SERVICE_ZONES } from '../mockData';
 import { 
   ShoppingBag, 
@@ -15,13 +15,16 @@ import {
   CreditCard,
   Sparkles,
   MessageSquare,
-  Send
+  Send,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface VfixqPortalViewProps {
   branches: Branch[];
   onConfirmBooking: (newBooking: QueueBooking) => void;
   onNavigateToTab: (tabId: string) => void;
+  banners: PortalBanner[];
 }
 
 interface ServiceItem {
@@ -38,11 +41,26 @@ interface ServiceItem {
 export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
   branches,
   onConfirmBooking,
-  onNavigateToTab
+  onNavigateToTab,
+  banners
 }) => {
   const [activeCategory, setActiveCategory] = useState<string>('ทั้งหมด');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
+  const [activeBannerIdx, setActiveBannerIdx] = useState<number>(0);
+  
+  const activeBanners = banners.filter(b => b.isActive);
+  const safeBannerIdx = activeBannerIdx >= activeBanners.length ? 0 : activeBannerIdx;
+  
+  const handleNextBanner = () => {
+    if (activeBanners.length <= 1) return;
+    setActiveBannerIdx((prev) => (prev + 1) % activeBanners.length);
+  };
+
+  const handlePrevBanner = () => {
+    if (activeBanners.length <= 1) return;
+    setActiveBannerIdx((prev) => (prev - 1 + activeBanners.length) % activeBanners.length);
+  };
   
   // Wizard States
   const [wizardStep, setWizardStep] = useState<number>(1);
@@ -383,19 +401,66 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
       {!isSuccess && !selectedService && (
         <div className="space-y-6">
           
-          {/* SPC Luxury Frame Banner */}
-          <div className="v-panel p-1.5 bg-gradient-to-r from-amber-500/20 via-slate-900 to-amber-500/20 rounded-2xl overflow-hidden border border-amber-500/20">
-            <div className="relative rounded-xl overflow-hidden bg-slate-900 max-h-72">
+          {/* Dynamic Panorama Banner Slider */}
+          <div className="v-panel p-1 bg-gradient-to-r from-amber-500/25 via-slate-900 to-amber-500/25 rounded-2xl overflow-hidden border border-amber-500/30 shadow-lg">
+            <div className="relative rounded-xl overflow-hidden bg-slate-950 h-72 sm:h-80 md:h-96 w-full flex flex-col justify-end shadow-2xl">
+              
+              {/* Slide image */}
               <img 
-                src="https://storage.googleapis.com/prod-qchang-v1/coupon/upload/20260720/20260720182034Banner%20-%20Shera%20SPC%2021-31%20Jul26-Web%20900x900.png" 
-                alt="โปรโมชั่น SPC" 
-                className="w-full h-full object-cover max-h-60 brightness-95"
+                src={
+                  activeBanners[safeBannerIdx]?.imageUrl || 
+                  'https://storage.googleapis.com/prod-qchang-v1/coupon/upload/20260720/20260720182034Banner%20-%20Shera%20SPC%2021-31%20Jul26-Web%20900x900.png'
+                } 
+                alt={activeBanners[safeBannerIdx]?.title || 'โปรโมชั่นหลัก'} 
+                className="absolute inset-0 w-full h-full object-cover brightness-85 animate-fadeIn"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-6">
-                <div className="bg-amber-500 text-slate-900 font-bold px-2 py-0.5 text-[10px] w-fit rounded uppercase tracking-wider mb-2">Campaign</div>
-                <h3 className="text-lg md:text-xl font-bold text-white leading-tight">โปรโมชั่นติดตั้งพื้นไม้ SPC เกรดพรีเมียม Shera</h3>
-                <p className="text-xs text-slate-300 mt-1 max-w-lg hidden sm:block">รับโปรโมชันจองช่างขยายประกันเพิ่ม 365 วัน ฟรีบริการพ่นน้ำยาโอโซนฆ่าเชื้อโรค มูลค่า 350.-</p>
+
+              {/* Text overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-6 sm:p-8 z-10">
+                <div className="bg-amber-500 text-slate-900 font-extrabold px-3 py-0.5 text-[10px] md:text-xs w-fit rounded-md uppercase tracking-wider mb-2 shadow-md">
+                  {activeBanners[safeBannerIdx]?.campaignTag || 'Campaign'}
+                </div>
+                <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight drop-shadow-md">
+                  {activeBanners[safeBannerIdx]?.title || 'โปรโมชั่นติดตั้งพื้นไม้ SPC เกรดพรีเมียม Shera'}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-200 mt-2 max-w-2xl leading-relaxed drop-shadow-sm">
+                  {activeBanners[safeBannerIdx]?.description || 'รับโปรโมชันจองช่างขยายประกันเพิ่ม 365 วัน ฟรีบริการพ่นน้ำยาโอโซนฆ่าเชื้อโรค มูลค่า 350.-'}
+                </p>
               </div>
+
+              {/* Slider Navigation controls */}
+              {activeBanners.length > 1 && (
+                <>
+                  <button
+                    onClick={handlePrevBanner}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-slate-900/50 hover:bg-slate-900/80 text-white p-2 rounded-full transition z-20 cursor-pointer border-0 shadow-md flex items-center justify-center hover:scale-105"
+                  >
+                    <ChevronLeft className="h-5 w-5 text-amber-500 stroke-[3]" />
+                  </button>
+                  <button
+                    onClick={handleNextBanner}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-slate-900/50 hover:bg-slate-900/80 text-white p-2 rounded-full transition z-20 cursor-pointer border-0 shadow-md flex items-center justify-center hover:scale-105"
+                  >
+                    <ChevronRight className="h-5 w-5 text-amber-500 stroke-[3]" />
+                  </button>
+
+                  {/* Dot Indicators */}
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2.5 z-20">
+                    {activeBanners.map((_, idx) => (
+                      <span
+                        key={idx}
+                        onClick={() => setActiveBannerIdx(idx)}
+                        className={`w-2 h-2 rounded-full cursor-pointer transition-all duration-300 ${
+                          safeBannerIdx === idx 
+                            ? 'bg-amber-500 scale-120 w-5 shadow-md' 
+                            : 'bg-white/50 hover:bg-white'
+                        }`}
+                      ></span>
+                    ))}
+                  </div>
+                </>
+              )}
+
             </div>
           </div>
 

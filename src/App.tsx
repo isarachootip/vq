@@ -13,8 +13,9 @@ import { VfixqPortalView } from './components/VfixqPortalView';
 import { BackendSettingsView } from './components/BackendSettingsView';
 import { BranchAnnouncementsView } from './components/BranchAnnouncementsView';
 import { InternalChatView } from './components/InternalChatView';
+import { BannerManagerView } from './components/BannerManagerView';
 
-import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel } from './types';
+import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner } from './types';
 import { 
   INITIAL_TECHNICIANS, 
   INITIAL_BOOKINGS, 
@@ -41,8 +42,20 @@ import {
   ShoppingBag,
   Settings,
   Megaphone,
-  MessageSquare
+  MessageSquare,
+  Image as ImageIcon
 } from 'lucide-react';
+
+const INITIAL_BANNERS: PortalBanner[] = [
+  {
+    id: 'banner-1',
+    imageUrl: 'https://storage.googleapis.com/prod-qchang-v1/coupon/upload/20260720/20260720182034Banner%20-%20Shera%20SPC%2021-31%20Jul26-Web%20900x900.png',
+    title: 'โปรโมชั่นติดตั้งพื้นไม้ SPC เกรดพรีเมียม Shera',
+    description: 'รับโปรโมชันจองช่างขยายประกันเพิ่ม 365 วัน ฟรีบริการพ่นน้ำยาโอโซนฆ่าเชื้อโรค มูลค่า 350.-',
+    campaignTag: 'Campaign',
+    isActive: true
+  }
+];
 
 const INITIAL_ANNOUNCEMENTS: BranchAnnouncement[] = [
   {
@@ -109,6 +122,7 @@ export function App() {
   // Communication States
   const [announcements, setAnnouncements] = useState<BranchAnnouncement[]>(INITIAL_ANNOUNCEMENTS);
   const [chatChannels, setChatChannels] = useState<ChatChannel[]>(INITIAL_CHANNELS);
+  const [banners, setBanners] = useState<PortalBanner[]>(INITIAL_BANNERS);
 
   // Configuration States
   const [matchWeights, setMatchWeights] = useState<any>({
@@ -171,6 +185,23 @@ export function App() {
   const handleAddAnnouncement = (newAnn: BranchAnnouncement) => {
     setAnnouncements((prev) => [newAnn, ...prev]);
     showToast('เผยแพร่ประกาศสาขาสำเร็จ!');
+  };
+
+  const handleAddBanner = (newBanner: PortalBanner) => {
+    setBanners((prev) => [...prev, newBanner]);
+    showToast('สร้างแบนเนอร์ประชาสัมพันธ์ใหม่สำเร็จ!');
+  };
+
+  const handleUpdateBanner = (updated: PortalBanner) => {
+    setBanners((prev) => 
+      prev.map((b) => (b.id === updated.id ? updated : b))
+    );
+    showToast('ปรับปรุงข้อมูลแบนเนอร์เรียบร้อย');
+  };
+
+  const handleDeleteBanner = (id: string) => {
+    setBanners((prev) => prev.filter((b) => b.id !== id));
+    showToast('ลบแบนเนอร์ออกเรียบร้อยแล้ว');
   };
 
   const handleDeleteAnnouncement = (id: string) => {
@@ -367,6 +398,7 @@ export function App() {
     { id: 'penalty-audit', label: 'รายการลงโทษ E-CN', icon: ShieldAlert },
     { id: 'branch-announcements', label: 'ประกาศสาขา (Board)', icon: Megaphone },
     { id: 'internal-chat', label: 'ห้องแชทประสานงาน', icon: MessageSquare },
+    { id: 'banner-manager', label: 'จัดการแบนเนอร์ (Banners)', icon: ImageIcon },
     { id: 'settings', label: 'การตั้งค่าระบบ (Configs)', icon: Settings },
     { id: 'divider-3', label: 'เอกสารเรียนรู้', isDivider: true },
     { id: 'km-hub', label: 'คู่มือระบบ & FAQ (KM)', icon: BookOpen },
@@ -386,6 +418,7 @@ export function App() {
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
           <VfixqPortalView
             branches={branches}
+            banners={banners}
             onConfirmBooking={(b) => {
               handleConfirmBooking(b);
               showToast('สร้างคิวติดตั้งงานและคำนวณ Match Score สำเร็จ!');
@@ -617,6 +650,7 @@ export function App() {
           {activeTab === 'vfixq-portal' && (
             <VfixqPortalView
               branches={branches}
+              banners={banners}
               onConfirmBooking={handleConfirmBooking}
               onNavigateToTab={(tabId) => setActiveTab(tabId)}
             />
@@ -646,6 +680,15 @@ export function App() {
               onSendMessage={handleSendMessage}
               technicians={technicians}
               branches={branches}
+            />
+          )}
+
+          {activeTab === 'banner-manager' && (
+            <BannerManagerView
+              banners={banners}
+              onAddBanner={handleAddBanner}
+              onUpdateBanner={handleUpdateBanner}
+              onDeleteBanner={handleDeleteBanner}
             />
           )}
         </main>
