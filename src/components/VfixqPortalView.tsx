@@ -288,7 +288,7 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
           <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest hidden sm:inline">| Vfixq Engine</span>
         </div>
 
-        <div className="relative max-w-xs flex-1 mx-4">
+        <div className="relative max-w-xs flex-1 mx-4 hidden sm:block">
           <input
             type="text"
             placeholder="ค้นหาบริการติดตั้ง ดูแลบ้าน..."
@@ -300,12 +300,14 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
         </div>
 
         <div className="flex items-center space-x-4 text-xs font-bold text-slate-500">
-          <span className="hover:text-amber-500 cursor-pointer">🛒 ตะกร้าสินค้า</span>
+          <span className="hover:text-amber-500 cursor-pointer hidden sm:inline">🛒 ตะกร้าสินค้า</span>
           <button 
             onClick={() => onNavigateToTab('dashboard')} 
-            className="bg-amber-500 hover:bg-amber-600 text-slate-900 px-3.5 py-1.5 rounded-full cursor-pointer font-bold transition flex items-center gap-1 shadow-md border-0"
+            className="bg-amber-500 hover:bg-amber-600 text-slate-900 px-3.5 py-1.5 rounded-full cursor-pointer font-bold transition flex items-center gap-1 shadow-md border-0 whitespace-nowrap"
           >
-            ⚙️ เข้าระบบหลังบ้าน (1308 Console)
+            <span>⚙️</span>
+            <span className="hidden md:inline"> เข้าระบบหลังบ้าน (1308 Console)</span>
+            <span className="md:hidden text-[10px]"> ระบบหลังบ้าน</span>
           </button>
         </div>
       </header>
