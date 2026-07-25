@@ -202,3 +202,14 @@ export interface TechnicianApplication {
   status: 'reject' | 'accept' | 'approve' | 'sign contract' | 'employee';
   appliedAt: string;
 }
+
+export interface ServiceItem {
+  id: string;
+  name: string;
+  category: string;
+  priceText: string;
+  priceNumber: number;
+  image: string;
+  description: string;
+  requiredSkillLevel: 1 | 2 | 3;
+}

@@ -15,8 +15,9 @@ import { BranchAnnouncementsView } from './components/BranchAnnouncementsView';
 import { InternalChatView } from './components/InternalChatView';
 import { BannerManagerView } from './components/BannerManagerView';
 import { TechApplicationsView } from './components/TechApplicationsView';
+import { ServiceCatalogManagerView } from './components/ServiceCatalogManagerView';
 
-import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner, TechnicianApplication, TechnicianSkill, SkillCategory } from './types';
+import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner, TechnicianApplication, TechnicianSkill, SkillCategory, ServiceItem } from './types';
 import { 
   INITIAL_TECHNICIANS, 
   INITIAL_BOOKINGS, 
@@ -45,7 +46,8 @@ import {
   Megaphone,
   MessageSquare,
   Image as ImageIcon,
-  FileText
+  FileText,
+  Briefcase
 } from 'lucide-react';
 
 const INITIAL_BANNERS: PortalBanner[] = [
@@ -85,6 +87,69 @@ const INITIAL_TECH_APPLICATIONS: TechnicianApplication[] = [
     avatarUrl: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150',
     status: 'approve',
     appliedAt: '2026-07-25 09:15'
+  }
+];
+
+const INITIAL_SERVICES: ServiceItem[] = [
+  {
+    id: 'inst-aircon-multi',
+    name: 'บริการติดตั้งเครื่องปรับอากาศ Multi-Split (3 เครื่อง)',
+    category: 'ระบบปรับอากาศ',
+    priceText: 'เริ่มต้น 3,500 บาท',
+    priceNumber: 3500,
+    image: '/ac_service_1784935924336.jpg',
+    description: 'บริการเดินท่อน้ำยาคอมเพรสเซอร์ แขวนคอยล์เย็น ติดตั้งขาแขวนแอร์ภายนอก และเทสแรงดันระบบน้ำยาแอร์ R32 ประกันการทำงาน 180 วัน',
+    requiredSkillLevel: 3
+  },
+  {
+    id: 'inst-built-kitchen',
+    name: 'บริการติดตั้งชุดครัว Built-in Master (ชุดใหญ่)',
+    category: 'เฟอร์นิเจอร์ Fit-In',
+    priceText: 'เริ่มต้น 12,000 บาท',
+    priceNumber: 12000,
+    image: '/kitchen_service_1784935953733.jpg',
+    description: 'ประกอบตู้ลอยและตู้ตั้งพื้น Built-in, ติดตั้งหินแกรนิตท็อปครัว, ต่อช่องดูดควันเจาะหน้ากากระบาย และจัดบานพับ Soft-close ตั้งองศาระดับสูงสุด',
+    requiredSkillLevel: 3
+  },
+  {
+    id: 'inst-built-closet',
+    name: 'บริการติดตั้งตู้เสื้อผ้า Walk-in Closet',
+    category: 'เฟอร์นิเจอร์ Fit-In',
+    priceText: 'เริ่มต้น 4,500 บาท',
+    priceNumber: 4500,
+    image: '/kitchen_service_1784935953733.jpg',
+    description: 'ประกอบตู้เสื้อโครงสร้างอะลูมิเนียม หน้ากระจกเทมเปอร์ แขวนรางเลื่อน และซ่อนระบบไฟ LED หรูหราส่องสว่างใต้ชั้นวาง',
+    requiredSkillLevel: 2
+  },
+  {
+    id: 'inst-flooring-laminate',
+    name: 'บริการปูพื้นไม้สำเร็จรูป SPC (เกรดนำเข้า)',
+    category: 'พื้น ผนัง และฝ้าเพดาน',
+    priceText: 'เริ่มต้น 450 บาท / ตร.ม.',
+    priceNumber: 450,
+    image: '/flooring_service_1784935940227.jpg',
+    description: 'ปรับระดับหน้าดิน/ปูนเดิม รองแผ่นโฟมหนากันความชื้น ติดตั้งแผ่นพื้น SPC แบรนด์นำเข้า ล็อกแน่นสนิท ทนน้ำและรอยขีดข่วน 100%',
+    requiredSkillLevel: 2
+  },
+  {
+    id: 'inst-smart-home',
+    name: 'บริการติดตั้งระบบ Smart Home & Digital Lock',
+    category: 'Smart living',
+    priceText: 'เริ่มต้น 1,800 บาท',
+    priceNumber: 1800,
+    image: '/ac_service_1784935924336.jpg',
+    description: 'ติดตั้งระบบล็อกประตูดิจิทัล (Digital Door Lock) บนประตูชนิดไม้หรือโลหะ เซ็ตระบบ Wi-Fi และเชื่อมเกตเวย์ผ่านสมาร์ทโฟน',
+    requiredSkillLevel: 2
+  },
+  {
+    id: 'inst-curtains-motor',
+    name: 'บริการติดตั้งผ้าม่านมอเตอร์ไฟฟ้า + วอลเปเปอร์',
+    category: 'อื่น ๆ',
+    priceText: 'เริ่มต้น 3,200 บาท',
+    priceNumber: 3200,
+    image: '/flooring_service_1784935940227.jpg',
+    description: 'ติดตั้งผ้าม่านพับ/ผ้าม่านรางมอเตอร์ เชื่อมต่อ Smart Home สั่งงานด้วยเสียง พร้อมปูวอลเปเปอร์กาวในตัวเกรดพรีเมียม',
+    requiredSkillLevel: 1
   }
 ];
 
@@ -155,6 +220,7 @@ export function App() {
   const [chatChannels, setChatChannels] = useState<ChatChannel[]>(INITIAL_CHANNELS);
   const [banners, setBanners] = useState<PortalBanner[]>(INITIAL_BANNERS);
   const [techApplications, setTechApplications] = useState<TechnicianApplication[]>(INITIAL_TECH_APPLICATIONS);
+  const [services, setServices] = useState<ServiceItem[]>(INITIAL_SERVICES);
 
   // Configuration States
   const [matchWeights, setMatchWeights] = useState<any>({
@@ -234,6 +300,23 @@ export function App() {
   const handleDeleteBanner = (id: string) => {
     setBanners((prev) => prev.filter((b) => b.id !== id));
     showToast('ลบแบนเนอร์ออกเรียบร้อยแล้ว');
+  };
+
+  const handleAddService = (newService: ServiceItem) => {
+    setServices((prev) => [...prev, newService]);
+    showToast(`เพิ่มบริการ ${newService.name} สำเร็จ!`);
+  };
+
+  const handleUpdateService = (updated: ServiceItem) => {
+    setServices((prev) => 
+      prev.map((s) => (s.id === updated.id ? updated : s))
+    );
+    showToast(`แก้ไขข้อมูลบริการ ${updated.name} เรียบร้อยแล้ว`);
+  };
+
+  const handleDeleteService = (id: string) => {
+    setServices((prev) => prev.filter((s) => s.id !== id));
+    showToast('ลบบริการงานติดตั้งออกจากระบบแล้ว');
   };
 
   const handleRegisterTechnician = (appData: {
@@ -517,6 +600,7 @@ export function App() {
     { id: 'branch-announcements', label: 'ประกาศสาขา (Board)', icon: Megaphone },
     { id: 'internal-chat', label: 'ห้องแชทประสานงาน', icon: MessageSquare },
     { id: 'banner-manager', label: 'จัดการแบนเนอร์ (Banners)', icon: ImageIcon },
+    { id: 'service-catalog-manager', label: 'จัดการบริการติดตั้ง (CRUD)', icon: Briefcase },
     { id: 'settings', label: 'การตั้งค่าระบบ (Configs)', icon: Settings },
     { id: 'divider-3', label: 'เอกสารเรียนรู้', isDivider: true },
     { id: 'km-hub', label: 'คู่มือระบบ & FAQ (KM)', icon: BookOpen },
@@ -538,6 +622,7 @@ export function App() {
             branches={branches}
             banners={banners}
             onRegisterTechnician={handleRegisterTechnician}
+            services={services}
             onConfirmBooking={(b) => {
               handleConfirmBooking(b);
               showToast('สร้างคิวติดตั้งงานและคำนวณ Match Score สำเร็จ!');
@@ -771,6 +856,7 @@ export function App() {
               branches={branches}
               banners={banners}
               onRegisterTechnician={handleRegisterTechnician}
+              services={services}
               onConfirmBooking={handleConfirmBooking}
               onNavigateToTab={(tabId) => setActiveTab(tabId)}
             />
@@ -782,6 +868,15 @@ export function App() {
               onUpdateMatchWeights={setMatchWeights}
               systemConfig={systemConfig}
               onUpdateSystemConfig={setSystemConfig}
+            />
+          )}
+
+          {activeTab === 'service-catalog-manager' && (
+            <ServiceCatalogManagerView
+              services={services}
+              onAddService={handleAddService}
+              onUpdateService={handleUpdateService}
+              onDeleteService={handleDeleteService}
             />
           )}
 
