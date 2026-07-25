@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { QueueBooking, Technician } from '../types';
+import type { QueueBooking, Technician, ServiceItem } from '../types';
 import { 
   Clock, 
   CheckCircle2, 
@@ -11,26 +11,41 @@ import {
   ArrowRight, 
   Layers, 
   Calendar as CalendarIcon,
-  Info
+  Info,
+  Phone
 } from 'lucide-react';
 
 interface DashboardViewProps {
   bookings: QueueBooking[];
   technicians: Technician[];
+  services: ServiceItem[];
   onDispatchToKanna: (bookingId: string) => void;
   onSelectBookingForSim: (booking: QueueBooking) => void;
+  onConfirmBooking: (newBooking: QueueBooking) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   bookings,
   technicians,
+  services,
   onDispatchToKanna,
   onSelectBookingForSim,
+  onConfirmBooking,
 }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>('2026-07-24'); // Default to 24th to highlight demo data
   const [selectedZone, setSelectedZone] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Manual Booking Modal States
+  const [showManualBookingModal, setShowManualBookingModal] = useState<boolean>(false);
+  const [mCustName, setMCustName] = useState<string>('');
+  const [mCustPhone, setMCustPhone] = useState<string>('');
+  const [mServiceId, setMServiceId] = useState<string>(services[0]?.id || '');
+  const [mZone, setMZone] = useState<string>('Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)');
+  const [mDate, setMDate] = useState<string>('2026-07-24');
+  const [mTimeSlot, setMTimeSlot] = useState<string>('Morning (09:00 - 12:00)');
+  const [mSource, setMSource] = useState<'Line OA' | 'Call Center 1308' | 'Walk-in'>('Call Center 1308');
 
   // 1. Filter bookings
   const filteredBookings = bookings.filter((b) => {
@@ -90,6 +105,42 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
     ];
     return `คิวติดตั้งประจำวันที่ ${parseInt(day)} ${thaiMonths[parseInt(month) - 1]} ${parseInt(year) + 543}`;
+  };
+
+  const handleManualBookingSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mCustName.trim() || !mCustPhone.trim()) return;
+
+    const selectedService = services.find(s => s.id === mServiceId);
+    if (!selectedService) return;
+
+    const randomDigits = Math.floor(Math.random() * 90 + 10);
+    const bookingRef = `BK-${mDate}-${randomDigits}`;
+
+    const newBooking: QueueBooking = {
+      id: `booking-manual-${Date.now()}`,
+      bookingRef,
+      customerName: mCustName,
+      customerPhone: mCustPhone,
+      bookingDate: mDate,
+      timeSlot: mTimeSlot,
+      createdFrom: mSource,
+      addressZone: mZone,
+      installationTypeId: selectedService.id,
+      installationTypeName: selectedService.name,
+      requiredSkillLevel: selectedService.requiredSkillLevel,
+      assignedTechTeamId: undefined,
+      status: 'Pending Dispatch',
+      createdAt: new Date().toISOString()
+    };
+
+    onConfirmBooking(newBooking);
+    
+    // Reset Form
+    setMCustName('');
+    setMCustPhone('');
+    setMServiceId(services[0]?.id || '');
+    setShowManualBookingModal(false);
   };
 
   return (
@@ -154,16 +205,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <h3 className="font-bold text-slate-800 text-sm">📅 ปฏิทินกำหนดการงานติดตั้ง (July 2026)</h3>
           </div>
           
-          <button
-            onClick={() => setSelectedDate(null)}
-            className={`px-3 py-1.5 rounded-full font-bold text-xs cursor-pointer border transition flex items-center gap-1.5 ${
-              selectedDate === null 
-                ? 'bg-amber-500 border-amber-600 text-slate-900 shadow-sm'
-                : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
-            }`}
-          >
-            📋 แสดงงานติดตั้งทั้งหมดทุกวัน
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setShowManualBookingModal(true)}
+              className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-full cursor-pointer shadow-sm border-0 transition flex items-center gap-1.5"
+            >
+              <span>➕ บันทึกคิวจอง (Line / โทรศัพท์)</span>
+            </button>
+
+            <button
+              onClick={() => setSelectedDate(null)}
+              className={`px-3 py-1.5 rounded-full font-bold text-xs cursor-pointer border transition flex items-center gap-1.5 ${
+                selectedDate === null 
+                  ? 'bg-amber-500 border-amber-600 text-slate-900 shadow-sm'
+                  : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'
+              }`}
+            >
+              📋 แสดงงานติดตั้งทั้งหมดทุกวัน
+            </button>
+          </div>
         </div>
 
         {/* Calendar Grid wrapper */}
@@ -418,6 +478,151 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </table>
         </div>
       </div>
+
+      {/* 5. Manual Booking Form Modal */}
+      {showManualBookingModal && (
+        <div className="fixed inset-0 z-150 flex items-center justify-center p-4 bg-slate-900/60 animate-fadeIn">
+          <div className="v-panel p-6 bg-white w-full max-w-lg border border-slate-200 rounded-2xl shadow-2xl space-y-4 text-xs">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <div className="flex items-center space-x-2 text-sm font-bold text-slate-800">
+                <Phone className="h-5 w-5 text-amber-500" />
+                <span>📝 บันทึกจองบริการติดตั้งใหม่ (ผู้ดูแลระบบหลังบ้านป้อนเอง)</span>
+              </div>
+              <button 
+                onClick={() => setShowManualBookingModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-sm border-0 bg-transparent font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleManualBookingSubmit} className="space-y-4">
+              
+              {/* Customer Info row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-600">ชื่อลูกค้า:</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="เช่น คุณสมเกียรติ มั่นคง"
+                    value={mCustName}
+                    onChange={(e) => setMCustName(e.target.value)}
+                    className="v-input w-full py-2"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-600">เบอร์โทรศัพท์ลูกค้า:</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="เช่น 089-1234567"
+                    value={mCustPhone}
+                    onChange={(e) => setMCustPhone(e.target.value)}
+                    className="v-input w-full py-2"
+                  />
+                </div>
+              </div>
+
+              {/* Service & Zone row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-600">เลือกบริการงานติดตั้ง:</label>
+                  <select
+                    value={mServiceId}
+                    onChange={(e) => setMServiceId(e.target.value)}
+                    className="v-input w-full py-2"
+                  >
+                    {services.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} (Min Level: {s.requiredSkillLevel})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-600">โซนพื้นที่ให้บริการ:</label>
+                  <select
+                    value={mZone}
+                    onChange={(e) => setMZone(e.target.value)}
+                    className="v-input w-full py-2"
+                  >
+                    <option value="Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)">Zone 1: สุขุมวิท - บางนา</option>
+                    <option value="Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)">Zone 2: ราชพฤกษ์ - แจ้งวัฒนะ</option>
+                    <option value="Zone 3: ปทุมธานี (รังสิต - ลำลูกกา)">Zone 3: รังสิต - ลำลูกกา</option>
+                    <option value="Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์)">Zone 4: เทพารักษ์ - ศรีนครินทร์</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Date & Time slot */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-600">วันที่นัดหมายติดตั้ง:</label>
+                  <input
+                    type="date"
+                    required
+                    value={mDate}
+                    onChange={(e) => setMDate(e.target.value)}
+                    className="v-input w-full py-2 font-bold"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-600">ช่วงเวลาปฏิบัติงาน:</label>
+                  <select
+                    value={mTimeSlot}
+                    onChange={(e) => setMTimeSlot(e.target.value)}
+                    className="v-input w-full py-2"
+                  >
+                    <option value="Morning (09:00 - 12:00)">Morning (09:00 - 12:00)</option>
+                    <option value="Afternoon (13:00 - 17:00)">Afternoon (13:00 - 17:00)</option>
+                    <option value="Full Day">Full Day (เต็มวัน)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Source selection */}
+              <div className="space-y-2">
+                <label className="block font-bold text-slate-600">ช่องทางการติดต่อที่ส่งข้อมูลเข้ามา:</label>
+                <div className="flex gap-4">
+                  {(['Line OA', 'Call Center 1308', 'Walk-in'] as const).map((src) => (
+                    <label key={src} className="flex items-center gap-2 cursor-pointer p-2 border border-slate-200 rounded-lg hover:bg-slate-50 flex-1 justify-center">
+                      <input
+                        type="radio"
+                        name="createdFrom"
+                        checked={mSource === src}
+                        onChange={() => setMSource(src)}
+                        className="accent-amber-500 scale-110"
+                      />
+                      <span className="font-semibold text-slate-700">{src}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowManualBookingModal(false)}
+                  className="v-btn-secondary py-2 px-4 cursor-pointer"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="v-btn-primary py-2 px-5 cursor-pointer"
+                >
+                  บันทึกตั๋วคิวงานติดตั้ง
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

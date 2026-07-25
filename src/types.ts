@@ -99,7 +99,7 @@ export interface QueueBooking {
   bookingDate: string;
   timeSlot: string;
   status: 'Pending Dispatch' | 'Scheduled' | 'Dispatched to KANNA' | 'STS In-Progress' | 'QC Inspection' | 'Passed (Closed)' | 'Penalty E-CN Issued';
-  createdFrom: 'Selling Tools (E-ordering)' | 'Manual POS' | 'COOHOM Direct' | 'Vfixq Portal';
+  createdFrom: 'Selling Tools (E-ordering)' | 'Manual POS' | 'COOHOM Direct' | 'Vfixq Portal' | 'Line OA' | 'Call Center 1308' | 'Walk-in';
   createdAt: string;
   penaltyRef?: string;
   branchId?: string; // Branch associated with booking

@@ -773,9 +773,14 @@ export function App() {
             <DashboardView
               bookings={bookings}
               technicians={technicians}
+              services={services}
               onDispatchToKanna={handleDispatchToKanna}
               onSelectBookingForSim={() => {
                 setActiveTab('integration-flow');
+              }}
+              onConfirmBooking={(b) => {
+                handleConfirmBooking(b);
+                showToast('บันทึกข้อมูลคิวติดตั้งใหม่ด้วยตนเองสำเร็จ!');
               }}
             />
           )}
