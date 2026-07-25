@@ -14,7 +14,7 @@
   --color-slate-900: #111115;
   
   /* Primary Accent: Gold-Yellow */
-  --color-blue-600: #b89130;
+  --color-blue-600: #ffb200;
   
   /* Badge/Status Bright Theme Mappings */
   --color-amber-50: #fffbeb;
@@ -141,20 +141,21 @@
 }
 
 .v-btn-primary {
-  background: linear-gradient(135deg, #111115 0%, #212529 100%);
-  color: #dfb750;
+  background-color: #ffb200;
+  color: #111115;
   font-weight: 700;
   border-radius: 6px;
   padding: 0.5rem 1.25rem;
-  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease-in-out;
-  border: 1px solid #b89130;
+  box-shadow: 0 4px 12px rgba(255, 178, 0, 0.15);
+  transition: all 0.25s ease-in-out;
+  border: 1px solid #ffb200;
   cursor: pointer;
 }
 .v-btn-primary:hover {
-  background: linear-gradient(135deg, #c5a03d 0%, #dfb750 50%, #b89130 100%);
-  color: #111115;
-  box-shadow: 0 6px 20px -3px rgba(184, 145, 48, 0.3);
+  background-color: #111115;
+  color: #ffb200;
+  border-color: #111115;
+  box-shadow: 0 6px 15px rgba(17, 17, 21, 0.15);
   transform: translateY(-1px);
 }
 
@@ -170,8 +171,8 @@
 }
 .v-btn-secondary:hover {
   background-color: #f8f9fa;
-  border-color: #b89130;
-  color: #b89130;
+  border-color: #ffb200;
+  color: #ffb200;
 }
 
 /* Leaflet Map (Bright Mode matches bright gold-yellow theme) */
