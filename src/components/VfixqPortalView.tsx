@@ -1111,7 +1111,7 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
         <div className="space-y-2.5">
           <h4 className="font-bold text-slate-800">ติดต่อสมัครร่วมเป็นช่างกับเรา</h4>
           <p className="text-[11px] text-slate-400 leading-relaxed">
-            สำหรับการติดต่อประสานงานเรื่องการสมัครบริการช่างของ vFixQ เพื่อรับงานติดตั้งสินค้าไทวัสดุ และ BnB Home
+            สำหรับการติดต่อประสานงานเรื่องการสมัครบริการช่างของ vFixQ เพื่อรับงานติดตั้งสินค้า
           </p>
           <button
             onClick={() => setShowTechAppModal(true)}
