@@ -58,6 +58,14 @@ const INITIAL_BANNERS: PortalBanner[] = [
     description: 'รับโปรโมชันจองช่างขยายประกันเพิ่ม 365 วัน ฟรีบริการพ่นน้ำยาโอโซนฆ่าเชื้อโรค มูลค่า 350.-',
     campaignTag: 'Campaign',
     isActive: true
+  },
+  {
+    id: 'banner-2',
+    imageUrl: 'https://images.unsplash.com/photo-1581094288338-2314dddb7eed?w=1200',
+    title: 'เราคือพระเอกตัวจริงเรื่อง Renovation',
+    description: 'รับสิทธิ์ให้คำปรึกษาฟรีไม่มีส่วนลดค่าใช้จ่ายในการสำรวจหน้างาน',
+    campaignTag: 'Renovation',
+    isActive: true
   }
 ];
 
@@ -211,40 +219,154 @@ export function App() {
   const [branches, setBranches] = useState<Branch[]>(INITIAL_BRANCHES);
   const [zones, setZones] = useState<Zone[]>(INITIAL_ZONES);
   const [skills, setSkills] = useState<Skill[]>(INITIAL_SKILLS);
-  const [technicians, setTechnicians] = useState<Technician[]>(INITIAL_TECHNICIANS);
-  const [bookings, setBookings] = useState<QueueBooking[]>(INITIAL_BOOKINGS);
-  const [penalties, setPenalties] = useState<PenaltyRecord[]>(INITIAL_PENALTIES);
+
+  const [technicians, setTechnicians] = useState<Technician[]>(() => {
+    try {
+      const saved = localStorage.getItem('vfixq_technicians');
+      return saved ? JSON.parse(saved) : INITIAL_TECHNICIANS;
+    } catch {
+      return INITIAL_TECHNICIANS;
+    }
+  });
+
+  const [bookings, setBookings] = useState<QueueBooking[]>(() => {
+    try {
+      const saved = localStorage.getItem('vfixq_bookings');
+      return saved ? JSON.parse(saved) : INITIAL_BOOKINGS;
+    } catch {
+      return INITIAL_BOOKINGS;
+    }
+  });
+
+  const [penalties, setPenalties] = useState<PenaltyRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('vfixq_penalties');
+      return saved ? JSON.parse(saved) : INITIAL_PENALTIES;
+    } catch {
+      return INITIAL_PENALTIES;
+    }
+  });
 
   // Communication States
   const [announcements, setAnnouncements] = useState<BranchAnnouncement[]>(INITIAL_ANNOUNCEMENTS);
   const [chatChannels, setChatChannels] = useState<ChatChannel[]>(INITIAL_CHANNELS);
-  const [banners, setBanners] = useState<PortalBanner[]>(INITIAL_BANNERS);
-  const [techApplications, setTechApplications] = useState<TechnicianApplication[]>(INITIAL_TECH_APPLICATIONS);
-  const [services, setServices] = useState<ServiceItem[]>(INITIAL_SERVICES);
+
+  const [banners, setBanners] = useState<PortalBanner[]>(() => {
+    try {
+      const saved = localStorage.getItem('vfixq_banners');
+      return saved ? JSON.parse(saved) : INITIAL_BANNERS;
+    } catch {
+      return INITIAL_BANNERS;
+    }
+  });
+
+  const [techApplications, setTechApplications] = useState<TechnicianApplication[]>(() => {
+    try {
+      const saved = localStorage.getItem('vfixq_tech_applications');
+      return saved ? JSON.parse(saved) : INITIAL_TECH_APPLICATIONS;
+    } catch {
+      return INITIAL_TECH_APPLICATIONS;
+    }
+  });
+
+  const [services, setServices] = useState<ServiceItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('vfixq_services');
+      return saved ? JSON.parse(saved) : INITIAL_SERVICES;
+    } catch {
+      return INITIAL_SERVICES;
+    }
+  });
 
   // Configuration States
-  const [matchWeights, setMatchWeights] = useState<any>({
-    baseMatch: 40,
-    levelBonus: 10,
-    primaryZone: 15,
-    secondaryZone: 5,
-    branchSync: 15,
-    goldTier: 10,
-    silverTier: 5,
-    ratingMultiplier: 10,
-    penaltyDivisor: 5
+  const [matchWeights, setMatchWeights] = useState<any>(() => {
+    try {
+      const saved = localStorage.getItem('vfixq_match_weights');
+      return saved ? JSON.parse(saved) : {
+        baseMatch: 40,
+        levelBonus: 10,
+        primaryZone: 15,
+        secondaryZone: 5,
+        branchSync: 15,
+        goldTier: 10,
+        silverTier: 5,
+        ratingMultiplier: 10,
+        penaltyDivisor: 5
+      };
+    } catch {
+      return {
+        baseMatch: 40,
+        levelBonus: 10,
+        primaryZone: 15,
+        secondaryZone: 5,
+        branchSync: 15,
+        goldTier: 10,
+        silverTier: 5,
+        ratingMultiplier: 10,
+        penaltyDivisor: 5
+      };
+    }
   });
 
-  const [systemConfig, setSystemConfig] = useState<any>({
-    cooldownThreshold: 45,
-    suspensionThreshold: 90,
-    kannaApiUrl: 'https://api.kanna.io/v1/projects',
-    stsWebhookUrl: 'https://sts-api.vservice.co.th/webhooks/checkin',
-    qcInspectorUrl: 'https://qc-inspect.vservice.co.th/api/audits',
-    eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing',
-    googleMapsApiKey: 'AIzaSyA1-DemoMapsKey-2026July',
-    bannerSlideInterval: 5
+  const [systemConfig, setSystemConfig] = useState<any>(() => {
+    try {
+      const saved = localStorage.getItem('vfixq_system_config');
+      return saved ? JSON.parse(saved) : {
+        cooldownThreshold: 45,
+        suspensionThreshold: 90,
+        kannaApiUrl: 'https://api.kanna.io/v1/projects',
+        stsWebhookUrl: 'https://sts-api.vservice.co.th/webhooks/checkin',
+        qcInspectorUrl: 'https://qc-inspect.vservice.co.th/api/audits',
+        eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing',
+        googleMapsApiKey: 'AIzaSyA1-DemoMapsKey-2026July',
+        bannerSlideInterval: 5
+      };
+    } catch {
+      return {
+        cooldownThreshold: 45,
+        suspensionThreshold: 90,
+        kannaApiUrl: 'https://api.kanna.io/v1/projects',
+        stsWebhookUrl: 'https://sts-api.vservice.co.th/webhooks/checkin',
+        qcInspectorUrl: 'https://qc-inspect.vservice.co.th/api/audits',
+        eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing',
+        googleMapsApiKey: 'AIzaSyA1-DemoMapsKey-2026July',
+        bannerSlideInterval: 5
+      };
+    }
   });
+
+  // Watchers to persist state updates in localStorage
+  useEffect(() => {
+    localStorage.setItem('vfixq_banners', JSON.stringify(banners));
+  }, [banners]);
+
+  useEffect(() => {
+    localStorage.setItem('vfixq_services', JSON.stringify(services));
+  }, [services]);
+
+  useEffect(() => {
+    localStorage.setItem('vfixq_tech_applications', JSON.stringify(techApplications));
+  }, [techApplications]);
+
+  useEffect(() => {
+    localStorage.setItem('vfixq_bookings', JSON.stringify(bookings));
+  }, [bookings]);
+
+  useEffect(() => {
+    localStorage.setItem('vfixq_technicians', JSON.stringify(technicians));
+  }, [technicians]);
+
+  useEffect(() => {
+    localStorage.setItem('vfixq_penalties', JSON.stringify(penalties));
+  }, [penalties]);
+
+  useEffect(() => {
+    localStorage.setItem('vfixq_match_weights', JSON.stringify(matchWeights));
+  }, [matchWeights]);
+
+  useEffect(() => {
+    localStorage.setItem('vfixq_system_config', JSON.stringify(systemConfig));
+  }, [systemConfig]);
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
