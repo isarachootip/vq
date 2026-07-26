@@ -240,8 +240,8 @@ export const BannerManagerView: React.FC<BannerManagerViewProps> = ({
                 <div className="space-y-1">
                   <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">หรือกรอกลิ้งก์ภาพ URL:</span>
                   <input
-                    type="url"
-                    placeholder="ใส่ที่อยู่รูปภาพโฆษณา (HTTPS URL)"
+                    type="text"
+                    placeholder="ใส่ที่อยู่รูปภาพโฆษณา (HTTPS URL หรือใช้รูปอัปโหลด)"
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
                     className="v-input w-full py-2 font-mono"
