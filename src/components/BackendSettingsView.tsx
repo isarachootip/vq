@@ -339,6 +339,27 @@ export const BackendSettingsView: React.FC<BackendSettingsViewProps> = ({
                   <span className="text-xs font-black text-rose-500 w-12 text-right">{systemConfig.suspensionThreshold} แต้ม</span>
                 </div>
               </div>
+
+              <div className="pt-2 border-t border-slate-100">
+                <label className="block text-xs font-bold text-slate-600 mb-1">
+                  ⏱️ ระยะเวลาการสไลด์แบนเนอร์หน้าร้าน (Banner Slide Delay):
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="range"
+                    min="2"
+                    max="12"
+                    step="1"
+                    value={systemConfig.bannerSlideInterval || 5}
+                    onChange={(e) => handleConfigChange('bannerSlideInterval', parseInt(e.target.value))}
+                    className="flex-1 accent-amber-500 cursor-pointer"
+                  />
+                  <span className="text-xs font-black text-amber-500 w-12 text-right">{systemConfig.bannerSlideInterval || 5} วินาที</span>
+                </div>
+                <span className="text-[9px] text-slate-400 block mt-1 leading-normal">
+                  *กำหนดระยะเวลาเป็นวินาทีก่อนที่แบนเนอร์หน้าร้านจะสลับรูปภาพโดยอัตโนมัติ
+                </span>
+              </div>
               
               <div className="p-3.5 rounded-lg bg-rose-950/20 border border-rose-500/20 text-[10px] text-rose-600 flex items-start gap-2">
                 <Info className="h-4.5 w-4.5 shrink-0 mt-0.5" />

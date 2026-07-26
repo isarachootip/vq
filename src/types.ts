@@ -150,6 +150,7 @@ export interface SystemConfig {
   qcInspectorUrl: string;
   eCnErpUrl: string;
   googleMapsApiKey?: string;
+  bannerSlideInterval?: number;
 }
 
 export interface BranchAnnouncement {

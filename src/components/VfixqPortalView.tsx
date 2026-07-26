@@ -36,6 +36,7 @@ interface VfixqPortalViewProps {
     refNum: string;
   }) => void;
   services: ServiceItem[];
+  bannerSlideInterval?: number;
 }
 
 export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
@@ -44,7 +45,8 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
   onNavigateToTab,
   banners,
   onRegisterTechnician,
-  services
+  services,
+  bannerSlideInterval
 }) => {
   const [activeCategory, setActiveCategory] = useState<string>('ทั้งหมด');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -57,11 +59,12 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
   // Auto-slide effect for banners
   useEffect(() => {
     if (activeBanners.length <= 1) return;
+    const intervalMs = (bannerSlideInterval || 5) * 1000;
     const interval = setInterval(() => {
       setActiveBannerIdx((prev) => (prev + 1) % activeBanners.length);
-    }, 5000); // Slide every 5 seconds
+    }, intervalMs);
     return () => clearInterval(interval);
-  }, [activeBanners.length]);
+  }, [activeBanners.length, bannerSlideInterval]);
   
   const handleNextBanner = () => {
     if (activeBanners.length <= 1) return;
@@ -363,11 +366,11 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
                   'https://storage.googleapis.com/prod-qchang-v1/coupon/upload/20260720/20260720182034Banner%20-%20Shera%20SPC%2021-31%20Jul26-Web%20900x900.png'
                 } 
                 alt={activeBanners[safeBannerIdx]?.title || 'โปรโมชั่นหลัก'} 
-                className="absolute inset-0 w-full h-full object-cover brightness-85 animate-fadeIn"
+                className="absolute inset-0 w-full h-full object-cover brightness-100 animate-fadeIn"
               />
 
               {/* Text overlays */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent flex flex-col justify-end p-6 sm:p-8 z-10">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent flex flex-col justify-end p-6 sm:p-8 z-10">
                 <div className="bg-amber-500 text-slate-900 font-extrabold px-3 py-0.5 text-[10px] md:text-xs w-fit rounded-md uppercase tracking-wider mb-2 shadow-md">
                   {activeBanners[safeBannerIdx]?.campaignTag || 'Campaign'}
                 </div>

@@ -242,7 +242,8 @@ export function App() {
     stsWebhookUrl: 'https://sts-api.vservice.co.th/webhooks/checkin',
     qcInspectorUrl: 'https://qc-inspect.vservice.co.th/api/audits',
     eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing',
-    googleMapsApiKey: 'AIzaSyA1-DemoMapsKey-2026July'
+    googleMapsApiKey: 'AIzaSyA1-DemoMapsKey-2026July',
+    bannerSlideInterval: 5
   });
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -624,6 +625,7 @@ export function App() {
             banners={banners}
             onRegisterTechnician={handleRegisterTechnician}
             services={services}
+            bannerSlideInterval={systemConfig.bannerSlideInterval}
             onConfirmBooking={(b) => {
               handleConfirmBooking(b);
               showToast('สร้างคิวติดตั้งงานและคำนวณ Match Score สำเร็จ!');
@@ -863,6 +865,7 @@ export function App() {
               banners={banners}
               onRegisterTechnician={handleRegisterTechnician}
               services={services}
+              bannerSlideInterval={systemConfig.bannerSlideInterval}
               onConfirmBooking={handleConfirmBooking}
               onNavigateToTab={(tabId) => setActiveTab(tabId)}
             />
