@@ -90,6 +90,7 @@ export interface QueueBooking {
   bookingRef: string;
   customerName: string;
   customerPhone: string;
+  lineId?: string;
   addressZone: string;
   installationTypeId: string;
   installationTypeName: string;

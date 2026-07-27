@@ -45,6 +45,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [showManualBookingModal, setShowManualBookingModal] = useState<boolean>(false);
   const [mCustName, setMCustName] = useState<string>('');
   const [mCustPhone, setMCustPhone] = useState<string>('');
+  const [mLineId, setMLineId] = useState<string>('');
   const [mServiceId, setMServiceId] = useState<string>(services[0]?.id || '');
   const [mZone, setMZone] = useState<string>('Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)');
   const [mDate, setMDate] = useState<string>('2026-07-24');
@@ -157,6 +158,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       bookingRef,
       customerName: mCustName,
       customerPhone: mCustPhone,
+      lineId: mLineId,
       bookingDate: mDate,
       timeSlot: mTimeSlot,
       createdFrom: mSource,
@@ -174,6 +176,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     // Reset Form
     setMCustName('');
     setMCustPhone('');
+    setMLineId('');
     setMServiceId(services[0]?.id || '');
     setShowManualBookingModal(false);
   };
@@ -484,7 +487,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </td>
 
                       <td className="px-4 py-3">
-                        <div className="font-semibold text-slate-800">{b.customerName}</div>
+                        <div className="font-semibold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                          <span>{b.customerName}</span>
+                          {b.lineId && (
+                            <span className="text-[9px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.2 rounded font-bold">
+                              LINE: {b.lineId}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[10px] text-slate-500 flex items-center space-x-1 mt-0.5">
                           <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
                           <span className="truncate max-w-[160px]">{b.addressZone}</span>
@@ -590,7 +600,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <form onSubmit={handleManualBookingSubmit} className="space-y-4">
               
               {/* Customer Info row */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="space-y-1">
                   <label className="block font-bold text-slate-600">ชื่อลูกค้า:</label>
                   <input
@@ -612,6 +622,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     value={mCustPhone}
                     onChange={(e) => setMCustPhone(e.target.value)}
                     className="v-input w-full py-2"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-600">LINE ID (ไลน์ไอดี):</label>
+                  <input
+                    type="text"
+                    placeholder="เช่น @somkiat หรือ somkiat_line"
+                    value={mLineId}
+                    onChange={(e) => setMLineId(e.target.value)}
+                    className="v-input w-full py-2 font-mono text-emerald-700"
                   />
                 </div>
               </div>
