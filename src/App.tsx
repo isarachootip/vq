@@ -19,6 +19,7 @@ import { ServiceCatalogManagerView } from './components/ServiceCatalogManagerVie
 import { TechDashboardView } from './components/TechDashboardView';
 import { InstallationAnalyticsView } from './components/InstallationAnalyticsView';
 import { UserManagementView } from './components/UserManagementView';
+import { LineCustomerChatView } from './components/LineCustomerChatView';
 
 import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner, TechnicianApplication, TechnicianSkill, SkillCategory, ServiceItem, UserAccount } from './types';
 import { 
@@ -54,7 +55,8 @@ import {
   Briefcase,
   BarChart3,
   TrendingUp,
-  UserCheck
+  UserCheck,
+  MessageCircle
 } from 'lucide-react';
 
 const INITIAL_BANNERS: PortalBanner[] = [
@@ -742,6 +744,7 @@ export function App() {
     { id: 'penalty-audit', label: 'รายการลงโทษ E-CN', icon: ShieldAlert },
     { id: 'branch-announcements', label: 'ประกาศสาขา (Board)', icon: Megaphone },
     { id: 'internal-chat', label: 'ห้องแชทประสานงาน', icon: MessageSquare },
+    { id: 'line-chat', label: 'แชท LINE กับลูกค้า (LINE OA)', icon: MessageCircle },
     { id: 'banner-manager', label: 'จัดการแบนเนอร์ (Banners)', icon: ImageIcon },
     { id: 'service-catalog-manager', label: 'จัดการบริการติดตั้ง (CRUD)', icon: Briefcase },
     { id: 'user-management', label: 'จัดการผู้ใช้งาน & Roles', icon: UserCheck },
@@ -1081,6 +1084,14 @@ export function App() {
               onSendMessage={handleSendMessage}
               technicians={technicians}
               branches={branches}
+            />
+          )}
+
+          {activeTab === 'line-chat' && (
+            <LineCustomerChatView
+              bookings={bookings}
+              services={services}
+              onNavigateToTab={(tabId) => setActiveTab(tabId)}
             />
           )}
 
