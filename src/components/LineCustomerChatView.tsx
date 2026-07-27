@@ -259,13 +259,29 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
 
     updateConvList(updated);
 
+    const getSavedAccessToken = () => {
+      try {
+        const saved = localStorage.getItem('vfixq_system_config');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return parsed.lineChannelAccessToken || '';
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      return '';
+    };
+
+    const token = getSavedAccessToken();
+
     // Call backend API to push message back to LINE user's phone
     fetch('/api/line/reply', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         conversationId: activeConv.id,
-        text
+        text,
+        channelAccessToken: token
       })
     }).catch((err) => console.log('Backend reply offline fallback:', err));
 
@@ -276,6 +292,7 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
   const handleSendBookingCard = () => {
     if (!activeConv) return;
     const ref = activeConv.linkedBookingRef || `BK-2026-0727-${Math.floor(Math.random() * 89 + 10)}`;
+    const serviceName = services[0]?.name || 'บริการติดตั้งเครื่องปรับอากาศ';
 
     const cardMsg: LineChatMessage = {
       id: `card-${Date.now()}`,
@@ -286,7 +303,7 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
       type: 'booking_card',
       bookingRef: ref,
       bookingDetails: {
-        serviceName: services[0]?.name || 'บริการติดตั้งเครื่องปรับอากาศ',
+        serviceName,
         date: '25/07/2026',
         timeSlot: 'Morning (09:00 - 12:00)',
         priceText: 'ทีมช่างสมชาย (Gold Tier ⭐ 4.9)'
@@ -308,6 +325,30 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
     });
 
     updateConvList(updated);
+
+    const getSavedAccessToken = () => {
+      try {
+        const saved = localStorage.getItem('vfixq_system_config');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return parsed.lineChannelAccessToken || '';
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      return '';
+    };
+
+    // Push card notification message to customer's LINE app
+    fetch('/api/line/reply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversationId: activeConv.id,
+        text: `[ยืนยันคิวงานติดตั้ง vService Ref: ${ref}]\nบริการ: ${serviceName}\nวันที่นัดหมาย: 25/07/2026 ช่วง 09:00 - 12:00 น.\nทีมช่าง: สมชาย (Gold Tier ⭐ 4.9)`,
+        channelAccessToken: getSavedAccessToken()
+      })
+    }).catch((err) => console.log('Backend reply offline fallback:', err));
   };
 
   return (
