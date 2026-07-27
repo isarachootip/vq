@@ -909,9 +909,9 @@ export function App() {
           </div>
 
           <div className="flex items-center space-x-3 text-xs text-slate-500 font-medium">
-            <span>สภาพแวดล้อม: <strong className="text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">ระบบจำลอง (Simulator)</strong></span>
+            <span>สภาพแวดล้อม: <strong className="text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 flex-inline items-center gap-1">🟢 ระบบงานจริง (Production Mode)</strong></span>
             <span>|</span>
-            <span>วันที่ระบบ: <strong className="text-slate-700">23 กรกฎาคม 2026</strong></span>
+            <span>สถานะ Webhook: <strong className="text-emerald-600 font-mono font-bold">https://vservice.online/api/line/webhook</strong></span>
           </div>
         </header>
 

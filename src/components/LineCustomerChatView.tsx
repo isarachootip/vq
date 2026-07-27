@@ -4,7 +4,6 @@ import {
   MessageCircle,
   Send,
   Search,
-  Calendar,
   User,
   PlusCircle,
   Briefcase,
@@ -53,147 +52,7 @@ interface LineCustomerChatViewProps {
   onConfirmBooking?: (b: QueueBooking) => void;
 }
 
-const DEFAULT_CONVERSATIONS: LineCustomerConversation[] = [
-  {
-    id: 'conv-01',
-    customerName: 'คุณภิญโญ รัตนประเสริฐ',
-    lineId: '@pinyo_r',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-    phone: '089-888-7766',
-    addressZone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)',
-    lastMessage: 'รับทราบครับ วันศุกร์นี้ 09:00 น. รอทีมช่างสมชายเข้ามาติดตั้งครับ',
-    lastMessageTime: '10:45',
-    unreadCount: 0,
-    status: 'booked',
-    linkedBookingRef: 'BK-2026-0723-01',
-    messages: [
-      {
-        id: 'm-101',
-        sender: 'customer',
-        senderName: 'คุณภิญโญ',
-        text: 'สวัสดีครับ สอบถามเรื่องการติดตั้งครัว Built-in Master ชุดใหญ่ที่สั่งไว้จากไทวัสดุครับ',
-        timestamp: '10:15',
-        isRead: true
-      },
-      {
-        id: 'm-102',
-        sender: 'cs_agent',
-        senderName: 'เจ้าหน้าที่ vService CS',
-        text: 'สวัสดีครับคุณภิญโญ ทางระบบ vService ยินดีให้บริการครับ ขออนุญาตส่งการ์ดจองคิวงานและรายละเอียดทีมช่างประจำพื้นที่ให้นะครับ',
-        timestamp: '10:20',
-        isRead: true
-      },
-      {
-        id: 'm-103',
-        sender: 'cs_agent',
-        senderName: 'ระบบอัตโนมัติ vService',
-        text: 'ส่งใบยืนยันการจองคิวงานติดตั้งสำเร็จ',
-        timestamp: '10:22',
-        isRead: true,
-        type: 'booking_card',
-        bookingRef: 'BK-2026-0723-01',
-        bookingDetails: {
-          serviceName: 'งานติดตั้งครัว Built-in Master (ชุดใหญ่)',
-          date: '24/07/2026',
-          timeSlot: '09:00 - 17:00 (Full Day)',
-          priceText: 'ทีมช่างสมชาย (Gold Tier ⭐ 4.9)'
-        }
-      },
-      {
-        id: 'm-104',
-        sender: 'customer',
-        senderName: 'คุณภิญโญ',
-        text: 'รับทราบครับ วันศุกร์นี้ 09:00 น. รอทีมช่างสมชายเข้ามาติดตั้งครับ',
-        timestamp: '10:45',
-        isRead: true
-      }
-    ]
-  },
-  {
-    id: 'conv-02',
-    customerName: 'คุณสิรินทร์ วงศ์อนันต์',
-    lineId: '@sirin_w',
-    avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150',
-    phone: '081-333-2211',
-    addressZone: 'Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)',
-    lastMessage: 'ขอทราบราคาประเมินและคิวช่างแอร์ว่างวันเสาร์นี้ด้วยค่ะ',
-    lastMessageTime: '09:30',
-    unreadCount: 2,
-    status: 'chatting',
-    linkedBookingRef: 'BK-2026-0723-02',
-    messages: [
-      {
-        id: 'm-201',
-        sender: 'customer',
-        senderName: 'คุณสิรินทร์',
-        text: 'สวัสดีค่ะ สนใจติดตั้งเครื่องปรับอากาศ Multi-Split 3 เครื่องค่ะ',
-        timestamp: '09:25',
-        isRead: false
-      },
-      {
-        id: 'm-202',
-        sender: 'customer',
-        senderName: 'คุณสิรินทร์',
-        text: 'ขอทราบราคาประเมินและคิวช่างแอร์ว่างวันเสาร์นี้ด้วยค่ะ',
-        timestamp: '09:30',
-        isRead: false
-      }
-    ]
-  },
-  {
-    id: 'conv-03',
-    customerName: 'คุณณัฐพล เดชอนันต์',
-    lineId: '@nattapol_d',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-    phone: '084-777-6655',
-    addressZone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)',
-    lastMessage: 'ส่งรูปพื้นที่หน้างานปูพื้น SPC 80 ตร.ม. ให้แล้วนะครับ',
-    lastMessageTime: 'เมื่อวาน',
-    unreadCount: 0,
-    status: 'booked',
-    linkedBookingRef: 'BK-2026-0723-03',
-    messages: [
-      {
-        id: 'm-301',
-        sender: 'customer',
-        senderName: 'คุณณัฐพล',
-        text: 'ส่งรูปพื้นที่หน้างานปูพื้น SPC 80 ตร.ม. ให้แล้วนะครับ',
-        timestamp: '18:40',
-        isRead: true
-      },
-      {
-        id: 'm-302',
-        sender: 'cs_agent',
-        senderName: 'เจ้าหน้าที่ vService CS',
-        text: 'ขอบคุณครับ ได้รับรูปเรียบร้อยแล้ว ทีมช่างประเสริฐจะเข้าหน้างานวันเสาร์ที่ 25/07/2026 ครับ',
-        timestamp: '18:45',
-        isRead: true
-      }
-    ]
-  },
-  {
-    id: 'conv-04',
-    customerName: 'คุณศุภชัย มีสุข',
-    lineId: '@supachai_m',
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-    phone: '086-123-9988',
-    addressZone: 'Zone 3: ปทุมธานี (รังสิต - ลำลูกกา)',
-    lastMessage: 'สวัสดีครับ สนใจล้างแอร์ 2 เครื่อง มีคิววันไหนบ้างครับ?',
-    lastMessageTime: '11:20',
-    unreadCount: 1,
-    status: 'new',
-    messages: [
-      {
-        id: 'm-401',
-        sender: 'customer',
-        senderName: 'คุณศุภชัย',
-        text: 'สวัสดีครับ สนใจล้างแอร์ 2 เครื่อง มีคิววันไหนบ้างครับ?',
-        timestamp: '11:20',
-        isRead: false
-      }
-    ]
-  }
-];
+const DEFAULT_CONVERSATIONS: LineCustomerConversation[] = [];
 
 const QUICK_REPLIES = [
   '👋 ยินดีต้อนรับสู่บริการ vService ยินดีให้บริการครับ',
@@ -204,16 +63,98 @@ const QUICK_REPLIES = [
 ];
 
 export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
-  conversations = DEFAULT_CONVERSATIONS,
   bookings,
   services,
   onNavigateToTab,
 }) => {
-  const [convList, setConvList] = useState<LineCustomerConversation[]>(conversations);
-  const [selectedId, setSelectedId] = useState<string>(conversations[0]?.id || '');
+  // Load conversation list from localStorage or fallback
+  const [convList, setConvList] = useState<LineCustomerConversation[]>(() => {
+    try {
+      const saved = localStorage.getItem('vfixq_line_live_conversations');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Purge legacy mockup data (e.g. conv-01, conv-02)
+          const filtered = parsed.filter(
+            (c: LineCustomerConversation) => !['conv-01', 'conv-02', 'conv-03', 'conv-04'].includes(c.id)
+          );
+          return filtered;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return [];
+  });
+
+  const [isLiveMode, setIsLiveMode] = useState<boolean>(() => {
+    return localStorage.getItem('vfixq_line_live_mode') !== 'false';
+  });
+
+  const [selectedId, setSelectedId] = useState<string>(convList[0]?.id || '');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [inputText, setInputText] = useState<string>('');
+
+  // Persist convList to localStorage
+  const updateConvList = (newConvs: LineCustomerConversation[]) => {
+    setConvList(newConvs);
+    try {
+      localStorage.setItem('vfixq_line_live_conversations', JSON.stringify(newConvs));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Clear Mock Data handler
+  const handleClearMockData = () => {
+    if (window.confirm('คุณต้องการล้างข้อมูลตัวอย่าง (Mockup Data) ทั้งหมด เพื่อเริ่มรับข้อความจริงใช่หรือไม่?')) {
+      updateConvList([]);
+      setSelectedId('');
+      localStorage.setItem('vfixq_line_live_mode', 'true');
+      setIsLiveMode(true);
+    }
+  };
+
+  // Restore Default Demo Data handler
+  const handleRestoreDemoData = () => {
+    updateConvList(DEFAULT_CONVERSATIONS);
+    setSelectedId(DEFAULT_CONVERSATIONS[0]?.id || '');
+  };
+
+  // Simulate Incoming Real Message from Webhook
+  const handleSimulateIncomingWebhookMsg = () => {
+    const testNames = ['คุณประเสริฐ ช่างทอง', 'คุณกนกวรรณ สุขเสริฐ', 'คุณธีรยุทธ การค้า', 'คุณวรรณา เลิศวณิช'];
+    const randomName = testNames[Math.floor(Math.random() * testNames.length)];
+    const randomLineId = `@${randomName.split(' ')[0].toLowerCase()}_line`;
+    const randomPhone = `08${Math.floor(Math.random() * 89 + 10)}-${Math.floor(Math.random() * 899 + 100)}-${Math.floor(Math.random() * 8999 + 1000)}`;
+
+    const newMsg: LineChatMessage = {
+      id: `webhook-msg-${Date.now()}`,
+      sender: 'customer',
+      senderName: randomName,
+      text: `สวัสดีครับ สอบถามคิวงานติดตั้งแอร์บ้านประจำโซน 1 จาก LINE OA Webhook (${new Date().toLocaleTimeString()})`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isRead: false
+    };
+
+    const newConv: LineCustomerConversation = {
+      id: `conv-webhook-${Date.now()}`,
+      customerName: randomName,
+      lineId: randomLineId,
+      avatarUrl: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150`,
+      phone: randomPhone,
+      addressZone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)',
+      lastMessage: newMsg.text,
+      lastMessageTime: 'เมื่อครู่',
+      unreadCount: 1,
+      status: 'new',
+      messages: [newMsg]
+    };
+
+    updateConvList([newConv, ...convList]);
+    setSelectedId(newConv.id);
+  };
 
   const activeConv = useMemo(() => {
     return convList.find((c) => c.id === selectedId) || convList[0];
@@ -256,22 +197,21 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
       isRead: true
     };
 
-    setConvList((prev) =>
-      prev.map((c) => {
-        if (c.id === activeConv.id) {
-          return {
-            ...c,
-            lastMessage: text,
-            lastMessageTime: 'เมื่อครู่',
-            unreadCount: 0,
-            status: c.status === 'new' ? 'chatting' : c.status,
-            messages: [...c.messages, newMsg]
-          };
-        }
-        return c;
-      })
-    );
+    const updated = convList.map((c) => {
+      if (c.id === activeConv.id) {
+        return {
+          ...c,
+          lastMessage: text,
+          lastMessageTime: 'เมื่อครู่',
+          unreadCount: 0,
+          status: c.status === 'new' ? ('chatting' as const) : c.status,
+          messages: [...c.messages, newMsg]
+        };
+      }
+      return c;
+    });
 
+    updateConvList(updated);
     if (!textToSend) setInputText('');
   };
 
@@ -296,21 +236,21 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
       }
     };
 
-    setConvList((prev) =>
-      prev.map((c) => {
-        if (c.id === activeConv.id) {
-          return {
-            ...c,
-            lastMessage: `[การ์ดจองคิวงาน ${ref}]`,
-            lastMessageTime: 'เมื่อครู่',
-            status: 'booked',
-            linkedBookingRef: ref,
-            messages: [...c.messages, cardMsg]
-          };
-        }
-        return c;
-      })
-    );
+    const updated = convList.map((c) => {
+      if (c.id === activeConv.id) {
+        return {
+          ...c,
+          lastMessage: `[การ์ดจองคิวงาน ${ref}]`,
+          lastMessageTime: 'เมื่อครู่',
+          status: 'booked' as const,
+          linkedBookingRef: ref,
+          messages: [...c.messages, cardMsg]
+        };
+      }
+      return c;
+    });
+
+    updateConvList(updated);
   };
 
   return (
@@ -328,26 +268,47 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
               <span className="bg-white/20 text-white font-bold text-[10px] px-2 py-0.5 rounded-full border border-white/30">
                 @vServiceInstaller
               </span>
+              <span className="bg-emerald-900/40 text-emerald-100 font-bold text-[10px] px-2 py-0.5 rounded-full border border-emerald-300/40 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
+                {isLiveMode ? '🟢 Live Webhook Mode' : '🟡 Simulator'}
+              </span>
             </div>
-            <p className="text-xs text-white/80 font-medium mt-0.5">ระบบแชทสดบริการลูกค้าและส่งการ์ดจองคิวติดตั้งผ่าน LINE OA</p>
+            <p className="text-xs text-white/80 font-medium mt-0.5">ระบบแชทสดบริการลูกค้าและส่งการ์ดจองคิวติดตั้งผ่าน LINE OA (Webhook Real-time Active)</p>
           </div>
         </div>
 
         <div className="flex items-center space-x-2">
+          {convList.length > 0 ? (
+            <button
+              onClick={handleClearMockData}
+              className="px-3 py-1.5 bg-red-600/90 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition cursor-pointer border border-red-400/50 flex items-center gap-1 shadow-sm"
+              title="ล้างข้อมูลตัวอย่างเดิม เพื่อเริ่มรับแชทสดจาก LINE OA จริง"
+            >
+              <span>🗑️ ล้างข้อมูลตัวอย่าง (Mockup Data)</span>
+            </button>
+          ) : (
+            <button
+              onClick={handleRestoreDemoData}
+              className="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white font-bold text-xs rounded-xl transition cursor-pointer border border-white/30 flex items-center gap-1"
+            >
+              <span>🔄 เติมข้อมูลตัวอย่าง (Load Demo)</span>
+            </button>
+          )}
+
           <button
-            onClick={() => onNavigateToTab('smart-booking')}
-            className="px-3.5 py-1.5 bg-white text-[#06C755] font-bold text-xs rounded-xl shadow-xs hover:bg-slate-50 transition cursor-pointer border-0 flex items-center gap-1.5"
+            onClick={handleSimulateIncomingWebhookMsg}
+            className="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-emerald-950 font-bold text-xs rounded-xl transition cursor-pointer border border-yellow-200 flex items-center gap-1 shadow-sm"
+            title="ทดสอบยิง event ข้อความเข้ามาจาก LINE Webhook"
           >
-            <Sparkles size={14} />
-            <span>สร้างคิวจองอัจฉริยะ</span>
+            <span>⚡ ทดสอบรับข้อความ Webhook ใหม่</span>
           </button>
 
           <button
-            onClick={() => onNavigateToTab('dashboard')}
-            className="px-3.5 py-1.5 bg-black/20 hover:bg-black/30 text-white font-bold text-xs rounded-xl border border-white/30 transition cursor-pointer flex items-center gap-1.5"
+            onClick={() => onNavigateToTab('smart-booking')}
+            className="px-3 py-1.5 bg-white text-[#06C755] font-bold text-xs rounded-xl shadow-xs hover:bg-slate-50 transition cursor-pointer border-0 flex items-center gap-1.5"
           >
-            <Calendar size={14} />
-            <span>ดูตารางงานติดตั้ง</span>
+            <Sparkles size={14} />
+            <span>สร้างคิวจองอัจฉริยะ</span>
           </button>
         </div>
       </div>
@@ -397,8 +358,31 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
           {/* Conversations List */}
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
             {filteredConvs.length === 0 ? (
-              <div className="p-6 text-center text-slate-400 text-xs italic">
-                ไม่พบการสนทนา LINE ที่ตรงตามค้นหา
+              <div className="p-6 text-center space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-[#06C755] flex items-center justify-center mx-auto border border-emerald-200 shadow-xs">
+                  <span className="w-3.5 h-3.5 rounded-full bg-[#06C755] animate-ping"></span>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-slate-800">🟢 พร้อมรับข้อความสดจาก LINE OA</p>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                    ล้างข้อมูลตัวอย่างเรียบร้อยแล้ว<br/>
+                    เมื่อผู้ใช้ส่งข้อความใน LINE App ข้อความจะยิงผ่าน Webhook เข้ามาที่นี่ทันที
+                  </p>
+                </div>
+                <div className="pt-2 flex flex-col gap-1.5">
+                  <button
+                    onClick={handleSimulateIncomingWebhookMsg}
+                    className="px-3 py-1.5 bg-[#06C755] hover:bg-[#00B900] text-white font-bold text-[11px] rounded-xl shadow-xs transition border-0 cursor-pointer"
+                  >
+                    ⚡ ทดสอบยิงข้อความ Webhook
+                  </button>
+                  <button
+                    onClick={handleRestoreDemoData}
+                    className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-[10px] rounded-lg transition border-0 cursor-pointer"
+                  >
+                    🔄 โหลดข้อมูลตัวอย่างกลับมา
+                  </button>
+                </div>
               </div>
             ) : (
               filteredConvs.map((conv) => {
@@ -409,9 +393,8 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
                     onClick={() => {
                       setSelectedId(conv.id);
                       // Clear unread
-                      setConvList((prev) =>
-                        prev.map((c) => (c.id === conv.id ? { ...c, unreadCount: 0 } : c))
-                      );
+                      const updated = convList.map((c) => (c.id === conv.id ? { ...c, unreadCount: 0 } : c));
+                      updateConvList(updated);
                     }}
                     className={`p-3 flex items-start space-x-3 cursor-pointer transition select-none ${
                       isSelected
@@ -665,9 +648,32 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
               </form>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8">
-              <MessageCircle size={48} className="mb-2 opacity-30 text-[#06C755]" />
-              <p className="font-bold">เลือกการสนทนาลูกค้าด้านซ้ายมือ</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-3 bg-white">
+              <div className="w-16 h-16 rounded-full bg-emerald-50 text-[#06C755] flex items-center justify-center border border-emerald-200 shadow-sm relative">
+                <MessageCircle size={32} />
+                <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-[#06C755] rounded-full border-2 border-white animate-ping"></span>
+              </div>
+              <div>
+                <h3 className="font-black text-slate-800 text-sm">🟢 ระบบพร้อมรับข้อความสดผ่าน LINE Webhook</h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 leading-relaxed">
+                  ล้าง Mockup Data เรียบร้อยแล้ว ขณะนี้ระบบกำลังเชื่อมต่อรับข้อความสดจาก <strong className="text-emerald-700 font-mono font-bold">https://vservice.online/api/line/webhook</strong>
+                </p>
+              </div>
+              <div className="pt-2 flex items-center space-x-2">
+                <button
+                  onClick={handleSimulateIncomingWebhookMsg}
+                  className="px-4 py-2 bg-[#06C755] hover:bg-[#00B900] text-white font-bold text-xs rounded-xl shadow-sm transition border-0 cursor-pointer flex items-center gap-1.5"
+                >
+                  <Sparkles size={14} />
+                  <span>ทดสอบยิงข้อความ Webhook ตัวอย่าง</span>
+                </button>
+                <button
+                  onClick={handleRestoreDemoData}
+                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition border border-slate-200 cursor-pointer"
+                >
+                  โหลดชุดตัวอย่างกลับมา
+                </button>
+              </div>
             </div>
           )}
 
