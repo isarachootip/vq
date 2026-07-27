@@ -17,6 +17,7 @@ import { BannerManagerView } from './components/BannerManagerView';
 import { TechApplicationsView } from './components/TechApplicationsView';
 import { ServiceCatalogManagerView } from './components/ServiceCatalogManagerView';
 import { TechDashboardView } from './components/TechDashboardView';
+import { InstallationAnalyticsView } from './components/InstallationAnalyticsView';
 
 import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner, TechnicianApplication, TechnicianSkill, SkillCategory, ServiceItem } from './types';
 import { 
@@ -49,7 +50,8 @@ import {
   Image as ImageIcon,
   FileText,
   Briefcase,
-  BarChart3
+  BarChart3,
+  TrendingUp
 } from 'lucide-react';
 
 const INITIAL_BANNERS: PortalBanner[] = [
@@ -693,6 +695,7 @@ export function App() {
   // Sidebar Menu Items Definition
   const menuItems = [
     { id: 'dashboard', label: 'ตารางคิวงานติดตั้ง', icon: LayoutDashboard },
+    { id: 'installation-analytics', label: 'Dashboard สถิติตั๋วติดตั้ง (Helpdesk)', icon: TrendingUp },
     { id: 'vfixq-portal', label: 'จองบริการ (Vfixq Portal)', icon: ShoppingBag },
     { id: 'smart-booking', label: 'จองคิวช่างอัจฉริยะ', icon: Calendar },
     { id: 'divider-1', label: 'ข้อมูลระบบหลัก (Master)', isDivider: true },
@@ -892,6 +895,13 @@ export function App() {
                 handleConfirmBooking(b);
                 showToast('บันทึกข้อมูลคิวติดตั้งใหม่ด้วยตนเองสำเร็จ!');
               }}
+            />
+          )}
+
+          {activeTab === 'installation-analytics' && (
+            <InstallationAnalyticsView
+              bookings={bookings}
+              penalties={penalties}
             />
           )}
 
