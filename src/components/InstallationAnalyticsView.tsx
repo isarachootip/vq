@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { QueueBooking, PenaltyRecord } from '../types';
 import {
-  HelpCircle,
   Inbox,
   CheckCircle2,
   ArrowUpRight,
@@ -9,7 +8,8 @@ import {
   Clock,
   Bell,
   BarChart2,
-  Layers
+  Layers,
+  Wrench
 } from 'lucide-react';
 
 interface InstallationAnalyticsViewProps {
@@ -120,18 +120,18 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
   return (
     <div className="space-y-6 animate-fadeIn pb-8 font-sans">
 
-      {/* Top Helpdesk Banner Header (Matching Screenshot Header) */}
+      {/* Top Banner Header */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center space-x-3.5">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 text-white flex items-center justify-center shadow-md shadow-indigo-200">
-            <HelpCircle className="h-6 w-6" />
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-md shadow-indigo-200">
+            <Wrench className="h-6 w-6" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">IT Helpdesk</h1>
-              <span className="bg-indigo-50 text-indigo-700 font-bold text-[10px] px-2 py-0.5 rounded-full border border-indigo-100">Support System</span>
+              <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">vService Installation Analytics</h1>
+              <span className="bg-blue-50 text-blue-700 font-bold text-[10px] px-2 py-0.5 rounded-full border border-blue-100">Installer System</span>
             </div>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">ระบบรับแจ้งปัญหา บริหารจัดการคิว และวิเคราะห์บริการงานติดตั้ง</p>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">ระบบติดตามคิวงาน บริหารจัดการช่าง และวิเคราะห์สถิติตามรอบเวลาติดตั้ง</p>
           </div>
         </div>
 
@@ -153,7 +153,7 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
         </div>
       </div>
 
-      {/* Top 4 KPI Cards (Matching Screenshot Top Stat Cards) */}
+      {/* Top 4 KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* Card 1: Escalated */}
@@ -163,8 +163,8 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
           </div>
           <div>
             <div className="text-3xl font-black text-slate-800 tracking-tight">{escalatedCount}</div>
-            <div className="text-xs font-bold text-slate-700 mt-0.5">Escalated</div>
-            <div className="text-[10px] text-slate-400 font-medium">ส่งต่อ Tier 2/3 (มีเคสพิเศษ)</div>
+            <div className="text-xs font-bold text-slate-700 mt-0.5">เคสมีปัญหา (Penalty E-CN)</div>
+            <div className="text-[10px] text-slate-400 font-medium">โดนค่าปรับหรือส่งต่อช่างเฉพาะทาง</div>
           </div>
         </div>
 
@@ -175,8 +175,8 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
           </div>
           <div>
             <div className="text-3xl font-black text-slate-800 tracking-tight">{pendingCount}</div>
-            <div className="text-xs font-bold text-slate-700 mt-0.5">รอรับเรื่อง (NEW)</div>
-            <div className="text-[10px] text-slate-400 font-medium">รอ Tier 1 รับตั๋วติดตั้ง</div>
+            <div className="text-xs font-bold text-slate-700 mt-0.5">คิวจัดเตรียมงาน (Pending)</div>
+            <div className="text-[10px] text-slate-400 font-medium">รอจัดสรรและส่งมอบงานช่าง</div>
           </div>
         </div>
 
@@ -187,8 +187,8 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
           </div>
           <div>
             <div className="text-3xl font-black text-slate-800 tracking-tight">{inProgressCount}</div>
-            <div className="text-xs font-bold text-slate-700 mt-0.5">กำลังดำเนินการ</div>
-            <div className="text-[10px] text-slate-400 font-medium">ส่งต่อ KANNA / STS อยู่</div>
+            <div className="text-xs font-bold text-slate-700 mt-0.5">กำลังติดตั้ง (KANNA/STS)</div>
+            <div className="text-[10px] text-slate-400 font-medium">ช่างอยู่ระหว่างปฏิบัติงานหน้างาน</div>
           </div>
         </div>
 
@@ -199,14 +199,14 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
           </div>
           <div>
             <div className="text-3xl font-black text-slate-800 tracking-tight">{resolvedCount}</div>
-            <div className="text-xs font-bold text-slate-700 mt-0.5">Resolved / Closed</div>
-            <div className="text-[10px] text-slate-400 font-medium">ผ่าน QC และปิดตั๋วงานเรียบร้อย</div>
+            <div className="text-xs font-bold text-slate-700 mt-0.5">ผ่าน QC ปิดงานแล้ว</div>
+            <div className="text-[10px] text-slate-400 font-medium">ผ่านการตรวจ QC และปิดงานสำเร็จ</div>
           </div>
         </div>
 
       </div>
 
-      {/* Main Analytics Spline Chart (Exact Replica of Screenshot) */}
+      {/* Main Analytics Spline Chart */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-6">
         
         {/* Chart Header & Toggles */}
@@ -215,25 +215,25 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
             <div className="flex items-center space-x-2">
               <TrendingUp className="h-5 w-5 text-indigo-600" />
               <h2 className="text-base font-extrabold text-slate-800">
-                จำนวน Ticket รายวัน <span className="text-xs font-normal text-slate-400">({period === 'MTD' ? 'Month to Date' : period === 'Weekly' ? 'Weekly' : 'Yearly'})</span>
+                จำนวนงานติดตั้ง รายวัน <span className="text-xs font-normal text-slate-400">({period === 'MTD' ? 'Month to Date' : period === 'Weekly' ? 'Weekly' : 'Yearly'})</span>
               </h2>
             </div>
             
-            {/* Chart Legend Badges matching screenshot */}
+            {/* Chart Legend Badges */}
             <div className="flex items-center space-x-4 mt-3 text-xs font-bold">
               <div className="flex items-center space-x-1.5 text-indigo-600">
                 <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 inline-block"></span>
-                <span>Total <strong className="text-slate-800">{chartData.reduce((s, d) => s + d.total, 0)}</strong></span>
+                <span>งานติดตั้งทั้งหมด <strong className="text-slate-800">{chartData.reduce((s, d) => s + d.total, 0)}</strong></span>
               </div>
 
               <div className="flex items-center space-x-1.5 text-amber-500">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-                <span>Open <strong className="text-slate-800">{chartData.reduce((s, d) => s + d.open, 0)}</strong></span>
+                <span>รอดำเนินการ / กำลังติดตั้ง <strong className="text-slate-800">{chartData.reduce((s, d) => s + d.open, 0)}</strong></span>
               </div>
 
               <div className="flex items-center space-x-1.5 text-emerald-500">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-                <span>Resolved/Closed <strong className="text-slate-800">{chartData.reduce((s, d) => s + d.resolved, 0)}</strong></span>
+                <span>ปิดงานสำเร็จ <strong className="text-slate-800">{chartData.reduce((s, d) => s + d.resolved, 0)}</strong></span>
               </div>
             </div>
           </div>
@@ -433,7 +433,7 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
 
             <div>
               <div className="flex justify-between text-slate-600 mb-1">
-                <span className="font-medium">อัตราปิดตั๋วตามเวลา (SLA Compliance Rate):</span>
+                <span className="font-medium">อัตราปิดงานติดตั้งตามเวลา (SLA Compliance Rate):</span>
                 <span className="font-bold text-slate-800">96.4%</span>
               </div>
               <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
@@ -459,7 +459,7 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4">
           <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
             <Layers className="h-5 w-5 text-violet-600" />
-            <h3 className="font-bold text-slate-800 text-sm">สัดส่วนตั๋วบริการตามหมวดหมู่</h3>
+            <h3 className="font-bold text-slate-800 text-sm">สัดส่วนคิวงานตามหมวดหมู่บริการ</h3>
           </div>
 
           <div className="space-y-3 text-xs">
@@ -473,7 +473,7 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
               <div key={cat.category}>
                 <div className="flex justify-between text-slate-600 mb-1">
                   <span className="font-medium truncate">{cat.category}</span>
-                  <span className="font-bold text-slate-800">{cat.count} ตั๋ว ({cat.pct}%)</span>
+                  <span className="font-bold text-slate-800">{cat.count} งาน ({cat.pct}%)</span>
                 </div>
                 <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                   <div className={`${cat.color} h-full rounded-full`} style={{ width: `${cat.pct}%` }}></div>
@@ -483,12 +483,12 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
           </div>
         </div>
 
-        {/* Panel 3: Recent Ticket Activity Log */}
+        {/* Panel 3: Recent Activity Log */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div className="flex items-center space-x-2">
               <BarChart2 className="h-5 w-5 text-emerald-600" />
-              <h3 className="font-bold text-slate-800 text-sm">ตั๋วคิวติดตั้งล่าสุด (Tickets Log)</h3>
+              <h3 className="font-bold text-slate-800 text-sm">คิวงานติดตั้งล่าสุด (Installation Logs)</h3>
             </div>
             <span className="text-[10px] text-slate-400 font-mono">Live Sync</span>
           </div>

@@ -728,7 +728,7 @@ export function App() {
   // Sidebar Menu Items Definition
   const menuItems = [
     { id: 'dashboard', label: 'ตารางคิวงานติดตั้ง', icon: LayoutDashboard },
-    { id: 'installation-analytics', label: 'Dashboard สถิติตั๋วติดตั้ง (Helpdesk)', icon: TrendingUp },
+    { id: 'installation-analytics', label: 'Dashboard สถิติงานติดตั้ง (Analytics)', icon: TrendingUp },
     { id: 'vfixq-portal', label: 'จองบริการ (Vfixq Portal)', icon: ShoppingBag },
     { id: 'smart-booking', label: 'จองคิวช่างอัจฉริยะ', icon: Calendar },
     { id: 'divider-1', label: 'ข้อมูลระบบหลัก (Master)', isDivider: true },
