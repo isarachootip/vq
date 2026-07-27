@@ -212,6 +212,26 @@ const INITIAL_CHANNELS: ChatChannel[] = [
   }
 ];
 
+// Helper function to safely load state from localStorage with type verification
+function loadState<T>(key: string, defaultValue: T): T {
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved) return defaultValue;
+    const parsed = JSON.parse(saved);
+    if (parsed === null || parsed === undefined) return defaultValue;
+    
+    // Type checking
+    if (Array.isArray(defaultValue)) {
+      if (!Array.isArray(parsed)) return defaultValue;
+    } else if (typeof defaultValue === 'object') {
+      if (typeof parsed !== 'object') return defaultValue;
+    }
+    return parsed;
+  } catch {
+    return defaultValue;
+  }
+}
+
 export function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   
@@ -220,120 +240,61 @@ export function App() {
   const [zones, setZones] = useState<Zone[]>(INITIAL_ZONES);
   const [skills, setSkills] = useState<Skill[]>(INITIAL_SKILLS);
 
-  const [technicians, setTechnicians] = useState<Technician[]>(() => {
-    try {
-      const saved = localStorage.getItem('vfixq_technicians');
-      return saved ? JSON.parse(saved) : INITIAL_TECHNICIANS;
-    } catch {
-      return INITIAL_TECHNICIANS;
-    }
-  });
+  const [technicians, setTechnicians] = useState<Technician[]>(() => 
+    loadState<Technician[]>('vfixq_technicians', INITIAL_TECHNICIANS)
+  );
 
-  const [bookings, setBookings] = useState<QueueBooking[]>(() => {
-    try {
-      const saved = localStorage.getItem('vfixq_bookings');
-      return saved ? JSON.parse(saved) : INITIAL_BOOKINGS;
-    } catch {
-      return INITIAL_BOOKINGS;
-    }
-  });
+  const [bookings, setBookings] = useState<QueueBooking[]>(() => 
+    loadState<QueueBooking[]>('vfixq_bookings', INITIAL_BOOKINGS)
+  );
 
-  const [penalties, setPenalties] = useState<PenaltyRecord[]>(() => {
-    try {
-      const saved = localStorage.getItem('vfixq_penalties');
-      return saved ? JSON.parse(saved) : INITIAL_PENALTIES;
-    } catch {
-      return INITIAL_PENALTIES;
-    }
-  });
+  const [penalties, setPenalties] = useState<PenaltyRecord[]>(() => 
+    loadState<PenaltyRecord[]>('vfixq_penalties', INITIAL_PENALTIES)
+  );
 
   // Communication States
   const [announcements, setAnnouncements] = useState<BranchAnnouncement[]>(INITIAL_ANNOUNCEMENTS);
   const [chatChannels, setChatChannels] = useState<ChatChannel[]>(INITIAL_CHANNELS);
 
-  const [banners, setBanners] = useState<PortalBanner[]>(() => {
-    try {
-      const saved = localStorage.getItem('vfixq_banners');
-      return saved ? JSON.parse(saved) : INITIAL_BANNERS;
-    } catch {
-      return INITIAL_BANNERS;
-    }
-  });
+  const [banners, setBanners] = useState<PortalBanner[]>(() => 
+    loadState<PortalBanner[]>('vfixq_banners', INITIAL_BANNERS)
+  );
 
-  const [techApplications, setTechApplications] = useState<TechnicianApplication[]>(() => {
-    try {
-      const saved = localStorage.getItem('vfixq_tech_applications');
-      return saved ? JSON.parse(saved) : INITIAL_TECH_APPLICATIONS;
-    } catch {
-      return INITIAL_TECH_APPLICATIONS;
-    }
-  });
+  const [techApplications, setTechApplications] = useState<TechnicianApplication[]>(() => 
+    loadState<TechnicianApplication[]>('vfixq_tech_applications', INITIAL_TECH_APPLICATIONS)
+  );
 
-  const [services, setServices] = useState<ServiceItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('vfixq_services');
-      return saved ? JSON.parse(saved) : INITIAL_SERVICES;
-    } catch {
-      return INITIAL_SERVICES;
-    }
-  });
+  const [services, setServices] = useState<ServiceItem[]>(() => 
+    loadState<ServiceItem[]>('vfixq_services', INITIAL_SERVICES)
+  );
 
   // Configuration States
-  const [matchWeights, setMatchWeights] = useState<any>(() => {
-    try {
-      const saved = localStorage.getItem('vfixq_match_weights');
-      return saved ? JSON.parse(saved) : {
-        baseMatch: 40,
-        levelBonus: 10,
-        primaryZone: 15,
-        secondaryZone: 5,
-        branchSync: 15,
-        goldTier: 10,
-        silverTier: 5,
-        ratingMultiplier: 10,
-        penaltyDivisor: 5
-      };
-    } catch {
-      return {
-        baseMatch: 40,
-        levelBonus: 10,
-        primaryZone: 15,
-        secondaryZone: 5,
-        branchSync: 15,
-        goldTier: 10,
-        silverTier: 5,
-        ratingMultiplier: 10,
-        penaltyDivisor: 5
-      };
-    }
-  });
+  const [matchWeights, setMatchWeights] = useState<any>(() => 
+    loadState<any>('vfixq_match_weights', {
+      baseMatch: 40,
+      levelBonus: 10,
+      primaryZone: 15,
+      secondaryZone: 5,
+      branchSync: 15,
+      goldTier: 10,
+      silverTier: 5,
+      ratingMultiplier: 10,
+      penaltyDivisor: 5
+    })
+  );
 
-  const [systemConfig, setSystemConfig] = useState<any>(() => {
-    try {
-      const saved = localStorage.getItem('vfixq_system_config');
-      return saved ? JSON.parse(saved) : {
-        cooldownThreshold: 45,
-        suspensionThreshold: 90,
-        kannaApiUrl: 'https://api.kanna.io/v1/projects',
-        stsWebhookUrl: 'https://sts-api.vservice.co.th/webhooks/checkin',
-        qcInspectorUrl: 'https://qc-inspect.vservice.co.th/api/audits',
-        eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing',
-        googleMapsApiKey: 'AIzaSyA1-DemoMapsKey-2026July',
-        bannerSlideInterval: 5
-      };
-    } catch {
-      return {
-        cooldownThreshold: 45,
-        suspensionThreshold: 90,
-        kannaApiUrl: 'https://api.kanna.io/v1/projects',
-        stsWebhookUrl: 'https://sts-api.vservice.co.th/webhooks/checkin',
-        qcInspectorUrl: 'https://qc-inspect.vservice.co.th/api/audits',
-        eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing',
-        googleMapsApiKey: 'AIzaSyA1-DemoMapsKey-2026July',
-        bannerSlideInterval: 5
-      };
-    }
-  });
+  const [systemConfig, setSystemConfig] = useState<any>(() => 
+    loadState<any>('vfixq_system_config', {
+      cooldownThreshold: 45,
+      suspensionThreshold: 90,
+      kannaApiUrl: 'https://api.kanna.io/v1/projects',
+      stsWebhookUrl: 'https://sts-api.vservice.co.th/webhooks/checkin',
+      qcInspectorUrl: 'https://qc-inspect.vservice.co.th/api/audits',
+      eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing',
+      googleMapsApiKey: 'AIzaSyA1-DemoMapsKey-2026July',
+      bannerSlideInterval: 5
+    })
+  );
 
   // Watchers to persist state updates in localStorage
   useEffect(() => {
