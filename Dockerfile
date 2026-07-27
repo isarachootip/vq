@@ -2,9 +2,11 @@ FROM node:22-slim AS builder
 
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Copy package files
 COPY package*.json ./
-RUN npm ci
+
+# Install all dependencies for build
+RUN npm install
 
 # Copy application source code
 COPY . .
@@ -12,13 +14,13 @@ COPY . .
 # Build Vite production dist
 RUN npm run build
 
-# Stage 2: Serve stage with Node.js Production Backend Server
+# Stage 2: Serve stage with Node.js Production Server
 FROM node:22-slim
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev
 
 COPY --from=builder /app/dist ./dist
 COPY server.js ./
