@@ -492,6 +492,87 @@ export const BackendSettingsView: React.FC<BackendSettingsViewProps> = ({
             </div>
           </div>
 
+          {/* LINE Official Account & Messaging API Configuration */}
+          <div className="v-panel p-5 bg-white space-y-4 border-2 border-emerald-500/30">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-[#06C755]">🟢</span>
+              <span>LINE Official Account & Messaging API Credentials</span>
+            </h3>
+
+            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-900 leading-relaxed">
+              <strong>💬 วิธีตั้งค่า LINE Secret Key & Messaging API (LINE Developers Console):</strong><br/>
+              1. เข้าสู่ระบบ <a href="https://developers.line.biz" target="_blank" rel="noreferrer" className="underline font-bold text-emerald-700">LINE Developers Console</a> แล้วเลือก Provider & Create Messaging API Channel<br/>
+              2. คัดลอก <strong>Channel ID</strong> และ <strong>Channel Secret</strong> ในแท็บ Basic Settings<br/>
+              3. ในแท็บ Messaging API ให้กด <strong>Issue</strong> เพื่อสร้าง <strong>Channel Access Token (Long-lived)</strong><br/>
+              4. กรอก <strong>Webhook URL</strong> แล้วเปิดสวิตช์ <strong>Use Webhook</strong> เพื่อรับข้อความและส่งการ์ดจองคิวอัจฉริยะ
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">🆔 LINE Channel ID:</label>
+                  <input
+                    type="text"
+                    placeholder="เช่น 2001234567"
+                    value={systemConfig.lineChannelId || ''}
+                    onChange={(e) => handleConfigChange('lineChannelId', e.target.value)}
+                    className="v-input w-full py-1.5 text-[11px] font-mono font-bold text-slate-800"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">🔑 LINE Channel Secret:</label>
+                  <input
+                    type="password"
+                    placeholder="เช่น 9f8e7d6c5b4a3f2e1d0c..."
+                    value={systemConfig.lineChannelSecret || ''}
+                    onChange={(e) => handleConfigChange('lineChannelSecret', e.target.value)}
+                    className="v-input w-full py-1.5 text-[11px] font-mono font-bold text-[#06C755]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">📜 Channel Access Token (Long-lived v2.1):</label>
+                <input
+                  type="text"
+                  placeholder="เช่น eyJhbGciOiJIUzI1NiJ9..."
+                  value={systemConfig.lineChannelAccessToken || ''}
+                  onChange={(e) => handleConfigChange('lineChannelAccessToken', e.target.value)}
+                  className="v-input w-full py-1.5 text-[11px] font-mono font-bold text-emerald-800 bg-emerald-500/5 border-emerald-500/30"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">📱 LIFF ID (LINE Front-end Framework):</label>
+                  <input
+                    type="text"
+                    placeholder="เช่น 2001234567-AbCdEfGh"
+                    value={systemConfig.lineLiffId || ''}
+                    onChange={(e) => handleConfigChange('lineLiffId', e.target.value)}
+                    className="v-input w-full py-1.5 text-[11px] font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">🌐 Webhook Callback URL:</label>
+                  <input
+                    type="text"
+                    placeholder="เช่น https://vservice.company.com/api/line/webhook"
+                    value={systemConfig.lineWebhookUrl || 'https://vservice.company.com/api/line/webhook'}
+                    onChange={(e) => handleConfigChange('lineWebhookUrl', e.target.value)}
+                    className="v-input w-full py-1.5 text-[11px] font-mono text-blue-700"
+                  />
+                </div>
+              </div>
+
+              <div className={`p-2.5 rounded-lg text-[10px] flex items-center gap-2 font-semibold ${systemConfig.lineChannelId && systemConfig.lineChannelSecret ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+                <span>{systemConfig.lineChannelId && systemConfig.lineChannelSecret ? '✅ LINE OA Messaging API เชื่อมต่อสมบูรณ์ — พร้อมส่งการ์ดจองคิวและรับแชทสดสดผ่าน LINE' : '⚡ พร้อมสำหรับป้อน Secret Key — ป้อน Channel ID & Channel Secret เพื่อเปิดใช้งาน Messaging API'}</span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div>

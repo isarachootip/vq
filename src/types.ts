@@ -155,6 +155,12 @@ export interface SystemConfig {
   minioEndpoint?: string;
   minioAccessKey?: string;
   minioSecretKey?: string;
+  // LINE Official Account & Messaging API Configurations
+  lineChannelId?: string;
+  lineChannelSecret?: string;
+  lineChannelAccessToken?: string;
+  lineLiffId?: string;
+  lineWebhookUrl?: string;
 }
 
 export interface BranchAnnouncement {
