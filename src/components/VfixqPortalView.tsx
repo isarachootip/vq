@@ -39,6 +39,14 @@ interface VfixqPortalViewProps {
   bannerSlideInterval?: number;
 }
 
+const formatDateDDMMYYYY = (dateStr: string | null) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const [year, month, day] = parts;
+  return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+};
+
 export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
   branches,
   onConfirmBooking,
@@ -313,7 +321,7 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">วันเวลานัด:</span>
-              <span className="font-semibold text-slate-700">{bookingDate} | {bookingTimeSlot}</span>
+              <span className="font-semibold text-slate-700">{formatDateDDMMYYYY(bookingDate)} | {bookingTimeSlot}</span>
             </div>
             <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-sm">
               <span className="text-slate-800">ราคาสุทธิ:</span>
@@ -862,7 +870,7 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
                       </div>
                       <div className="col-span-2 border-t border-slate-200 pt-2.5">
                         <div className="text-[10px] text-slate-400">วันเวลานัดเข้าหน้างาน:</div>
-                        <div className="font-bold text-slate-800 text-xs">{bookingDate} | {bookingTimeSlot}</div>
+                        <div className="font-bold text-slate-800 text-xs">{formatDateDDMMYYYY(bookingDate)} | {bookingTimeSlot}</div>
                       </div>
                     </div>
                   </div>

@@ -12,7 +12,9 @@ import {
   Layers, 
   Calendar as CalendarIcon,
   Info,
-  Phone
+  Phone,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -33,6 +35,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onConfirmBooking,
 }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>('2026-07-24'); // Default to 24th to highlight demo data
+  const [viewYear, setViewYear] = useState<number>(2026);
+  const [viewMonth, setViewMonth] = useState<number>(7); // 1 = Jan, 7 = Jul
   const [selectedZone, setSelectedZone] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -80,10 +84,44 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     }
   };
 
-  // Calendar parameters for July 2026 (Wednesday is 1st, 31 days)
-  const calendarDays = Array.from({ length: 31 }, (_, i) => i + 1);
-  const paddingDays = Array.from({ length: 3 }); // Wednesday offset (Sun, Mon, Tue empty)
+  // Dynamic calendar parameters based on viewYear and viewMonth
+  const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
+  const firstDayOfWeek = new Date(viewYear, viewMonth - 1, 1).getDay();
+  const calendarDays = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const paddingDays = Array.from({ length: firstDayOfWeek });
   const weekdays = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+
+  const thaiMonths = [
+    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+  ];
+
+  const handlePrevMonth = () => {
+    if (viewMonth === 1) {
+      setViewMonth(12);
+      setViewYear((prev) => prev - 1);
+    } else {
+      setViewMonth((prev) => prev - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (viewMonth === 12) {
+      setViewMonth(1);
+      setViewYear((prev) => prev + 1);
+    } else {
+      setViewMonth((prev) => prev + 1);
+    }
+  };
+
+  // Format YYYY-MM-DD date string to dd/mm/yyyy
+  const formatDateDDMMYYYY = (dateStr: string | null) => {
+    if (!dateStr) return '';
+    const parts = dateStr.split('-');
+    if (parts.length !== 3) return dateStr;
+    const [year, month, day] = parts;
+    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+  };
 
   const getBookingsCountForDate = (dateStr: string) => {
     return bookings.filter((b) => b.bookingDate === dateStr).length;
@@ -100,11 +138,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const formatDateThai = (dateStr: string | null) => {
     if (!dateStr) return 'คิวงานทั้งหมดทุกวัน';
     const [year, month, day] = dateStr.split('-');
-    const thaiMonths = [
-      'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
-    ];
-    return `คิวติดตั้งประจำวันที่ ${parseInt(day)} ${thaiMonths[parseInt(month) - 1]} ${parseInt(year) + 543}`;
+    const ddmmyyyy = formatDateDDMMYYYY(dateStr);
+    return `คิวติดตั้งประจำวันที่ ${ddmmyyyy} (${parseInt(day)} ${thaiMonths[parseInt(month) - 1]} ${parseInt(year) + 543})`;
   };
 
   const handleManualBookingSubmit = (e: React.FormEvent) => {
@@ -199,10 +234,64 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* 2. Interactive Calendar Panel */}
       <div className="v-panel p-5 bg-white border border-slate-200 space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-100 pb-3">
-          <div className="flex items-center space-x-2">
-            <CalendarIcon className="h-5 w-5 text-amber-500" />
-            <h3 className="font-bold text-slate-800 text-sm">📅 ปฏิทินกำหนดการงานติดตั้ง (July 2026)</h3>
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-3 border-b border-slate-100 pb-3">
+          <div className="flex items-center space-x-3 flex-wrap">
+            <div className="flex items-center space-x-1.5">
+              <CalendarIcon className="h-5 w-5 text-amber-500" />
+              <h3 className="font-bold text-slate-800 text-sm">📅 ปฏิทินกำหนดการงานติดตั้ง</h3>
+            </div>
+            
+            {/* Month & Year Selectors */}
+            <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                className="p-1 rounded-lg bg-white hover:bg-slate-200 text-slate-700 transition cursor-pointer shadow-xs border-0 flex items-center justify-center"
+                title="เดือนก่อนหน้า"
+              >
+                <ChevronLeft size={16} />
+              </button>
+
+              <select
+                value={viewMonth}
+                onChange={(e) => setViewMonth(Number(e.target.value))}
+                className="bg-white border-0 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer shadow-xs"
+              >
+                {thaiMonths.map((m, idx) => (
+                  <option key={m} value={idx + 1}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={viewYear}
+                onChange={(e) => setViewYear(Number(e.target.value))}
+                className="bg-white border-0 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 focus:outline-none cursor-pointer shadow-xs"
+              >
+                {[2024, 2025, 2026, 2027, 2028].map((y) => (
+                  <option key={y} value={y}>
+                    {y + 543} ({y})
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                className="p-1 rounded-lg bg-white hover:bg-slate-200 text-slate-700 transition cursor-pointer shadow-xs border-0 flex items-center justify-center"
+                title="เดือนถัดไป"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+
+            {selectedDate && (
+              <span className="text-xs font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-1 rounded-lg shadow-xs flex items-center gap-1">
+                <span>วันที่เลือก:</span>
+                <span className="text-blue-700 font-extrabold">{formatDateDDMMYYYY(selectedDate)}</span>
+              </span>
+            )}
           </div>
           
           <div className="flex flex-wrap items-center gap-2">
@@ -244,9 +333,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div key={`pad-${i}`} className="min-h-16 bg-slate-50/50 rounded-lg border border-transparent"></div>
             ))}
 
-            {/* July 1 to 31 cells */}
+            {/* Days in month cells */}
             {calendarDays.map((day) => {
-              const dateStr = `2026-07-${String(day).padStart(2, '0')}`;
+              const dateStr = `${viewYear}-${String(viewMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              const ddmmyyyy = `${String(day).padStart(2, '0')}/${String(viewMonth).padStart(2, '0')}/${viewYear}`;
               const count = getBookingsCountForDate(dateStr);
               const summary = getBookingsStatusSummary(dateStr);
               const isSelected = selectedDate === dateStr;
@@ -255,6 +345,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div
                   key={day}
                   onClick={() => setSelectedDate(dateStr)}
+                  title={`วันที่ ${ddmmyyyy}`}
                   className={`min-h-16 p-1.5 rounded-lg border flex flex-col justify-between transition cursor-pointer select-none ${
                     isSelected
                       ? 'bg-amber-500 border-amber-600 text-slate-900 shadow-md scale-103 font-bold ring-1 ring-amber-400'
@@ -388,7 +479,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <tr key={b.id} className="hover:bg-slate-50">
                       <td className="px-4 py-3 font-mono">
                         <div className="font-bold text-slate-800">{b.bookingRef}</div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">{b.bookingDate} | {b.timeSlot}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5 font-bold">📅 {formatDateDDMMYYYY(b.bookingDate)} | {b.timeSlot}</div>
                         <div className="text-[9px] text-slate-400 mt-0.5">จาก {b.createdFrom}</div>
                       </td>
 

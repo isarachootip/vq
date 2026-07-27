@@ -11,6 +11,14 @@ interface SmartBookingViewProps {
   systemConfig?: SystemConfig;
 }
 
+const formatDateDDMMYYYY = (dateStr: string | null) => {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const [year, month, day] = parts;
+  return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+};
+
 export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
   technicians,
   branches,
@@ -184,7 +192,7 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
           <div className="max-w-md mx-auto p-4 rounded-lg bg-white border border-slate-200 text-xs text-slate-700 text-left space-y-2.5 shadow-xs">
             <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500 font-semibold">ชื่อลูกค้า:</span> <span className="font-bold text-slate-800">{customerName}</span></div>
             <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500 font-semibold">งานติดตั้ง:</span> <span className="font-semibold text-slate-800">{currentInst.name}</span></div>
-            <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500 font-semibold">วัน/เวลา:</span> <span className="font-semibold text-slate-800">{bookingDate} ({currentSlot.startTime} - {currentSlot.endTime})</span></div>
+            <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500 font-semibold">วัน/เวลา:</span> <span className="font-semibold text-slate-800">{formatDateDDMMYYYY(bookingDate)} ({currentSlot.startTime} - {currentSlot.endTime})</span></div>
             <div className="flex justify-between border-b pb-1.5"><span className="text-slate-500 font-semibold">สังกัดสาขาดูแล:</span> <span className="font-semibold text-slate-800">{getBranchName(selectedBranchId)}</span></div>
             <div className="flex justify-between"><span className="text-slate-500 font-semibold">ทีมช่างที่ได้รับเลือก:</span> <span className="font-bold text-emerald-600">{eligibleTechs[0]?.tech.name}</span></div>
           </div>
