@@ -151,6 +151,9 @@ export interface SystemConfig {
   eCnErpUrl: string;
   googleMapsApiKey?: string;
   bannerSlideInterval?: number;
+  minioEndpoint?: string;
+  minioAccessKey?: string;
+  minioSecretKey?: string;
 }
 
 export interface BranchAnnouncement {

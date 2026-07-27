@@ -291,8 +291,11 @@ export function App() {
       stsWebhookUrl: 'https://sts-api.vservice.co.th/webhooks/checkin',
       qcInspectorUrl: 'https://qc-inspect.vservice.co.th/api/audits',
       eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing',
-      googleMapsApiKey: 'AIzaSyA1-DemoMapsKey-2026July',
-      bannerSlideInterval: 5
+      googleMapsApiKey: '',
+      bannerSlideInterval: 5,
+      minioEndpoint: 'https://storage.vibepjm.online',
+      minioAccessKey: '',
+      minioSecretKey: ''
     })
   );
 
@@ -987,6 +990,7 @@ export function App() {
               onAddService={handleAddService}
               onUpdateService={handleUpdateService}
               onDeleteService={handleDeleteService}
+              minioConfig={{ endpoint: systemConfig.minioEndpoint || '', accessKey: systemConfig.minioAccessKey || '', secretKey: systemConfig.minioSecretKey || '' }}
             />
           )}
 
@@ -1022,6 +1026,7 @@ export function App() {
               onAddBanner={handleAddBanner}
               onUpdateBanner={handleUpdateBanner}
               onDeleteBanner={handleDeleteBanner}
+              minioConfig={{ endpoint: systemConfig.minioEndpoint || '', accessKey: systemConfig.minioAccessKey || '', secretKey: systemConfig.minioSecretKey || '' }}
             />
           )}
         </main>

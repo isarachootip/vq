@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import type { ServiceItem } from '../types';
+import { uploadImageToStorage, isStorageConfigured, type MinIOConfig } from '../utils/storageUpload';
 import { 
   Briefcase, 
   PlusCircle, 
   Trash2, 
   Edit2, 
-  Eye, 
+  Eye,
+  CloudUpload,
+  Upload,
 } from 'lucide-react';
 
 interface ServiceCatalogManagerViewProps {
@@ -13,6 +16,7 @@ interface ServiceCatalogManagerViewProps {
   onAddService: (service: ServiceItem) => void;
   onUpdateService: (service: ServiceItem) => void;
   onDeleteService: (id: string) => void;
+  minioConfig: MinIOConfig;
 }
 
 const CATEGORY_PRESETS = [
@@ -43,10 +47,13 @@ export const ServiceCatalogManagerView: React.FC<ServiceCatalogManagerViewProps>
   services,
   onAddService,
   onUpdateService,
-  onDeleteService
+  onDeleteService,
+  minioConfig
 }) => {
   const [showForm, setShowForm] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string>('');
 
   // Form Fields
   const [name, setName] = useState<string>('');
@@ -249,34 +256,56 @@ export const ServiceCatalogManagerView: React.FC<ServiceCatalogManagerViewProps>
                     )}
                   </div>
                   <div className="flex-1 space-y-1">
+                    <div className={`text-[9px] font-bold px-2 py-0.5 rounded w-fit mb-1 flex items-center gap-1 ${isStorageConfigured(minioConfig) ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {isStorageConfigured(minioConfig)
+                        ? <><CloudUpload className="h-2.5 w-2.5" /> อัปโหลดไป MinIO Storage</>
+                        : <><Upload className="h-2.5 w-2.5" /> โหมด Base64 (ตั้งค่า MinIO เพื่อเก็บไฟล์บน VPS)</>
+                      }
+                    </div>
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
+                      disabled={isUploading}
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          if (!event.target?.result) return;
-                          const img = new Image();
-                          img.onload = () => {
-                            const MAX_WIDTH = 900;
-                            const scale = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
-                            const canvas = document.createElement('canvas');
-                            canvas.width = img.width * scale;
-                            canvas.height = img.height * scale;
-                            const ctx = canvas.getContext('2d');
-                            if (ctx) {
-                              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                              setImage(canvas.toDataURL('image/jpeg', 0.8));
-                            }
-                          };
-                          img.src = event.target.result as string;
-                        };
-                        reader.readAsDataURL(file);
+                        setUploadError('');
+                        setIsUploading(true);
+                        try {
+                          if (isStorageConfigured(minioConfig)) {
+                            const url = await uploadImageToStorage(file, 'vservice-services', minioConfig);
+                            setImage(url);
+                          } else {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              if (!event.target?.result) return;
+                              const img = new Image();
+                              img.onload = () => {
+                                const MAX_WIDTH = 900;
+                                const scale = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
+                                const canvas = document.createElement('canvas');
+                                canvas.width = img.width * scale;
+                                canvas.height = img.height * scale;
+                                const ctx = canvas.getContext('2d');
+                                if (ctx) {
+                                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                  setImage(canvas.toDataURL('image/jpeg', 0.8));
+                                }
+                              };
+                              img.src = event.target.result as string;
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        } catch (err: any) {
+                          setUploadError(err.message || 'อัปโหลดล้มเหลว กรุณาตรวจสอบการตั้งค่า MinIO');
+                        } finally {
+                          setIsUploading(false);
+                        }
                       }}
-                      className="text-[10px] text-slate-500 w-full file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-600 file:cursor-pointer"
+                      className="text-[10px] text-slate-500 w-full file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-600 file:cursor-pointer disabled:opacity-50"
                     />
+                    {isUploading && <p className="text-[9px] text-blue-600 font-semibold animate-pulse">⏳ กำลังอัปโหลด...</p>}
+                    {uploadError && <p className="text-[9px] text-red-500">{uploadError}</p>}
                     <p className="text-[8px] text-slate-400">อัปรูปถ่ายผลงานจริง หรือเลือกไฟล์ภาพประกอบ</p>
                   </div>
                 </div>

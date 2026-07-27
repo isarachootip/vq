@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { PortalBanner } from '../types';
+import { uploadImageToStorage, isStorageConfigured, type MinIOConfig } from '../utils/storageUpload';
 import { 
   Image as ImageIcon, 
   PlusCircle, 
@@ -7,7 +8,9 @@ import {
   Edit2, 
   Eye, 
   Check, 
-  X
+  X,
+  Upload,
+  CloudUpload
 } from 'lucide-react';
 
 interface BannerManagerViewProps {
@@ -15,6 +18,7 @@ interface BannerManagerViewProps {
   onAddBanner: (banner: PortalBanner) => void;
   onUpdateBanner: (banner: PortalBanner) => void;
   onDeleteBanner: (id: string) => void;
+  minioConfig: MinIOConfig;
 }
 
 const PRESET_BANNER_IMAGES = [
@@ -36,10 +40,13 @@ export const BannerManagerView: React.FC<BannerManagerViewProps> = ({
   banners,
   onAddBanner,
   onUpdateBanner,
-  onDeleteBanner
+  onDeleteBanner,
+  minioConfig
 }) => {
   const [showAddForm, setShowAddForm] = useState<boolean>(false);
   const [editingBannerId, setEditingBannerId] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string>('');
 
   // Form Fields
   const [title, setTitle] = useState<string>('');
@@ -216,37 +223,62 @@ export const BannerManagerView: React.FC<BannerManagerViewProps> = ({
                     )}
                   </div>
                   <div className="flex-1 space-y-1">
+                    {/* MinIO status indicator */}
+                    <div className={`text-[9px] font-bold px-2 py-0.5 rounded w-fit mb-1 flex items-center gap-1 ${isStorageConfigured(minioConfig) ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {isStorageConfigured(minioConfig)
+                        ? <><CloudUpload className="h-2.5 w-2.5" /> อัปโหลดไป MinIO Storage</>
+                        : <><Upload className="h-2.5 w-2.5" /> โหมด Base64 (ตั้งค่า MinIO เพื่อเก็บไฟล์บน VPS)</>
+                      }
+                    </div>
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
+                      disabled={isUploading}
+                      onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (event) => {
-                          if (!event.target?.result) return;
-                          // Compress image via Canvas before storing (max 1200px wide, 80% quality)
-                          const img = new Image();
-                          img.onload = () => {
-                            const MAX_WIDTH = 1200;
-                            const scale = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
-                            const canvas = document.createElement('canvas');
-                            canvas.width = img.width * scale;
-                            canvas.height = img.height * scale;
-                            const ctx = canvas.getContext('2d');
-                            if (ctx) {
-                              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                              // Export as JPEG at 80% quality to keep size small
-                              setImageUrl(canvas.toDataURL('image/jpeg', 0.8));
-                            }
-                          };
-                          img.src = event.target.result as string;
-                        };
-                        reader.readAsDataURL(file);
+                        setUploadError('');
+                        setIsUploading(true);
+                        try {
+                          if (isStorageConfigured(minioConfig)) {
+                            // อัปโหลดไป MinIO — ได้ URL กลับมา
+                            const url = await uploadImageToStorage(file, 'vservice-banners', minioConfig);
+                            setImageUrl(url);
+                          } else {
+                            // Fallback: Compress แล้วเก็บเป็น Base64
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              if (!event.target?.result) return;
+                              const img = new Image();
+                              img.onload = () => {
+                                const MAX_WIDTH = 1200;
+                                const scale = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
+                                const canvas = document.createElement('canvas');
+                                canvas.width = img.width * scale;
+                                canvas.height = img.height * scale;
+                                const ctx = canvas.getContext('2d');
+                                if (ctx) {
+                                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                  setImageUrl(canvas.toDataURL('image/jpeg', 0.8));
+                                }
+                              };
+                              img.src = event.target.result as string;
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        } catch (err: any) {
+                          setUploadError(err.message || 'อัปโหลดล้มเหลว กรุณาตรวจสอบการตั้งค่า MinIO');
+                        } finally {
+                          setIsUploading(false);
+                        }
                       }}
-                      className="text-[10px] text-slate-500 w-full file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-600 file:cursor-pointer"
+                      className="text-[10px] text-slate-500 w-full file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-600 file:cursor-pointer disabled:opacity-50"
                     />
-                    <p className="text-[8px] text-slate-400">อัปรูปภาพแบนเนอร์ขนาดใหญ่พรีเมียมจากเครื่องคอมพิวเตอร์ของคุณ</p>
+                    {isUploading && <p className="text-[9px] text-blue-600 font-semibold animate-pulse">⏳ กำลังอัปโหลด...</p>}
+                    {uploadError && <p className="text-[9px] text-red-500">{uploadError}</p>}
+                    <p className="text-[8px] text-slate-400">
+                      {isStorageConfigured(minioConfig) ? 'รูปภาพจะเก็บบน MinIO VPS Storage อย่างถาวร' : 'แนะนำตั้งค่า MinIO ใน Configs เพื่อเก็บรูปบน VPS'}
+                    </p>
                   </div>
                 </div>
 

@@ -436,6 +436,62 @@ export const BackendSettingsView: React.FC<BackendSettingsViewProps> = ({
             </div>
           </div>
 
+          {/* MinIO Storage Configuration */}
+          <div className="v-panel p-5 bg-white space-y-4 border-2 border-emerald-500/20">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+              <span className="text-emerald-600">🗄️</span>
+              <span>MinIO Object Storage (S3-Compatible VPS Storage)</span>
+            </h3>
+
+            <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-800 leading-relaxed">
+              <strong>📦 วิธีตั้งค่า MinIO บน Coolify:</strong><br/>
+              1. เปิด Coolify → New Resource → Service → เลือก <strong>MinIO</strong><br/>
+              2. ตั้งค่า User/Password → Deploy → รอ Container พร้อม<br/>
+              3. เปิด MinIO Console → สร้าง Bucket: <code className="bg-emerald-100 px-1 rounded">vservice-banners</code>, <code className="bg-emerald-100 px-1 rounded">vservice-services</code>, <code className="bg-emerald-100 px-1 rounded">vservice-avatars</code><br/>
+              4. ตั้ง Bucket Policy เป็น <strong>Public</strong> → สร้าง Access Key → กรอกข้อมูลด้านล่าง
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">🌐 MinIO Endpoint URL:</label>
+                <input
+                  type="text"
+                  placeholder="เช่น https://storage.vibepjm.online"
+                  value={systemConfig.minioEndpoint || ''}
+                  onChange={(e) => handleConfigChange('minioEndpoint', e.target.value)}
+                  className="v-input w-full py-1.5 text-[11px] font-mono text-emerald-700 bg-emerald-500/5 border-emerald-500/30"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">🔑 Access Key:</label>
+                  <input
+                    type="text"
+                    placeholder="เช่น vservice_api"
+                    value={systemConfig.minioAccessKey || ''}
+                    onChange={(e) => handleConfigChange('minioAccessKey', e.target.value)}
+                    className="v-input w-full py-1.5 text-[11px] font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">🔒 Secret Key:</label>
+                  <input
+                    type="password"
+                    placeholder="รหัสลับ MinIO"
+                    value={systemConfig.minioSecretKey || ''}
+                    onChange={(e) => handleConfigChange('minioSecretKey', e.target.value)}
+                    className="v-input w-full py-1.5 text-[11px] font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className={`p-2.5 rounded-lg text-[10px] flex items-center gap-2 font-semibold ${systemConfig.minioEndpoint && systemConfig.minioAccessKey && systemConfig.minioSecretKey ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+                <span>{systemConfig.minioEndpoint && systemConfig.minioAccessKey && systemConfig.minioSecretKey ? '✅ MinIO พร้อมใช้งาน — รูปภาพจะอัปโหลดขึ้น VPS Storage โดยตรง' : '⚠️ ยังไม่ได้ตั้งค่า — ระบบจะใช้ Base64 แทนชั่วคราว'}</span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div>
