@@ -16,6 +16,7 @@ import { InternalChatView } from './components/InternalChatView';
 import { BannerManagerView } from './components/BannerManagerView';
 import { TechApplicationsView } from './components/TechApplicationsView';
 import { ServiceCatalogManagerView } from './components/ServiceCatalogManagerView';
+import { TechDashboardView } from './components/TechDashboardView';
 
 import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner, TechnicianApplication, TechnicianSkill, SkillCategory, ServiceItem } from './types';
 import { 
@@ -47,7 +48,8 @@ import {
   MessageSquare,
   Image as ImageIcon,
   FileText,
-  Briefcase
+  Briefcase,
+  BarChart3
 } from 'lucide-react';
 
 const INITIAL_BANNERS: PortalBanner[] = [
@@ -696,6 +698,7 @@ export function App() {
     { id: 'divider-1', label: 'ข้อมูลระบบหลัก (Master)', isDivider: true },
     { id: 'branch-manager', label: 'ข้อมูลสาขา (Branch)', icon: Building },
     { id: 'branch-map', label: 'แผนที่สาขา (All-Store Map)', icon: MapPin },
+    { id: 'tech-dashboard', label: 'Dashboard ช่างทั้งหมด', icon: BarChart3 },
     { id: 'tech-manager', label: 'ข้อมูลช่าง & Skill Matrix', icon: Users },
     { id: 'tech-applications', label: 'จัดการใบสมัครช่าง (Recruitment)', icon: FileText },
     { id: 'zone-manager', label: 'ข้อมูลพื้นที่และโซน (Zone)', icon: Map },
@@ -916,6 +919,15 @@ export function App() {
 
           {activeTab === 'branch-map' && (
             <BranchMapView branches={branches} />
+          )}
+
+          {activeTab === 'tech-dashboard' && (
+            <TechDashboardView
+              technicians={technicians}
+              penalties={penalties}
+              bookings={bookings}
+              branches={branches}
+            />
           )}
 
           {activeTab === 'tech-manager' && (
