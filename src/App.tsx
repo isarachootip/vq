@@ -18,15 +18,17 @@ import { TechApplicationsView } from './components/TechApplicationsView';
 import { ServiceCatalogManagerView } from './components/ServiceCatalogManagerView';
 import { TechDashboardView } from './components/TechDashboardView';
 import { InstallationAnalyticsView } from './components/InstallationAnalyticsView';
+import { UserManagementView } from './components/UserManagementView';
 
-import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner, TechnicianApplication, TechnicianSkill, SkillCategory, ServiceItem } from './types';
+import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner, TechnicianApplication, TechnicianSkill, SkillCategory, ServiceItem, UserAccount } from './types';
 import { 
   INITIAL_TECHNICIANS, 
   INITIAL_BOOKINGS, 
   INITIAL_PENALTIES,
   INITIAL_BRANCHES,
   INITIAL_ZONES,
-  INITIAL_SKILLS 
+  INITIAL_SKILLS,
+  INITIAL_USERS
 } from './mockData';
 
 import { 
@@ -51,7 +53,8 @@ import {
   FileText,
   Briefcase,
   BarChart3,
-  TrendingUp
+  TrendingUp,
+  UserCheck
 } from 'lucide-react';
 
 const INITIAL_BANNERS: PortalBanner[] = [
@@ -272,6 +275,10 @@ export function App() {
     loadState<ServiceItem[]>('vfixq_services', INITIAL_SERVICES)
   );
 
+  const [users, setUsers] = useState<UserAccount[]>(() => 
+    loadState<UserAccount[]>('vfixq_users', INITIAL_USERS)
+  );
+
   // Configuration States
   const [matchWeights, setMatchWeights] = useState<any>(() => 
     loadState<any>('vfixq_match_weights', {
@@ -333,6 +340,14 @@ export function App() {
   useEffect(() => {
     safeLocalSet('vfixq_tech_applications', techApplications);
   }, [techApplications]);
+
+  useEffect(() => {
+    safeLocalSet('vfixq_services', services);
+  }, [services]);
+
+  useEffect(() => {
+    safeLocalSet('vfixq_users', users);
+  }, [users]);
 
   useEffect(() => {
     safeLocalSet('vfixq_bookings', bookings);
@@ -584,6 +599,22 @@ export function App() {
     showToast('ลบข้อมูลทักษะสำเร็จ');
   };
 
+  // Handlers for User Management
+  const handleAddUser = (newUser: UserAccount) => {
+    setUsers((prev) => [newUser, ...prev]);
+    showToast(`เพิ่มผู้ใช้งาน ${newUser.name} (${newUser.role}) สำเร็จ`);
+  };
+
+  const handleUpdateUser = (updatedUser: UserAccount) => {
+    setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
+    showToast(`อัปเดตสิทธิ์ของ ${updatedUser.name} เรียบร้อยแล้ว`);
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+    showToast('ลบบัญชีผู้ใช้งานสำเร็จ');
+  };
+
   // Handlers for Technician
   const handleAddMultipleTechnicians = (newTechs: Technician[]) => {
     setTechnicians((prev) => [...prev, ...newTechs]);
@@ -713,6 +744,7 @@ export function App() {
     { id: 'internal-chat', label: 'ห้องแชทประสานงาน', icon: MessageSquare },
     { id: 'banner-manager', label: 'จัดการแบนเนอร์ (Banners)', icon: ImageIcon },
     { id: 'service-catalog-manager', label: 'จัดการบริการติดตั้ง (CRUD)', icon: Briefcase },
+    { id: 'user-management', label: 'จัดการผู้ใช้งาน & Roles', icon: UserCheck },
     { id: 'settings', label: 'การตั้งค่าระบบ (Configs)', icon: Settings },
     { id: 'divider-3', label: 'เอกสารเรียนรู้', isDivider: true },
     { id: 'km-hub', label: 'คู่มือระบบ & FAQ (KM)', icon: BookOpen },
@@ -1013,6 +1045,16 @@ export function App() {
               onUpdateService={handleUpdateService}
               onDeleteService={handleDeleteService}
               minioConfig={{ endpoint: systemConfig.minioEndpoint || '', accessKey: systemConfig.minioAccessKey || '', secretKey: systemConfig.minioSecretKey || '' }}
+            />
+          )}
+
+          {activeTab === 'user-management' && (
+            <UserManagementView
+              users={users}
+              branches={branches}
+              onAddUser={handleAddUser}
+              onUpdateUser={handleUpdateUser}
+              onDeleteUser={handleDeleteUser}
             />
           )}
 

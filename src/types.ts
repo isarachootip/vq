@@ -219,3 +219,26 @@ export interface ServiceItem {
   description: string;
   requiredSkillLevel: 1 | 2 | 3;
 }
+
+export type UserRole = 
+  | 'sys_admin' 
+  | 'admin' 
+  | 'supervisor' 
+  | 'technician' 
+  | 'storecs' 
+  | 'customer';
+
+export interface UserAccount {
+  id: string;
+  username: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: UserRole;
+  status: 'Active' | 'Inactive' | 'Suspended';
+  branchId?: string;
+  branchName?: string;
+  avatarUrl?: string;
+  lastLogin?: string;
+  createdAt: string;
+}

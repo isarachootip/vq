@@ -1,4 +1,4 @@
-import type { Technician, InstallationTypeConfig, QueueBooking, PenaltyRecord, TimeSlot, Branch, Zone, Skill } from './types';
+import type { Technician, InstallationTypeConfig, QueueBooking, PenaltyRecord, TimeSlot, Branch, Zone, Skill, UserAccount } from './types';
 
 export const INITIAL_BRANCHES: Branch[] = [
   { id: 'br-01', code: 'B01', name: 'สาขาพระราม 9', province: 'กรุงเทพมหานคร', status: 'Active' },
@@ -1553,4 +1553,73 @@ export const INITIAL_PENALTIES: PenaltyRecord[] = [
     status: 'Resolved / Fine Paid',
     details: 'เข้าหน้างานล่าช้ากว่าเวลานัดหมาย 1 ชั่วโมง 45 นาที โดยไม่ได้แจ้งล่วงหน้าผ่านระบบ KANNA/STS',
   },
+];
+
+export const INITIAL_USERS: UserAccount[] = [
+  {
+    id: 'usr-001',
+    username: 'sysadmin',
+    name: 'คุณชัยวัฒน์ มงคลสุวรรณ',
+    email: 'chaiwat.m@vservice.co.th',
+    phone: '081-999-8888',
+    role: 'sys_admin',
+    status: 'Active',
+    createdAt: '2026-01-01'
+  },
+  {
+    id: 'usr-002',
+    username: 'admin_center',
+    name: 'คุณอนันต์ ตั้งเจริญ',
+    email: 'anan.t@vservice.co.th',
+    phone: '089-777-6655',
+    role: 'admin',
+    status: 'Active',
+    createdAt: '2026-01-15'
+  },
+  {
+    id: 'usr-003',
+    username: 'super_bkk',
+    name: 'คุณวรวุฒิ สมบูรณ์',
+    email: 'worawut.s@vservice.co.th',
+    phone: '086-555-4433',
+    role: 'supervisor',
+    status: 'Active',
+    branchId: 'br-01',
+    branchName: 'สาขาพระราม 9',
+    createdAt: '2026-02-01'
+  },
+  {
+    id: 'usr-004',
+    username: 'tech_somchai',
+    name: 'ช่างสมชาย & ทีม (ช่างใหญ่)',
+    email: 'somchai.tech@vservice.co.th',
+    phone: '089-111-2233',
+    role: 'technician',
+    status: 'Active',
+    branchId: 'br-01',
+    branchName: 'สาขาพระราม 9',
+    createdAt: '2026-02-10'
+  },
+  {
+    id: 'usr-005',
+    username: 'cs_rama9',
+    name: 'คุณกนกวรรณ ใจดี (CS พระราม 9)',
+    email: 'kanokwan.j@vservice.co.th',
+    phone: '084-222-3344',
+    role: 'storecs',
+    status: 'Active',
+    branchId: 'br-01',
+    branchName: 'สาขาพระราม 9',
+    createdAt: '2026-03-01'
+  },
+  {
+    id: 'usr-006',
+    username: 'cust_pinyo',
+    name: 'คุณภิญโญ รัตนประเสริฐ',
+    email: 'pinyo.r@gmail.com',
+    phone: '089-888-7766',
+    role: 'customer',
+    status: 'Active',
+    createdAt: '2026-07-20'
+  }
 ];
