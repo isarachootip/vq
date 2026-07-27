@@ -52,8 +52,6 @@ interface LineCustomerChatViewProps {
   onConfirmBooking?: (b: QueueBooking) => void;
 }
 
-const DEFAULT_CONVERSATIONS: LineCustomerConversation[] = [];
-
 const QUICK_REPLIES = [
   '👋 ยินดีต้อนรับสู่บริการ vService ยินดีให้บริการครับ',
   '📍 ขออนุญาตสอบถามพื้นที่และวันที่สะดวกติดตั้งนะครับ',
@@ -85,10 +83,6 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
       console.error(e);
     }
     return [];
-  });
-
-  const [isLiveMode, setIsLiveMode] = useState<boolean>(() => {
-    return localStorage.getItem('vfixq_line_live_mode') !== 'false';
   });
 
   const [selectedId, setSelectedId] = useState<string>(convList[0]?.id || '');
@@ -151,56 +145,7 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
     };
   }, []);
 
-  // Clear Mock Data handler
-  const handleClearMockData = () => {
-    if (window.confirm('คุณต้องการล้างข้อมูลตัวอย่าง (Mockup Data) ทั้งหมด เพื่อเริ่มรับข้อความจริงใช่หรือไม่?')) {
-      updateConvList([]);
-      setSelectedId('');
-      localStorage.setItem('vfixq_line_live_mode', 'true');
-      setIsLiveMode(true);
-      fetch('/api/line/clear', { method: 'POST' }).catch((e) => console.error(e));
-    }
-  };
 
-  // Restore Default Demo Data handler
-  const handleRestoreDemoData = () => {
-    updateConvList(DEFAULT_CONVERSATIONS);
-    setSelectedId(DEFAULT_CONVERSATIONS[0]?.id || '');
-  };
-
-  // Simulate Incoming Real Message from Webhook
-  const handleSimulateIncomingWebhookMsg = () => {
-    const testNames = ['คุณประเสริฐ ช่างทอง', 'คุณกนกวรรณ สุขเสริฐ', 'คุณธีรยุทธ การค้า', 'คุณวรรณา เลิศวณิช'];
-    const randomName = testNames[Math.floor(Math.random() * testNames.length)];
-    const randomLineId = `@${randomName.split(' ')[0].toLowerCase()}_line`;
-    const randomPhone = `08${Math.floor(Math.random() * 89 + 10)}-${Math.floor(Math.random() * 899 + 100)}-${Math.floor(Math.random() * 8999 + 1000)}`;
-
-    const newMsg: LineChatMessage = {
-      id: `webhook-msg-${Date.now()}`,
-      sender: 'customer',
-      senderName: randomName,
-      text: `สวัสดีครับ สอบถามคิวงานติดตั้งแอร์บ้านประจำโซน 1 จาก LINE OA Webhook (${new Date().toLocaleTimeString()})`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isRead: false
-    };
-
-    const newConv: LineCustomerConversation = {
-      id: `conv-webhook-${Date.now()}`,
-      customerName: randomName,
-      lineId: randomLineId,
-      avatarUrl: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150`,
-      phone: randomPhone,
-      addressZone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)',
-      lastMessage: newMsg.text,
-      lastMessageTime: 'เมื่อครู่',
-      unreadCount: 1,
-      status: 'new',
-      messages: [newMsg]
-    };
-
-    updateConvList([newConv, ...convList]);
-    setSelectedId(newConv.id);
-  };
 
   const activeConv = useMemo(() => {
     return convList.find((c) => c.id === selectedId) || convList[0];
@@ -368,7 +313,7 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
               </span>
               <span className="bg-emerald-900/40 text-emerald-100 font-bold text-[10px] px-2 py-0.5 rounded-full border border-emerald-300/40 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
-                {isLiveMode ? '🟢 Live Webhook Mode' : '🟡 Simulator'}
+                🟢 Live Webhook Mode
               </span>
             </div>
             <p className="text-xs text-white/80 font-medium mt-0.5">ระบบแชทสดบริการลูกค้าและส่งการ์ดจองคิวติดตั้งผ่าน LINE OA (Webhook Real-time Active)</p>
@@ -376,34 +321,9 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
         </div>
 
         <div className="flex items-center space-x-2">
-          {convList.length > 0 ? (
-            <button
-              onClick={handleClearMockData}
-              className="px-3 py-1.5 bg-red-600/90 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition cursor-pointer border border-red-400/50 flex items-center gap-1 shadow-sm"
-              title="ล้างข้อมูลตัวอย่างเดิม เพื่อเริ่มรับแชทสดจาก LINE OA จริง"
-            >
-              <span>🗑️ ล้างข้อมูลตัวอย่าง (Mockup Data)</span>
-            </button>
-          ) : (
-            <button
-              onClick={handleRestoreDemoData}
-              className="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white font-bold text-xs rounded-xl transition cursor-pointer border border-white/30 flex items-center gap-1"
-            >
-              <span>🔄 เติมข้อมูลตัวอย่าง (Load Demo)</span>
-            </button>
-          )}
-
-          <button
-            onClick={handleSimulateIncomingWebhookMsg}
-            className="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-emerald-950 font-bold text-xs rounded-xl transition cursor-pointer border border-yellow-200 flex items-center gap-1 shadow-sm"
-            title="ทดสอบยิง event ข้อความเข้ามาจาก LINE Webhook"
-          >
-            <span>⚡ ทดสอบรับข้อความ Webhook ใหม่</span>
-          </button>
-
           <button
             onClick={() => onNavigateToTab('smart-booking')}
-            className="px-3 py-1.5 bg-white text-[#06C755] font-bold text-xs rounded-xl shadow-xs hover:bg-slate-50 transition cursor-pointer border-0 flex items-center gap-1.5"
+            className="px-4 py-2 bg-white text-[#06C755] font-bold text-xs rounded-xl shadow-xs hover:bg-slate-50 transition cursor-pointer border-0 flex items-center gap-1.5"
           >
             <Sparkles size={14} />
             <span>สร้างคิวจองอัจฉริยะ</span>
@@ -412,7 +332,7 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
       </div>
 
       {/* Main 3-Column Chat Layout */}
-      <div className="v-panel bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs grid grid-cols-1 lg:grid-cols-12 min-h-[620px]">
+      <div className="v-panel bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs grid grid-cols-1 lg:grid-cols-12 min-h-[640px]">
         
         {/* ===== Column 1: Customer Conversation List (3 cols) ===== */}
         <div className="lg:col-span-3 border-r border-slate-200 flex flex-col bg-slate-50/60">
@@ -456,30 +376,16 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
           {/* Conversations List */}
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
             {filteredConvs.length === 0 ? (
-              <div className="p-6 text-center space-y-3">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-[#06C755] flex items-center justify-center mx-auto border border-emerald-200 shadow-xs">
+              <div className="p-8 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-[#06C755] flex items-center justify-center mx-auto border border-emerald-200 shadow-xs">
                   <span className="w-3.5 h-3.5 rounded-full bg-[#06C755] animate-ping"></span>
                 </div>
                 <div>
-                  <p className="text-xs font-black text-slate-800">🟢 พร้อมรับข้อความสดจาก LINE OA</p>
+                  <p className="text-xs font-black text-slate-800">🟢 รอรับข้อความจาก LINE OA</p>
                   <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                    ล้างข้อมูลตัวอย่างเรียบร้อยแล้ว<br/>
-                    เมื่อผู้ใช้ส่งข้อความใน LINE App ข้อความจะยิงผ่าน Webhook เข้ามาที่นี่ทันที
+                    เมื่อผู้ใช้พิมพ์ข้อความใน LINE App<br/>
+                    ข้อมูลสนทนาจะเด้งเข้ามาที่นี่ทันที
                   </p>
-                </div>
-                <div className="pt-2 flex flex-col gap-1.5">
-                  <button
-                    onClick={handleSimulateIncomingWebhookMsg}
-                    className="px-3 py-1.5 bg-[#06C755] hover:bg-[#00B900] text-white font-bold text-[11px] rounded-xl shadow-xs transition border-0 cursor-pointer"
-                  >
-                    ⚡ ทดสอบยิงข้อความ Webhook
-                  </button>
-                  <button
-                    onClick={handleRestoreDemoData}
-                    className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-[10px] rounded-lg transition border-0 cursor-pointer"
-                  >
-                    🔄 โหลดข้อมูลตัวอย่างกลับมา
-                  </button>
                 </div>
               </div>
             ) : (
@@ -752,25 +658,10 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
                 <span className="absolute top-1 right-1 w-3.5 h-3.5 bg-[#06C755] rounded-full border-2 border-white animate-ping"></span>
               </div>
               <div>
-                <h3 className="font-black text-slate-800 text-sm">🟢 ระบบพร้อมรับข้อความสดผ่าน LINE Webhook</h3>
+                <h3 className="font-black text-slate-800 text-sm">🟢 ระบบแชทสดพร้อมใช้งาน (Live Customer Chat Active)</h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 leading-relaxed">
-                  ล้าง Mockup Data เรียบร้อยแล้ว ขณะนี้ระบบกำลังเชื่อมต่อรับข้อความสดจาก <strong className="text-emerald-700 font-mono font-bold">{typeof window !== 'undefined' ? `${window.location.origin}/api/line/webhook` : 'https://vibepjm.online/api/line/webhook'}</strong>
+                  เลือกรายการสนทนาของลูกค้าทางด้านซ้ายเพื่ออ่านและตอบกลับข้อความผ่าน LINE Official Account
                 </p>
-              </div>
-              <div className="pt-2 flex items-center space-x-2">
-                <button
-                  onClick={handleSimulateIncomingWebhookMsg}
-                  className="px-4 py-2 bg-[#06C755] hover:bg-[#00B900] text-white font-bold text-xs rounded-xl shadow-sm transition border-0 cursor-pointer flex items-center gap-1.5"
-                >
-                  <Sparkles size={14} />
-                  <span>ทดสอบยิงข้อความ Webhook ตัวอย่าง</span>
-                </button>
-                <button
-                  onClick={handleRestoreDemoData}
-                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition border border-slate-200 cursor-pointer"
-                >
-                  โหลดชุดตัวอย่างกลับมา
-                </button>
               </div>
             </div>
           )}

@@ -61,7 +61,9 @@ async function fetchLineUserProfile(userId, token) {
       }
     });
     if (res.ok) {
-      return await res.json();
+      const data = await res.json();
+      console.log(`[LINE PROFILE API SUCCESS]: User ${userId} -> ${data.displayName}`);
+      return data;
     } else {
       const errText = await res.text();
       console.error(`[LINE PROFILE API ERROR ${res.status}]:`, errText);
@@ -70,6 +72,27 @@ async function fetchLineUserProfile(userId, token) {
     console.error('[LINE PROFILE API EXCEPTION]:', err);
   }
   return null;
+}
+
+// Background profile refetcher for conversations with placeholder names
+async function tryRefetchProfiles() {
+  const accessToken = lineConfig.channelAccessToken || process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!accessToken) return;
+
+  let updated = false;
+  for (const conv of conversationsStore) {
+    if (conv.lineUserId && (conv.customerName.includes('คุณ LINE') || !conv.customerName)) {
+      const profile = await fetchLineUserProfile(conv.lineUserId, accessToken);
+      if (profile && profile.displayName) {
+        conv.customerName = profile.displayName;
+        if (profile.pictureUrl) conv.avatarUrl = profile.pictureUrl;
+        updated = true;
+      }
+    }
+  }
+  if (updated) {
+    saveJson(DATA_FILE, conversationsStore);
+  }
 }
 
 // ----------------------------------------------------
@@ -84,6 +107,7 @@ app.post('/api/line/config', (req, res) => {
   if (channelAccessToken) lineConfig.channelAccessToken = channelAccessToken;
   
   saveJson(CONFIG_FILE, lineConfig);
+  tryRefetchProfiles();
   return res.json({ status: 'success', config: lineConfig });
 });
 
@@ -137,14 +161,16 @@ app.all('/api/line/webhook', async (req, res) => {
     const newMsg = {
       id: `msg-${event.message?.id || Date.now()}-${Math.floor(Math.random() * 1000)}`,
       sender: 'customer',
-      senderName: customerName,
+      senderName: profile?.displayName || customerName,
       text: textContent,
       timestamp,
       isRead: false
     };
 
     if (conv) {
-      conv.customerName = customerName;
+      if (profile?.displayName) {
+        conv.customerName = profile.displayName;
+      }
       if (avatarUrl) conv.avatarUrl = avatarUrl;
       conv.lastMessage = textContent;
       conv.lastMessageTime = timestamp;
@@ -177,6 +203,7 @@ app.all('/api/line/webhook', async (req, res) => {
 
 // 2. GET API for Web App to fetch active conversations
 app.get('/api/line/conversations', (req, res) => {
+  tryRefetchProfiles();
   res.json({
     status: 'success',
     count: conversationsStore.length,
