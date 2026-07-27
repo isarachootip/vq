@@ -158,6 +158,7 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
       setSelectedId('');
       localStorage.setItem('vfixq_line_live_mode', 'true');
       setIsLiveMode(true);
+      fetch('/api/line/clear', { method: 'POST' }).catch((e) => console.error(e));
     }
   };
 
