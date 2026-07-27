@@ -296,37 +296,55 @@ export function App() {
     })
   );
 
+  // Helper to safely write to localStorage (guard against QuotaExceededError)
+  const safeLocalSet = (key: string, value: any) => {
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (e) {
+      console.warn(`localStorage quota exceeded for key: ${key}. Skipping save.`);
+    }
+  };
+
   // Watchers to persist state updates in localStorage
+  // Strip base64 imageUrls from banners before saving to avoid QuotaExceededError
   useEffect(() => {
-    localStorage.setItem('vfixq_banners', JSON.stringify(banners));
+    const safeBanners = banners.map(b => ({
+      ...b,
+      imageUrl: b.imageUrl.startsWith('data:') ? '' : b.imageUrl
+    }));
+    safeLocalSet('vfixq_banners', safeBanners);
   }, [banners]);
 
   useEffect(() => {
-    localStorage.setItem('vfixq_services', JSON.stringify(services));
+    const safeServices = services.map(s => ({
+      ...s,
+      image: s.image.startsWith('data:') ? '' : s.image
+    }));
+    safeLocalSet('vfixq_services', safeServices);
   }, [services]);
 
   useEffect(() => {
-    localStorage.setItem('vfixq_tech_applications', JSON.stringify(techApplications));
+    safeLocalSet('vfixq_tech_applications', techApplications);
   }, [techApplications]);
 
   useEffect(() => {
-    localStorage.setItem('vfixq_bookings', JSON.stringify(bookings));
+    safeLocalSet('vfixq_bookings', bookings);
   }, [bookings]);
 
   useEffect(() => {
-    localStorage.setItem('vfixq_technicians', JSON.stringify(technicians));
+    safeLocalSet('vfixq_technicians', technicians);
   }, [technicians]);
 
   useEffect(() => {
-    localStorage.setItem('vfixq_penalties', JSON.stringify(penalties));
+    safeLocalSet('vfixq_penalties', penalties);
   }, [penalties]);
 
   useEffect(() => {
-    localStorage.setItem('vfixq_match_weights', JSON.stringify(matchWeights));
+    safeLocalSet('vfixq_match_weights', matchWeights);
   }, [matchWeights]);
 
   useEffect(() => {
-    localStorage.setItem('vfixq_system_config', JSON.stringify(systemConfig));
+    safeLocalSet('vfixq_system_config', systemConfig);
   }, [systemConfig]);
   
   const [toastMessage, setToastMessage] = useState<string | null>(null);

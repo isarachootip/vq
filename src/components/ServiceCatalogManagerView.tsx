@@ -254,15 +254,26 @@ export const ServiceCatalogManagerView: React.FC<ServiceCatalogManagerViewProps>
                       accept="image/*"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = (event) => {
-                            if (event.target?.result) {
-                              setImage(event.target.result as string);
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          if (!event.target?.result) return;
+                          const img = new Image();
+                          img.onload = () => {
+                            const MAX_WIDTH = 900;
+                            const scale = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width * scale;
+                            canvas.height = img.height * scale;
+                            const ctx = canvas.getContext('2d');
+                            if (ctx) {
+                              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                              setImage(canvas.toDataURL('image/jpeg', 0.8));
                             }
                           };
-                          reader.readAsDataURL(file);
-                        }
+                          img.src = event.target.result as string;
+                        };
+                        reader.readAsDataURL(file);
                       }}
                       className="text-[10px] text-slate-500 w-full file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-semibold file:bg-amber-500 file:text-slate-900 hover:file:bg-amber-600 file:cursor-pointer"
                     />
