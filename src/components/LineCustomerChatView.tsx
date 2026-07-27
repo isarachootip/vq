@@ -106,8 +106,30 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
     }
   };
 
-  // Real-time listener for incoming messages
+  // Real-time listener & Backend API polling for incoming LINE messages
   React.useEffect(() => {
+    let isMounted = true;
+
+    const fetchLiveConversations = async () => {
+      try {
+        const res = await fetch('/api/line/conversations');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.conversations && Array.isArray(data.conversations) && isMounted) {
+            if (data.conversations.length > 0) {
+              setConvList(data.conversations);
+              localStorage.setItem('vfixq_line_live_conversations', JSON.stringify(data.conversations));
+            }
+          }
+        }
+      } catch (err) {
+        // quiet fallback if standalone
+      }
+    };
+
+    fetchLiveConversations();
+    const interval = setInterval(fetchLiveConversations, 2500);
+
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'vfixq_line_live_conversations' && e.newValue) {
         try {
@@ -122,7 +144,11 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
     };
 
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   // Clear Mock Data handler
@@ -231,6 +257,17 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
     });
 
     updateConvList(updated);
+
+    // Call backend API to push message back to LINE user's phone
+    fetch('/api/line/reply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversationId: activeConv.id,
+        text
+      })
+    }).catch((err) => console.log('Backend reply offline fallback:', err));
+
     if (!textToSend) setInputText('');
   };
 

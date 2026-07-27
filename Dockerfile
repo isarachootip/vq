@@ -1,4 +1,3 @@
-# Stage 1: Build stage
 FROM node:22-slim AS builder
 
 WORKDIR /app
@@ -13,15 +12,20 @@ COPY . .
 # Build Vite production dist
 RUN npm run build
 
-# Stage 2: Serve stage with Nginx
-FROM nginx:alpine
+# Stage 2: Serve stage with Node.js Production Backend Server
+FROM node:22-slim
 
-# Copy custom nginx configuration for SPA routing
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Copy compiled static assets from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+COPY --from=builder /app/dist ./dist
+COPY server.js ./
 
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+ENV PORT=80
+ENV NODE_ENV=production
+
+CMD ["node", "server.js"]
