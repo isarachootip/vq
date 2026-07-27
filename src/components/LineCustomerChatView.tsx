@@ -713,7 +713,7 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
               <div>
                 <h3 className="font-black text-slate-800 text-sm">🟢 ระบบพร้อมรับข้อความสดผ่าน LINE Webhook</h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1 leading-relaxed">
-                  ล้าง Mockup Data เรียบร้อยแล้ว ขณะนี้ระบบกำลังเชื่อมต่อรับข้อความสดจาก <strong className="text-emerald-700 font-mono font-bold">https://vservice.online/api/line/webhook</strong>
+                  ล้าง Mockup Data เรียบร้อยแล้ว ขณะนี้ระบบกำลังเชื่อมต่อรับข้อความสดจาก <strong className="text-emerald-700 font-mono font-bold">{typeof window !== 'undefined' ? `${window.location.origin}/api/line/webhook` : 'https://vibepjm.online/api/line/webhook'}</strong>
                 </p>
               </div>
               <div className="pt-2 flex items-center space-x-2">
