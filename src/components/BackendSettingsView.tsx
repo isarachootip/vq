@@ -88,11 +88,38 @@ export const BackendSettingsView: React.FC<BackendSettingsViewProps> = ({
   };
 
   const handleConfigChange = (key: keyof SystemConfig, value: any) => {
-    onUpdateSystemConfig({
+    const updated = {
       ...systemConfig,
       [key]: value
-    });
+    };
+    onUpdateSystemConfig(updated);
+
+    if (['lineChannelId', 'lineChannelSecret', 'lineChannelAccessToken'].includes(key)) {
+      fetch('/api/line/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channelId: updated.lineChannelId || '',
+          channelSecret: updated.lineChannelSecret || '',
+          channelAccessToken: updated.lineChannelAccessToken || ''
+        })
+      }).catch((e) => console.error(e));
+    }
   };
+
+  React.useEffect(() => {
+    if (systemConfig.lineChannelAccessToken || systemConfig.lineChannelId || systemConfig.lineChannelSecret) {
+      fetch('/api/line/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          channelId: systemConfig.lineChannelId || '',
+          channelSecret: systemConfig.lineChannelSecret || '',
+          channelAccessToken: systemConfig.lineChannelAccessToken || ''
+        })
+      }).catch((e) => console.error(e));
+    }
+  }, [systemConfig.lineChannelId, systemConfig.lineChannelSecret, systemConfig.lineChannelAccessToken]);
 
   // Calculate sum of positive weights to display contribution summary
   const totalPositiveWeights = 
