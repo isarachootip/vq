@@ -560,7 +560,12 @@ export const BackendSettingsView: React.FC<BackendSettingsViewProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">📜 Channel Access Token (Long-lived v2.1):</label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block font-bold text-slate-700">📜 Channel Access Token (Long-lived v2.1):</label>
+                  <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    ⚡ Auto-Saved บันทึกอัตโนมัติ
+                  </span>
+                </div>
                 <input
                   type="text"
                   placeholder="เช่น eyJhbGciOiJIUzI1NiJ9..."
