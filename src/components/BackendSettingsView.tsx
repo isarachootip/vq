@@ -556,14 +556,37 @@ export const BackendSettingsView: React.FC<BackendSettingsViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">🌐 Webhook Callback URL:</label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block font-bold text-slate-700">🌐 Webhook Callback URL:</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const liveOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+                        const urlToCopy = systemConfig.lineWebhookUrl && !systemConfig.lineWebhookUrl.includes('vservice.company.com')
+                          ? systemConfig.lineWebhookUrl
+                          : `${liveOrigin}/api/line/webhook`;
+                        navigator.clipboard.writeText(urlToCopy);
+                        alert(`คัดลอก Webhook URL (${urlToCopy}) เรียบร้อยแล้ว! นำไปวางใน LINE Developers Console ได้เลย`);
+                      }}
+                      className="text-[10px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-0.5 rounded cursor-pointer transition border-0"
+                    >
+                      📋 คัดลอก URL
+                    </button>
+                  </div>
                   <input
                     type="text"
-                    placeholder="เช่น https://vservice.company.com/api/line/webhook"
-                    value={systemConfig.lineWebhookUrl || 'https://vservice.company.com/api/line/webhook'}
+                    placeholder="เช่น https://vq.vibepjm.online/api/line/webhook"
+                    value={
+                      systemConfig.lineWebhookUrl && !systemConfig.lineWebhookUrl.includes('vservice.company.com')
+                        ? systemConfig.lineWebhookUrl
+                        : (typeof window !== 'undefined' ? `${window.location.origin}/api/line/webhook` : 'https://vq.vibepjm.online/api/line/webhook')
+                    }
                     onChange={(e) => handleConfigChange('lineWebhookUrl', e.target.value)}
-                    className="v-input w-full py-1.5 text-[11px] font-mono text-blue-700"
+                    className="v-input w-full py-1.5 text-[11px] font-mono text-blue-700 bg-blue-50/40 font-bold"
                   />
+                  <span className="text-[9px] text-[#06C755] font-semibold block mt-1">
+                    *คัดลอก URL นี้ไปวางในช่อง <strong>Webhook URL</strong> บน LINE Developers Console ตามโดเมนจริงของคุณ
+                  </span>
                 </div>
               </div>
 
