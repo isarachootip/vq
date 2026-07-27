@@ -106,6 +106,25 @@ export const LineCustomerChatView: React.FC<LineCustomerChatViewProps> = ({
     }
   };
 
+  // Real-time listener for incoming messages
+  React.useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'vfixq_line_live_conversations' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setConvList(parsed);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   // Clear Mock Data handler
   const handleClearMockData = () => {
     if (window.confirm('คุณต้องการล้างข้อมูลตัวอย่าง (Mockup Data) ทั้งหมด เพื่อเริ่มรับข้อความจริงใช่หรือไม่?')) {
