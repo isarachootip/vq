@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import type { Branch, QueueBooking, PortalBanner, ServiceItem } from '../types';
+import { CustomDateInput } from './CustomDateInput';
 import { SERVICE_ZONES } from '../mockData';
 import { 
   ShoppingBag, 
   Search, 
   MapPin, 
-  Calendar, 
   User, 
   Phone, 
   Check, 
@@ -772,16 +772,13 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
                   <label className="block text-[11px] font-bold text-slate-500 mb-1">ระบุวันที่สะดวกติดตั้ง:</label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      value={bookingDate}
-                      min={new Date().toISOString().split('T')[0]}
-                      onChange={(e) => setBookingDate(e.target.value)}
-                      className="v-input w-full pl-9 py-2 text-xs"
-                    />
-                    <Calendar className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
-                  </div>
+                  <CustomDateInput
+                    value={bookingDate}
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(val) => setBookingDate(val)}
+                    iconPosition="left"
+                    className="v-input w-full py-2 text-xs"
+                  />
                 </div>
 
                 <div className="space-y-2">

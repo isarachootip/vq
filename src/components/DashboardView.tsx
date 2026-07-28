@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { QueueBooking, Technician, ServiceItem } from '../types';
+import { CustomDateInput } from './CustomDateInput';
 import { 
   Clock, 
   CheckCircle2, 
@@ -14,7 +15,9 @@ import {
   Info,
   Phone,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  UserCheck,
+  Sparkles
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -24,6 +27,7 @@ interface DashboardViewProps {
   onDispatchToKanna: (bookingId: string) => void;
   onSelectBookingForSim: (booking: QueueBooking) => void;
   onConfirmBooking: (newBooking: QueueBooking) => void;
+  onAssignTechnician?: (bookingId: string, techId: string, techName: string) => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -33,6 +37,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onDispatchToKanna,
   onSelectBookingForSim,
   onConfirmBooking,
+  onAssignTechnician,
 }) => {
   const [selectedDate, setSelectedDate] = useState<string | null>('2026-07-24'); // Default to 24th to highlight demo data
   const [viewYear, setViewYear] = useState<number>(2026);
@@ -51,6 +56,61 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [mDate, setMDate] = useState<string>('2026-07-24');
   const [mTimeSlot, setMTimeSlot] = useState<string>('Morning (09:00 - 12:00)');
   const [mSource, setMSource] = useState<'Line OA' | 'Call Center 1308' | 'Walk-in'>('Call Center 1308');
+
+  // Assign Technician Modal States
+  const [assignModalBooking, setAssignModalBooking] = useState<QueueBooking | null>(null);
+  const [selectedTechIdForAssign, setSelectedTechIdForAssign] = useState<string>('');
+
+  const handleOpenAssignModal = (b: QueueBooking) => {
+    setAssignModalBooking(b);
+    const eligible = technicians.filter(
+      (t) => t.status !== 'In Cooldown' && t.tier !== 'Cooldown'
+    );
+    if (eligible.length > 0) {
+      setSelectedTechIdForAssign(eligible[0].id);
+    }
+  };
+
+  const handleConfirmAssignTech = () => {
+    if (!assignModalBooking || !selectedTechIdForAssign) return;
+    const tech = technicians.find((t) => t.id === selectedTechIdForAssign);
+    if (!tech) return;
+
+    if (onAssignTechnician) {
+      onAssignTechnician(assignModalBooking.id, tech.id, tech.name);
+    } else {
+      assignModalBooking.assignedTechTeamId = tech.id;
+      assignModalBooking.assignedTechTeamName = tech.name;
+      assignModalBooking.status = 'Scheduled';
+    }
+
+    setAssignModalBooking(null);
+  };
+
+  const unassignedCount = bookings.filter(
+    (b) => !b.assignedTechTeamId || b.assignedTechTeamId === '' || b.status === 'Pending Dispatch'
+  ).length;
+
+  const handleAutoAssignAllPending = () => {
+    const unassigned = bookings.filter(
+      (b) => !b.assignedTechTeamId || b.assignedTechTeamId === '' || b.status === 'Pending Dispatch'
+    );
+    const eligibleTechs = technicians.filter(
+      (t) => t.status !== 'In Cooldown' && t.tier !== 'Cooldown'
+    );
+    if (eligibleTechs.length === 0) return;
+
+    unassigned.forEach((b, idx) => {
+      const chosenTech = eligibleTechs[idx % eligibleTechs.length];
+      if (onAssignTechnician) {
+        onAssignTechnician(b.id, chosenTech.id, chosenTech.name);
+      } else {
+        b.assignedTechTeamId = chosenTech.id;
+        b.assignedTechTeamName = chosenTech.name;
+        b.status = 'Scheduled';
+      }
+    });
+  };
 
   // 1. Filter bookings
   const filteredBookings = bookings.filter((b) => {
@@ -298,6 +358,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
           
           <div className="flex flex-wrap items-center gap-2">
+            {unassignedCount > 0 && (
+              <button
+                onClick={handleAutoAssignAllPending}
+                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-full cursor-pointer shadow-sm border-0 transition flex items-center gap-1.5 animate-pulse"
+                title="ระบบจะวิเคราะห์หาช่างและจัดคิวให้อัตโนมัติทุกรายการที่รอจัดสรร"
+              >
+                <Sparkles size={14} />
+                <span>🤖 จัดสรรช่างให้อัตโนมัติ ({unassignedCount})</span>
+              </button>
+            )}
+
             <button
               onClick={() => setShowManualBookingModal(true)}
               className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-full cursor-pointer shadow-sm border-0 transition flex items-center gap-1.5"
@@ -534,7 +605,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             </div>
                           </div>
                         ) : (
-                          <span className="text-amber-600 font-semibold italic">ยังไม่ได้จัดสรรช่าง</span>
+                          <div className="flex flex-col space-y-1 items-start">
+                            <span className="text-amber-600 font-bold italic text-[11px]">ยังไม่ได้จัดสรรช่าง</span>
+                            <button
+                              onClick={() => handleOpenAssignModal(b)}
+                              className="px-2 py-0.5 rounded bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-[9px] transition flex items-center space-x-1 shadow-xs border-0 cursor-pointer animate-pulse"
+                            >
+                              <UserCheck className="h-3 w-3" />
+                              <span>จัดสรรช่าง</span>
+                            </button>
+                          </div>
                         )}
                       </td>
 
@@ -552,6 +632,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end space-x-1.5">
+                          {!assignedTech && (
+                            <button
+                              onClick={() => handleOpenAssignModal(b)}
+                              className="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] transition flex items-center space-x-1 shadow-sm border-0 cursor-pointer"
+                            >
+                              <UserCheck className="h-3 w-3" />
+                              <span>จัดสรรช่าง</span>
+                            </button>
+                          )}
+
                           {b.status === 'Scheduled' && (
                             <button
                               onClick={() => onDispatchToKanna(b.id)}
@@ -673,11 +763,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="block font-bold text-slate-600">วันที่นัดหมายติดตั้ง:</label>
-                  <input
-                    type="date"
+                  <CustomDateInput
                     required
                     value={mDate}
-                    onChange={(e) => setMDate(e.target.value)}
+                    onChange={(val) => setMDate(val)}
                     className="v-input w-full py-2 font-bold"
                   />
                 </div>
@@ -731,6 +820,133 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Assign Technician Modal */}
+      {assignModalBooking && (
+        <div className="fixed inset-0 z-150 flex items-center justify-center p-4 bg-slate-900/60 animate-fadeIn">
+          <div className="v-panel p-6 bg-white w-full max-w-lg border border-slate-200 rounded-2xl shadow-2xl space-y-4 text-xs">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <div className="flex items-center space-x-2 text-sm font-bold text-slate-800">
+                <UserCheck className="h-5 w-5 text-emerald-600" />
+                <span>⚡ จัดสรรทีมช่างให้แก่คิวงาน: <span className="font-mono text-blue-700">{assignModalBooking.bookingRef}</span></span>
+              </div>
+              <button 
+                onClick={() => setAssignModalBooking(null)}
+                className="text-slate-400 hover:text-slate-600 text-sm border-0 bg-transparent font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Booking Details */}
+            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-slate-700">
+              <div className="flex justify-between">
+                <span className="font-semibold text-slate-500">ชื่อลูกค้า:</span>
+                <span className="font-bold text-slate-800">{assignModalBooking.customerName} ({assignModalBooking.customerPhone})</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-semibold text-slate-500">ประเภทงานติดตั้ง:</span>
+                <span className="font-bold text-blue-700">{assignModalBooking.installationTypeName}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-semibold text-slate-500">โซนที่อยู่:</span>
+                <span className="font-semibold">{assignModalBooking.addressZone}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-semibold text-slate-500">วัน/เวลานัดหมาย:</span>
+                <span className="font-semibold text-slate-800">{formatDateDDMMYYYY(assignModalBooking.bookingDate)} | {assignModalBooking.timeSlot}</span>
+              </div>
+              <div className="flex justify-between border-t border-slate-200 pt-1.5">
+                <span className="font-semibold text-slate-500">ทักษะที่ต้องการ:</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                  Skill Level {assignModalBooking.requiredSkillLevel}
+                </span>
+              </div>
+            </div>
+
+            {/* Select Technician */}
+            <div className="space-y-2">
+              <label className="block font-bold text-slate-700">เลือกทีมช่างที่ต้องการมอบหมายงาน (Smart Match):</label>
+              
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {technicians
+                  .filter((t) => t.status !== 'In Cooldown' && t.tier !== 'Cooldown')
+                  .map((tech, idx) => {
+                    const isSelected = selectedTechIdForAssign === tech.id;
+                    const hasSkill = tech.skills.some((s) => s.level >= (assignModalBooking.requiredSkillLevel || 1));
+                    return (
+                      <div
+                        key={tech.id}
+                        onClick={() => setSelectedTechIdForAssign(tech.id)}
+                        className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+                          isSelected
+                            ? 'border-emerald-500 bg-emerald-50/50 shadow-sm ring-2 ring-emerald-400/20'
+                            : 'border-slate-200 bg-white hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={tech.avatar}
+                            alt={tech.name}
+                            className="h-9 w-9 rounded-lg object-cover border border-slate-200"
+                          />
+                          <div>
+                            <div className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                              <span>{tech.name}</span>
+                              {idx === 0 && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-amber-400 text-slate-900 shadow-2xs">
+                                  ⭐ Rank #1 Match
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-2 text-[10px] text-slate-500 mt-0.5">
+                              <span className={tech.tier === 'Gold' ? 'text-amber-600 font-bold' : 'text-slate-500'}>
+                                {tech.tier} Tier
+                              </span>
+                              <span>• ⭐ {tech.rating}</span>
+                              <span>• {tech.primaryZone}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          {hasSkill ? (
+                            <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                              ทักษะตรงสาย
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600">
+                              ทักษะทั่วไป
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+
+            <div className="pt-3 border-t border-slate-100 flex justify-end space-x-2">
+              <button
+                type="button"
+                onClick={() => setAssignModalBooking(null)}
+                className="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer border-0"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                disabled={!selectedTechIdForAssign}
+                onClick={handleConfirmAssignTech}
+                className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs cursor-pointer border-0 shadow-sm disabled:opacity-50 flex items-center space-x-1.5"
+              >
+                <UserCheck className="h-4 w-4" />
+                <span>✅ ยืนยันจัดสรรช่างทีมนี้</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

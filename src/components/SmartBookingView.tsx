@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Technician, QueueBooking, Branch, MatchWeights, SystemConfig } from '../types';
+import { CustomDateInput } from './CustomDateInput';
 import { INITIAL_INSTALLATION_TYPES, SERVICE_ZONES, AVAILABLE_TIME_SLOTS } from '../mockData';
 import { MapPin, CheckCircle2, ShieldAlert, UserCheck, Sparkles } from 'lucide-react';
 
@@ -297,10 +298,9 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
                 <label className="block text-xs font-semibold text-slate-600 mb-1">
                   วันที่จองติดตั้ง
                 </label>
-                <input
-                  type="date"
+                <CustomDateInput
                   value={bookingDate}
-                  onChange={(e) => setBookingDate(e.target.value)}
+                  onChange={(val) => setBookingDate(val)}
                   className="v-input w-full"
                 />
               </div>

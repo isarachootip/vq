@@ -640,6 +640,22 @@ export function App() {
     showToast('ส่งข้อมูลงานติดตั้งไปยังระบบ KANNA (Project Flow) เรียบร้อยแล้ว');
   };
 
+  const handleAssignTechnician = (bookingId: string, techId: string, techName: string) => {
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId || b.bookingRef === bookingId
+          ? {
+              ...b,
+              assignedTechTeamId: techId,
+              assignedTechTeamName: techName,
+              status: 'Scheduled',
+            }
+          : b
+      )
+    );
+    showToast(`จัดสรรทีมช่าง ${techName} ให้กับใบงานเรียบร้อยแล้ว!`);
+  };
+
   const handleUpdateTechnician = (updatedTech: Technician) => {
     setTechnicians((prev) => prev.map((t) => (t.id === updatedTech.id ? updatedTech : t)));
     showToast(`อัปเดตข้อมูลและ Skill ของ ${updatedTech.name} เรียบร้อยแล้ว`);
@@ -917,6 +933,7 @@ export function App() {
               technicians={technicians}
               services={services}
               onDispatchToKanna={handleDispatchToKanna}
+              onAssignTechnician={handleAssignTechnician}
               onSelectBookingForSim={() => {
                 setActiveTab('integration-flow');
               }}
