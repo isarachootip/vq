@@ -54,6 +54,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [selectedDate, setSelectedDate] = useState<string | null>('2026-07-24'); // Default to 24th to highlight demo data
   const [viewYear, setViewYear] = useState<number>(2026);
   const [viewMonth, setViewMonth] = useState<number>(7); // 1 = Jan, 7 = Jul
+  const [selectedRegion, setSelectedRegion] = useState<'ALL' | 'BKK' | 'UPC'>('ALL');
   const [selectedZone, setSelectedZone] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -164,13 +165,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   // 1. Filter bookings
   const filteredBookings = bookings.filter((b) => {
     const matchesDate = !selectedDate || b.bookingDate === selectedDate;
+    
+    // Region Filter (BKK vs UPC)
+    const isUpc = b.addressZone.includes('UPC') || b.addressZone.includes('ภาค') || b.addressZone.includes('เชียงใหม่') || b.addressZone.includes('ขอนแก่น') || b.addressZone.includes('ชลบุรี') || b.addressZone.includes('ภูเก็ต') || b.addressZone.includes('นครปฐม') || b.addressZone.includes('พิษณุโลก');
+    const matchesRegion = 
+      selectedRegion === 'ALL' ||
+      (selectedRegion === 'BKK' && !isUpc) ||
+      (selectedRegion === 'UPC' && isUpc);
+
     const matchesZone = selectedZone === 'ALL' || b.addressZone.includes(selectedZone);
     const matchesStatus = selectedStatus === 'ALL' || b.status === selectedStatus;
     const matchesSearch =
       b.bookingRef.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.installationTypeName.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesDate && matchesZone && matchesStatus && matchesSearch;
+    return matchesDate && matchesRegion && matchesZone && matchesStatus && matchesSearch;
   });
 
   const getStatusBadge = (status: QueueBooking['status']) => {
@@ -536,16 +545,49 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>ตัวกรองคิวติดตั้ง:</span>
           </div>
 
+          {/* Region Filter (BKK vs UPC) */}
+          <select
+            value={selectedRegion}
+            onChange={(e) => {
+              setSelectedRegion(e.target.value as any);
+              setSelectedZone('ALL');
+            }}
+            className="v-input py-1 text-xs font-bold bg-amber-500/10 border-amber-500/30 text-amber-900"
+          >
+            <option value="ALL">🌏 ทุกภูมิภาค (BKK + UPC)</option>
+            <option value="BKK">🏙️ BKK (กรุงเทพฯ/ปริมณฑล)</option>
+            <option value="UPC">🏞️ UPC (ต่างจังหวัด/ภูมิภาค)</option>
+          </select>
+
+          {/* Zone Filter */}
           <select
             value={selectedZone}
             onChange={(e) => setSelectedZone(e.target.value)}
-            className="v-input py-1 text-xs"
+            className="v-input py-1 text-xs font-medium"
           >
-            <option value="ALL">ทุกโซนบริการ</option>
-            <option value="Zone 1">Zone 1: สุขุมวิท - บางนา</option>
-            <option value="Zone 2">Zone 2: ราชพฤกษ์ - แจ้งวัฒนะ</option>
-            <option value="Zone 3">Zone 3: รังสิต - ลำลูกกา</option>
-            <option value="Zone 4">Zone 4: เทพารักษ์ - ศรีนครินทร์</option>
+            <option value="ALL">📍 ทุกโซนพื้นที่บริการ</option>
+
+            {(selectedRegion === 'ALL' || selectedRegion === 'BKK') && (
+              <optgroup label="🏙️ โซนกรุงเทพและปริมณฑล (BKK)">
+                <option value="Zone 1">Zone 1: สุขุมวิท - บางนา - ประเวศ</option>
+                <option value="Zone 2">Zone 2: ราชพฤกษ์ - ปากเกร็ด - แจ้งวัฒนะ</option>
+                <option value="Zone 3">Zone 3: รังสิต - คลองหลวง - ลำลูกกา</option>
+                <option value="Zone 4">Zone 4: เทพารักษ์ - บางพลี - ศรีนครินทร์</option>
+                <option value="Zone 5">Zone 5: ธนบุรี - ตลิ่งชัน - บางแค</option>
+                <option value="Zone 6">Zone 6: ตอนเหนือ - จตุจักร - ลาดพร้าว</option>
+              </optgroup>
+            )}
+
+            {(selectedRegion === 'ALL' || selectedRegion === 'UPC') && (
+              <optgroup label="🏞️ โซนต่างจังหวัด / ภูมิภาค (UPC)">
+                <option value="Zone UPC-N1">Zone UPC-N1: ภาคเหนือ (เชียงใหม่ - ลำพูน)</option>
+                <option value="Zone UPC-NE1">Zone UPC-NE1: ภาคอีสาน (ขอนแก่น - อุดร)</option>
+                <option value="Zone UPC-E1">Zone UPC-E1: ภาคตะวันออก (ชลบุรี - ระยอง)</option>
+                <option value="Zone UPC-S1">Zone UPC-S1: ภาคใต้ (ภูเก็ต - สุราษฎร์)</option>
+                <option value="Zone UPC-W1">Zone UPC-W1: ภาคตะวันตก (นครปฐม - ราชบุรี)</option>
+                <option value="Zone UPC-C1">Zone UPC-C1: ภาคกลางบน (พิษณุโลก - นครสวรรค์)</option>
+              </optgroup>
+            )}
           </select>
 
           <select
