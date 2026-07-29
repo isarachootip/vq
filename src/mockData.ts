@@ -1243,18 +1243,1027 @@ export const INITIAL_BRANCHES: Branch[] = [
 ];
 
 export const INITIAL_ZONES: Zone[] = [
-  { id: 'zone-01', code: 'Z01', name: 'กรุงเทพฯ ตะวันออก (สุขุมวิท - บางนา - ประเวศ)', description: 'ครอบคลุมโซนเศรษฐกิจและที่อยู่อาศัยฝั่งตะวันออก', coverageZipcodes: ['10260', '10250', '10110'] },
-  { id: 'zone-02', code: 'Z02', name: 'นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ - บางบัวทอง)', description: 'ครอบคลุมโซนที่อยู่อาศัยแนวราบฝั่งตะวันตก', coverageZipcodes: ['11000', '11120', '11110'] },
-  { id: 'zone-03', code: 'Z03', name: 'ปทุมธานี (รังสิต - ลำลูกกา - คลองหลวง)', description: 'ครอบคลุมพื้นที่กรุงเทพฯ ตอนเหนือและปริมณฑล', coverageZipcodes: ['12130', '12150', '12120'] },
-  { id: 'zone-04', code: 'Z04', name: 'สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์ - สำโรง)', description: 'ครอบคลุมพื้นที่อุตสาหกรรมและที่อยู่อาศัยตอนใต้', coverageZipcodes: ['10270', '10280', '10540'] },
+  {
+    "id": "zone-1",
+    "code": "Z01",
+    "name": "[BKK] กรุงเทพมหานคร",
+    "description": "<< ตัวอย่างขอสิทธิ์เพิ่มเองได้ด้วย เนื่องจาก BKK ต้องเลือกเป็นเขต",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-2",
+    "code": "Z02",
+    "name": "[BKK] นนทบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค BKK (นนทบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-3",
+    "code": "Z03",
+    "name": "[BKK] ปทุมธานี",
+    "description": "พื้นที่ให้บริการภูมิภาค BKK (ปทุมธานี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-4",
+    "code": "Z04",
+    "name": "[BKK] สมุทรปราการ",
+    "description": "พื้นที่ให้บริการภูมิภาค BKK (สมุทรปราการ)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-5",
+    "code": "Z05",
+    "name": "[CT] กำแพงเพชร",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (กำแพงเพชร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-6",
+    "code": "Z06",
+    "name": "[CT] ชัยนาท",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (ชัยนาท)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-7",
+    "code": "Z07",
+    "name": "[CT] นครนายก",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (นครนายก)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-8",
+    "code": "Z08",
+    "name": "[CT] นครปฐม",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (นครปฐม)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-9",
+    "code": "Z09",
+    "name": "[CT] นครสวรรค์",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (นครสวรรค์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-10",
+    "code": "Z10",
+    "name": "[CT] อยุธยา",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (อยุธยา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-11",
+    "code": "Z11",
+    "name": "[CT] พระนครศรีอยุธยา",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (พระนครศรีอยุธยา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-12",
+    "code": "Z12",
+    "name": "[CT] พิจิตร",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (พิจิตร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-13",
+    "code": "Z13",
+    "name": "[CT] พิษณุโลก",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (พิษณุโลก)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-14",
+    "code": "Z14",
+    "name": "[CT] เพชรบูรณ์",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (เพชรบูรณ์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-15",
+    "code": "Z15",
+    "name": "[CT] ลพบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (ลพบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-16",
+    "code": "Z16",
+    "name": "[CT] สมุทรสงคราม",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (สมุทรสงคราม)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-17",
+    "code": "Z17",
+    "name": "[CT] สมุทรสาคร",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (สมุทรสาคร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-18",
+    "code": "Z18",
+    "name": "[CT] สระบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (สระบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-19",
+    "code": "Z19",
+    "name": "[CT] สิงห์บุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (สิงห์บุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-20",
+    "code": "Z20",
+    "name": "[CT] สุโขทัย",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (สุโขทัย)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-21",
+    "code": "Z21",
+    "name": "[CT] สุพรรณบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (สุพรรณบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-22",
+    "code": "Z22",
+    "name": "[CT] อ่างทอง",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (อ่างทอง)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-23",
+    "code": "Z23",
+    "name": "[CT] อุทัยธานี",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (อุทัยธานี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-24",
+    "code": "Z24",
+    "name": "[ET] จันทบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (จันทบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-25",
+    "code": "Z25",
+    "name": "[ET] ฉะเชิงเทรา",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (ฉะเชิงเทรา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-26",
+    "code": "Z26",
+    "name": "[ET] ชลบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (ชลบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-27",
+    "code": "Z27",
+    "name": "[ET] ตราด",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (ตราด)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-28",
+    "code": "Z28",
+    "name": "[ET] ปราจีนบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (ปราจีนบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-29",
+    "code": "Z29",
+    "name": "[ET] ระยอง",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (ระยอง)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-30",
+    "code": "Z30",
+    "name": "[ET] สระแก้ว",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (สระแก้ว)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-31",
+    "code": "Z31",
+    "name": "[NE] กาฬสินธุ์",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (กาฬสินธุ์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-32",
+    "code": "Z32",
+    "name": "[NE] ขอนแก่น",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (ขอนแก่น)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-33",
+    "code": "Z33",
+    "name": "[NE] ชัยภูมิ",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (ชัยภูมิ)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-34",
+    "code": "Z34",
+    "name": "[NE] นครพนม",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (นครพนม)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-35",
+    "code": "Z35",
+    "name": "[NE] นครราชสีมา",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (นครราชสีมา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-36",
+    "code": "Z36",
+    "name": "[NE] บึงกาฬ",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (บึงกาฬ)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-37",
+    "code": "Z37",
+    "name": "[NE] บุรีรัมย์",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (บุรีรัมย์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-38",
+    "code": "Z38",
+    "name": "[NE] มหาสารคาม",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (มหาสารคาม)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-39",
+    "code": "Z39",
+    "name": "[NE] มุกดาหาร",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (มุกดาหาร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-40",
+    "code": "Z40",
+    "name": "[NE] ยโสธร",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (ยโสธร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-41",
+    "code": "Z41",
+    "name": "[NE] ร้อยเอ็ด",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (ร้อยเอ็ด)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-42",
+    "code": "Z42",
+    "name": "[NE] เลย",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (เลย)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-43",
+    "code": "Z43",
+    "name": "[NE] ศรีสะเกษ",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (ศรีสะเกษ)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-44",
+    "code": "Z44",
+    "name": "[NE] สกลนคร",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (สกลนคร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-45",
+    "code": "Z45",
+    "name": "[NE] สุรินทร์",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (สุรินทร์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-46",
+    "code": "Z46",
+    "name": "[NE] หนองคาย",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (หนองคาย)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-47",
+    "code": "Z47",
+    "name": "[NE] หนองบัวลำภู",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (หนองบัวลำภู)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-48",
+    "code": "Z48",
+    "name": "[NE] อำนาจเจริญ",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (อำนาจเจริญ)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-49",
+    "code": "Z49",
+    "name": "[NE] อุดรธานี",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (อุดรธานี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-50",
+    "code": "Z50",
+    "name": "[NE] อุบลราชธานี",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (อุบลราชธานี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-51",
+    "code": "Z51",
+    "name": "[NT] เชียงราย",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (เชียงราย)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-52",
+    "code": "Z52",
+    "name": "[NT] เชียงใหม่",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (เชียงใหม่)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-53",
+    "code": "Z53",
+    "name": "[NT] น่าน",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (น่าน)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-54",
+    "code": "Z54",
+    "name": "[NT] พะเยา",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (พะเยา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-55",
+    "code": "Z55",
+    "name": "[NT] แพร่",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (แพร่)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-56",
+    "code": "Z56",
+    "name": "[NT] แม่ฮ่องสอน",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (แม่ฮ่องสอน)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-57",
+    "code": "Z57",
+    "name": "[NT] ลำปาง",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (ลำปาง)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-58",
+    "code": "Z58",
+    "name": "[NT] ลำพูน",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (ลำพูน)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-59",
+    "code": "Z59",
+    "name": "[NT] อุตรดิตถ์",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (อุตรดิตถ์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-60",
+    "code": "Z60",
+    "name": "[ST] กระบี่",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (กระบี่)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-61",
+    "code": "Z61",
+    "name": "[ST] ชุมพร",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (ชุมพร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-62",
+    "code": "Z62",
+    "name": "[ST] ตรัง",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (ตรัง)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-63",
+    "code": "Z63",
+    "name": "[ST] นครศรีธรรมราช",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (นครศรีธรรมราช)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-64",
+    "code": "Z64",
+    "name": "[ST] นราธิวาส",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (นราธิวาส)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-65",
+    "code": "Z65",
+    "name": "[ST] ปัตตานี",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (ปัตตานี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-66",
+    "code": "Z66",
+    "name": "[ST] พังงา",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (พังงา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-67",
+    "code": "Z67",
+    "name": "[ST] พัทลุง",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (พัทลุง)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-68",
+    "code": "Z68",
+    "name": "[ST] ภูเก็ต",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (ภูเก็ต)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-69",
+    "code": "Z69",
+    "name": "[ST] ยะลา",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (ยะลา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-70",
+    "code": "Z70",
+    "name": "[ST] ระนอง",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (ระนอง)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-71",
+    "code": "Z71",
+    "name": "[ST] สงขลา",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (สงขลา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-72",
+    "code": "Z72",
+    "name": "[ST] สตูล",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (สตูล)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-73",
+    "code": "Z73",
+    "name": "[ST] สุราษฎร์ธานี",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (สุราษฎร์ธานี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-74",
+    "code": "Z74",
+    "name": "[WE] กาญจนบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค WE (กาญจนบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-75",
+    "code": "Z75",
+    "name": "[WE] ตาก",
+    "description": "พื้นที่ให้บริการภูมิภาค WE (ตาก)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-76",
+    "code": "Z76",
+    "name": "[WE] ประจวบคีรีขันธ์",
+    "description": "พื้นที่ให้บริการภูมิภาค WE (ประจวบคีรีขันธ์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-77",
+    "code": "Z77",
+    "name": "[WE] เพชรบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค WE (เพชรบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-78",
+    "code": "Z78",
+    "name": "[WE] ราชบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค WE (ราชบุรี)",
+    "coverageZipcodes": []
+  }
 ];
 
 export const INITIAL_SKILLS: Skill[] = [
-  { id: 'sk-01', code: 'SK-BUILTIN', category: 'Built-in Furniture', name: 'ประกอบและติดตั้งเฟอร์นิเจอร์ Built-in', description: 'ความเชี่ยวชาญในการติดตั้งตู้ ชั้นวางของ ชุดครัว และปรับระนาบหน้าบานระดับสูง', certificationRequired: true },
-  { id: 'sk-02', code: 'SK-FLOOR', category: 'Flooring & Tile', name: 'ปูพื้นไม้ SPC / Laminate / กระเบื้อง', description: 'งานปรับระดับพื้นผิว ติดตั้งแผ่นรองกันชื้น และตัดต่อแผ่นพื้นขอบบัวอย่างประณีต', certificationRequired: false },
-  { id: 'sk-03', code: 'SK-SMART', category: 'Electrical & Smart Home', name: 'ติดตั้งระบบ Smart Home & Electrical', description: 'เดินสายไฟแรงดันต่ำ ติดตั้งกลอนประตูดิจิทัล สวิตช์อัจฉริยะ และตั้งค่า Gateway', certificationRequired: true },
-  { id: 'sk-04', code: 'SK-HVAC', category: 'Air Condition & HVAC', name: 'ติดตั้งและบำรุงรักษาเครื่องปรับอากาศ', description: 'งานเดินท่อน้ำยา R32 บานแฟลร์ แขวนคอยล์ร้อน-เย็น และทดสอบแรงดันระบบระบายความร้อน', certificationRequired: true },
-  { id: 'sk-05', code: 'SK-CURTAIN', category: 'Curtains & Wallpaper', name: 'ติดตั้งรางม่านไฟฟ้าและปูวอลเปเปอร์', description: 'ติดตั้งรางม่านมอเตอร์ เซ็ตอัพรีโมทควบคุม และงานปูวอลเปเปอร์เนียนเรียบไม่มีรอยต่อ', certificationRequired: false },
+  {
+    "id": "sk-1",
+    "code": "SK-01",
+    "category": "CE",
+    "name": "ติดตั้งแอร์ติดผนัง",
+    "description": "ความเชี่ยวชาญกลุ่มงาน CE: ติดตั้งแอร์ติดผนัง",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-2",
+    "code": "SK-02",
+    "category": "CE",
+    "name": "ติดตั้งแอร์แขวน",
+    "description": "ความเชี่ยวชาญกลุ่มงาน CE: ติดตั้งแอร์แขวน",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-3",
+    "code": "SK-03",
+    "category": "CE",
+    "name": "ติดตั้งแอร์สี่ทิศทาง",
+    "description": "ความเชี่ยวชาญกลุ่มงาน CE: ติดตั้งแอร์สี่ทิศทาง",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-4",
+    "code": "SK-04",
+    "category": "CE",
+    "name": "ติดตั้งเครื่องทำน้ำอุ่น/น้ำร้อน",
+    "description": "ความเชี่ยวชาญกลุ่มงาน CE: ติดตั้งเครื่องทำน้ำอุ่น/น้ำร้อน",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-5",
+    "code": "SK-05",
+    "category": "CE",
+    "name": "ติดตั้งเครื่องทำน้ำร้อนแบบหม้อต้ม",
+    "description": "ความเชี่ยวชาญกลุ่มงาน CE: ติดตั้งเครื่องทำน้ำร้อนแบบหม้อต้ม",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-6",
+    "code": "SK-06",
+    "category": "CEC",
+    "name": "งานล้างเครื่องซักผ้าฝาบน แบบถอดซัก",
+    "description": "ความเชี่ยวชาญกลุ่มงาน CEC: งานล้างเครื่องซักผ้าฝาบน แบบถอดซัก",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-7",
+    "code": "SK-07",
+    "category": "CEC",
+    "name": "งานล้างแอร์",
+    "description": "ความเชี่ยวชาญกลุ่มงาน CEC: งานล้างแอร์",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-8",
+    "code": "SK-08",
+    "category": "CEC",
+    "name": "ติดตั้งเครื่องกรองน้ำใช้",
+    "description": "ความเชี่ยวชาญกลุ่มงาน CEC: ติดตั้งเครื่องกรองน้ำใช้",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-9",
+    "code": "SK-09",
+    "category": "CEC",
+    "name": "ติดตั้งเครื่องกรองน้ำ",
+    "description": "ความเชี่ยวชาญกลุ่มงาน CEC: ติดตั้งเครื่องกรองน้ำ",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-10",
+    "code": "SK-10",
+    "category": "CEC",
+    "name": "ติดตั้งเครื่องกรองน้ำ ระบบไฟฟ้า",
+    "description": "ความเชี่ยวชาญกลุ่มงาน CEC: ติดตั้งเครื่องกรองน้ำ ระบบไฟฟ้า",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-11",
+    "code": "SK-11",
+    "category": "CEC",
+    "name": "ติดตั้งปั๊มแท็งค์",
+    "description": "ความเชี่ยวชาญกลุ่มงาน CEC: ติดตั้งปั๊มแท็งค์",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-12",
+    "code": "SK-12",
+    "category": "SOLAR",
+    "name": "ติดตั้งโซล่าเซล / รวมสินค้า / ไม่รวมสินค้า",
+    "description": "ความเชี่ยวชาญกลุ่มงาน SOLAR: ติดตั้งโซล่าเซล / รวมสินค้า / ไม่รวมสินค้า",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-13",
+    "code": "SK-13",
+    "category": "SOLAR",
+    "name": "ติดตั้งโซล่าปั้ม",
+    "description": "ความเชี่ยวชาญกลุ่มงาน SOLAR: ติดตั้งโซล่าปั้ม",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-14",
+    "code": "SK-14",
+    "category": "SOLAR",
+    "name": "ติดตั้งเครื่องดูดควัน หมุนเวียน",
+    "description": "ความเชี่ยวชาญกลุ่มงาน SOLAR: ติดตั้งเครื่องดูดควัน หมุนเวียน",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-15",
+    "code": "SK-15",
+    "category": "SOLAR",
+    "name": "ติดตั้งเครื่องดูดควัน ต่อท่อนอกอาคาร",
+    "description": "ความเชี่ยวชาญกลุ่มงาน SOLAR: ติดตั้งเครื่องดูดควัน ต่อท่อนอกอาคาร",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-16",
+    "code": "SK-16",
+    "category": "SOLAR",
+    "name": "ติดตั้งเตาฝังแก๊ส",
+    "description": "ความเชี่ยวชาญกลุ่มงาน SOLAR: ติดตั้งเตาฝังแก๊ส",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-17",
+    "code": "SK-17",
+    "category": "SOLAR",
+    "name": "ติดตั้งเตาอบไฟฟ้า / เตาไฟฟ้า",
+    "description": "ความเชี่ยวชาญกลุ่มงาน SOLAR: ติดตั้งเตาอบไฟฟ้า / เตาไฟฟ้า",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-18",
+    "code": "SK-18",
+    "category": "SOLAR",
+    "name": "งานล้างเครื่องดูดควัน",
+    "description": "ความเชี่ยวชาญกลุ่มงาน SOLAR: งานล้างเครื่องดูดควัน",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-19",
+    "code": "SK-19",
+    "category": "Electrical",
+    "name": "งานระบบไฟฟ้า / บ้าน / อาคาร",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Electrical: งานระบบไฟฟ้า / บ้าน / อาคาร",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-20",
+    "code": "SK-20",
+    "category": "Electrical",
+    "name": "ติดตั้งพัดลมดูดอากาศเจาะปูน/ฝังฝ้า",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Electrical: ติดตั้งพัดลมดูดอากาศเจาะปูน/ฝังฝ้า",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-21",
+    "code": "SK-21",
+    "category": "Electrical",
+    "name": "ติดตั้งพัดลมโคมไฟ",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Electrical: ติดตั้งพัดลมโคมไฟ",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-22",
+    "code": "SK-22",
+    "category": "Electrical",
+    "name": "ติดตั้งสวิทช์ / ปลั๊ก / พัดลม / โคมไฟ / ดาวน์ไลน์",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Electrical: ติดตั้งสวิทช์ / ปลั๊ก / พัดลม / โคมไฟ / ดาวน์ไลน์",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-23",
+    "code": "SK-23",
+    "category": "Electrical",
+    "name": "ติดตั้งไฟหัวเสา / โคมไฟกิ่ง",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Electrical: ติดตั้งไฟหัวเสา / โคมไฟกิ่ง",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-24",
+    "code": "SK-24",
+    "category": "Electrical",
+    "name": "ติดตั้งโคมไฟระย้า",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Electrical: ติดตั้งโคมไฟระย้า",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-25",
+    "code": "SK-25",
+    "category": "Electrical",
+    "name": "ติดตั้งกล้องวงจรปิด",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Electrical: ติดตั้งกล้องวงจรปิด",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-26",
+    "code": "SK-26",
+    "category": "Electrical",
+    "name": "ติดตั้งกุญแจดิจิตอล RIM Lock / Mortise",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Electrical: ติดตั้งกุญแจดิจิตอล RIM Lock / Mortise",
+    "certificationRequired": true
+  },
+  {
+    "id": "sk-27",
+    "code": "SK-27",
+    "category": "Certain",
+    "name": "ติดตั้งผ้าม่านสั่งตัด",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Certain: ติดตั้งผ้าม่านสั่งตัด",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-28",
+    "code": "SK-28",
+    "category": "Certain",
+    "name": "ติดตั้งรางม่าน / ม่านสำเร็จรูป",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Certain: ติดตั้งรางม่าน / ม่านสำเร็จรูป",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-29",
+    "code": "SK-29",
+    "category": "Certain",
+    "name": "งานติดวอลเปเปอร์",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Certain: งานติดวอลเปเปอร์",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-30",
+    "code": "SK-30",
+    "category": "Bath",
+    "name": "ติดตั้งสุขภัณฑ์",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Bath: ติดตั้งสุขภัณฑ์",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-31",
+    "code": "SK-31",
+    "category": "Bath",
+    "name": "ติดตั้งสุขภัณฑ์ ระบบไฟฟ้า",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Bath: ติดตั้งสุขภัณฑ์ ระบบไฟฟ้า",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-32",
+    "code": "SK-32",
+    "category": "Bath",
+    "name": "ติดตั้งอุปกรณ์ห้องน้ำ",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Bath: ติดตั้งอุปกรณ์ห้องน้ำ",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-33",
+    "code": "SK-33",
+    "category": "Bath",
+    "name": "ติดตั้งฉากกั้นอาบน้ำ",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Bath: ติดตั้งฉากกั้นอาบน้ำ",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-34",
+    "code": "SK-34",
+    "category": "Bath",
+    "name": "ติดตั้งฉากกั้นอาบน้ำแบบสั่งตัด",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Bath: ติดตั้งฉากกั้นอาบน้ำแบบสั่งตัด",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-35",
+    "code": "SK-35",
+    "category": "Bath",
+    "name": "ติดตั้งโถปัสสาวะ",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Bath: ติดตั้งโถปัสสาวะ",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-36",
+    "code": "SK-36",
+    "category": "Bath",
+    "name": "ติดตั้งโถปัสสาวะ อัตโนมัติระบบไฟฟ้า",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Bath: ติดตั้งโถปัสสาวะ อัตโนมัติระบบไฟฟ้า",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-37",
+    "code": "SK-37",
+    "category": "Bath",
+    "name": "ติดตั้งอ่างล้างหน้า",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Bath: ติดตั้งอ่างล้างหน้า",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-38",
+    "code": "SK-38",
+    "category": "KC",
+    "name": "ประกอบเฟอร์นิเจอร์",
+    "description": "ความเชี่ยวชาญกลุ่มงาน KC: ประกอบเฟอร์นิเจอร์",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-39",
+    "code": "SK-39",
+    "category": "KC",
+    "name": "ประกอบชุดครัวสำเร็จรูป",
+    "description": "ความเชี่ยวชาญกลุ่มงาน KC: ประกอบชุดครัวสำเร็จรูป",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-40",
+    "code": "SK-40",
+    "category": "KC",
+    "name": "ประกอบชุดครัวสำเร็จรูปเจาะ TOP",
+    "description": "ความเชี่ยวชาญกลุ่มงาน KC: ประกอบชุดครัวสำเร็จรูปเจาะ TOP",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-41",
+    "code": "SK-41",
+    "category": "KC",
+    "name": "ติดตั้งอ่างล้างจาน / อ่างซิงค์",
+    "description": "ความเชี่ยวชาญกลุ่มงาน KC: ติดตั้งอ่างล้างจาน / อ่างซิงค์",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-42",
+    "code": "SK-42",
+    "category": "Door",
+    "name": "ติดตั้งลูกบิด / ก้านโยก",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Door: ติดตั้งลูกบิด / ก้านโยก",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-43",
+    "code": "SK-43",
+    "category": "Door",
+    "name": "ติดตั้งโช๊คอัพ",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Door: ติดตั้งโช๊คอัพ",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-44",
+    "code": "SK-44",
+    "category": "Door",
+    "name": "ติดตั้งประตู / หน้าต่าง อลูมิเนียม",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Door: ติดตั้งประตู / หน้าต่าง อลูมิเนียม",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-45",
+    "code": "SK-45",
+    "category": "Door",
+    "name": "ติดตั้งหน้าต่างบานกระทุ้ง / บานสวิง / บานเลื่อน",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Door: ติดตั้งหน้าต่างบานกระทุ้ง / บานสวิง / บานเลื่อน",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-46",
+    "code": "SK-46",
+    "category": "Door",
+    "name": "ติดตั้งกระเบื้องยาง / SPC",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Door: ติดตั้งกระเบื้องยาง / SPC",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-47",
+    "code": "SK-47",
+    "category": "Door",
+    "name": "ติดตั้งกระเบื้อง / ลามิเนต",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Door: ติดตั้งกระเบื้อง / ลามิเนต",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-48",
+    "code": "SK-48",
+    "category": "Constuction",
+    "name": "งานโครงสร้าง",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Constuction: งานโครงสร้าง",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-49",
+    "code": "SK-49",
+    "category": "Constuction",
+    "name": "งานทาสี / ภายใน / ภายนอก",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Constuction: งานทาสี / ภายใน / ภายนอก",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-50",
+    "code": "SK-50",
+    "category": "Constuction",
+    "name": "งานผนัง WPC",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Constuction: งานผนัง WPC",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-51",
+    "code": "SK-51",
+    "category": "Constuction",
+    "name": "งานติดตั้งแผ่นผนัง PVC Wall",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Constuction: งานติดตั้งแผ่นผนัง PVC Wall",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-52",
+    "code": "SK-52",
+    "category": "Constuction",
+    "name": "งานติดตั้งหลังคาโครงเหล็ก",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Constuction: งานติดตั้งหลังคาโครงเหล็ก",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-53",
+    "code": "SK-53",
+    "category": "Constuction",
+    "name": "งาน Renovate ต่อเติม ปรับปรุง",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Constuction: งาน Renovate ต่อเติม ปรับปรุง",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-54",
+    "code": "SK-54",
+    "category": "Constuction",
+    "name": "งานเดินท่อประปา",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Constuction: งานเดินท่อประปา",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-55",
+    "code": "SK-55",
+    "category": "Maid",
+    "name": "งานล้างถังเก็บน้ำ ขนาดไม่เกิน 200 ลิตร",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Maid: งานล้างถังเก็บน้ำ ขนาดไม่เกิน 200 ลิตร",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-56",
+    "code": "SK-56",
+    "category": "Maid",
+    "name": "ติดตั้งหญ้าเทียม",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Maid: ติดตั้งหญ้าเทียม",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-57",
+    "code": "SK-57",
+    "category": "Maid",
+    "name": "จัดสวน / ตัดแต่งกิ่ง / ตัดหญ้า",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Maid: จัดสวน / ตัดแต่งกิ่ง / ตัดหญ้า",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-58",
+    "code": "SK-58",
+    "category": "Maid",
+    "name": "แม่บ้าน ทำความสะอาด",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Maid: แม่บ้าน ทำความสะอาด",
+    "certificationRequired": false
+  },
+  {
+    "id": "sk-59",
+    "code": "SK-59",
+    "category": "Maid",
+    "name": "กำจัดปลวก",
+    "description": "ความเชี่ยวชาญกลุ่มงาน Maid: กำจัดปลวก",
+    "certificationRequired": false
+  }
 ];
 
 export const INITIAL_INSTALLATION_TYPES: InstallationTypeConfig[] = [
