@@ -344,9 +344,9 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Title & View Mode Switcher Header */}
+      {/* Title & Global Action Bar */}
       <div className="v-panel p-5 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-blue-600/10 border border-blue-600/20 flex items-center justify-center text-blue-600 shrink-0">
               <Map className="h-6 w-6" />
@@ -356,35 +356,71 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
                 🗺️ ระบบมอนิเตอร์และจัดการโซนบริการ (Zone Monitor & Directory)
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                ติดตามสถานะคิวงานแบบ Real-time แยกตามโซน พร้อมคลิกเข้าดูรายละเอียดและบริหารจัดการข้อมูลพื้นที่
+                ติดตามสถานะคิวงานแบบ Real-time แยกตามโซน พร้อมปุ่มเพิ่มโซนและนำเข้าข้อมูล
               </p>
             </div>
           </div>
 
-          {/* Mode Switcher Buttons */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+          {/* Action Buttons & View Mode Switcher */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* Add Zone Button (ALWAYS VISIBLE) */}
             <button
-              onClick={() => setActiveViewMode('monitor')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border-0 ${
-                activeViewMode === 'monitor'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 bg-transparent'
-              }`}
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="v-btn-primary py-2 px-3.5 flex items-center space-x-1.5 text-xs font-extrabold cursor-pointer bg-amber-500 hover:bg-amber-600 text-slate-900 border-0 shadow-sm rounded-xl"
             >
-              <Activity className="h-4 w-4" />
-              <span>📊 Zone Monitor Cards (มอนิเตอร์ทุกโซน)</span>
+              <Plus className="h-4 w-4" />
+              <span>+ เพิ่มโซนแมนนวล</span>
             </button>
+
+            {/* Import Button */}
             <button
-              onClick={() => setActiveViewMode('master')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border-0 ${
-                activeViewMode === 'master'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 bg-transparent'
-              }`}
+              onClick={() => fileInputRef.current?.click()}
+              className="v-btn-secondary py-2 px-3 flex items-center space-x-1 text-xs cursor-pointer rounded-xl"
             >
-              <Layers className="h-4 w-4" />
-              <span>⚙️ ตารางจัดการโซนหลัก (Master Table)</span>
+              <Upload className="h-3.5 w-3.5" />
+              <span>นำเข้าไฟล์</span>
             </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".csv,.json"
+              className="hidden"
+            />
+
+            {/* Load Sample Button */}
+            <button
+              onClick={handleLoadSampleData}
+              className="v-btn-secondary py-2 px-3 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 cursor-pointer rounded-xl hidden sm:inline-flex"
+            >
+              โหลดตัวอย่าง
+            </button>
+
+            {/* Mode Switcher Buttons */}
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button
+                onClick={() => setActiveViewMode('monitor')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border-0 ${
+                  activeViewMode === 'monitor'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 bg-transparent'
+                }`}
+              >
+                <Activity className="h-4 w-4" />
+                <span>📊 Zone Cards</span>
+              </button>
+              <button
+                onClick={() => setActiveViewMode('master')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border-0 ${
+                  activeViewMode === 'master'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 bg-transparent'
+                }`}
+              >
+                <Layers className="h-4 w-4" />
+                <span>⚙️ ตาราง Master</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -427,6 +463,160 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
           </div>
         )}
       </div>
+
+      {/* Add / Edit Manual Form (AVAILABLE GLOBALLY IN BOTH VIEWS) */}
+      {showAddForm && (
+        <form onSubmit={handleAddSubmit} className="v-panel p-5 space-y-4 animate-fadeIn border-amber-500/40 bg-slate-50/90 rounded-2xl shadow-md">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+              {editingZoneId ? <Pencil className="h-4 w-4 text-amber-500" /> : <Plus className="h-4 w-4 text-blue-600" />}
+              <span>{editingZoneId ? 'แก้ไขข้อมูลโซนบริการ (Edit Zone)' : 'เพิ่มโซนพื้นที่บริการใหม่ (Create Zone)'}</span>
+            </h3>
+            <button
+              type="button"
+              onClick={handleResetForm}
+              className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 cursor-pointer"
+            >
+              <X className="h-3.5 w-3.5" /> ยกเลิก / ปิดฟอร์ม
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">รหัสโซน (Zone Code) *</label>
+              <input
+                type="text"
+                placeholder="เช่น Z05"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="v-input w-full font-mono font-bold bg-white"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-slate-600 mb-1">ชื่อพื้นที่ / ขอบเขตบริการ *</label>
+              <div className="flex gap-1.5 mb-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!name.startsWith('[BKK]')) {
+                      setName('[BKK] ' + name.replace(/^\[(BKK|UPC)\]\s*/, ''));
+                    }
+                  }}
+                  className="px-2 py-1 text-[10px] font-bold rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 border border-amber-500/30 cursor-pointer"
+                >
+                  + ใส่สัญลักษณ์ [BKK]
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!name.startsWith('[UPC]')) {
+                      setName('[UPC] ' + name.replace(/^\[(BKK|UPC)\]\s*/, ''));
+                    }
+                  }}
+                  className="px-2 py-1 text-[10px] font-bold rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-900 border border-blue-500/30 cursor-pointer"
+                >
+                  + ใส่สัญลักษณ์ [UPC]
+                </button>
+              </div>
+              <input
+                type="text"
+                placeholder="เช่น [BKK] กรุงเทพฯ (บางแค - ภาษีเจริญ) หรือ [UPC] เชียงใหม่"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="v-input w-full bg-white"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">คำอธิบาย</label>
+              <input
+                type="text"
+                placeholder="เช่น โซนที่อยู่อาศัยฝั่งเหนือ"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="v-input w-full bg-white"
+              />
+            </div>
+            <div className="flex items-end justify-between gap-3">
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-slate-600 mb-1">รหัสไปรษณีย์ (คั่นด้วย Comma ,)</label>
+                <input
+                  type="text"
+                  placeholder="เช่น 10260,10250"
+                  value={zipcodesStr}
+                  onChange={(e) => setZipcodesStr(e.target.value)}
+                  className="v-input w-full bg-white"
+                />
+              </div>
+              <button type="submit" className={`${editingZoneId ? 'bg-amber-500 hover:bg-amber-600 text-slate-900' : 'v-btn-primary'} h-9 text-xs px-4 font-bold rounded-lg transition cursor-pointer`}>
+                {editingZoneId ? 'บันทึกแก้ไข' : 'บันทึกสร้าง'}
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {/* Import File Preview */}
+      {importPreview && (
+        <div className="v-panel p-5 bg-blue-50/50 border-blue-200 space-y-3 rounded-2xl">
+          <div className="flex items-center justify-between border-b border-blue-100 pb-2">
+            <div className="flex items-center space-x-2 text-blue-800 font-bold text-sm">
+              <CheckCircle className="h-4 w-4 text-blue-600" />
+              <span>ตรวจพบข้อมูลโซนใหม่พร้อมนำเข้า {importPreview.length} รายการ</span>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setImportPreview(null)}
+                className="px-3 py-1 bg-white border border-slate-300 rounded text-xs text-slate-600 hover:bg-slate-50 cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleConfirmImport}
+                className="px-3 py-1 bg-blue-600 rounded text-xs text-white hover:bg-blue-700 font-semibold cursor-pointer"
+              >
+                ยืนยันการนำเข้าข้อมูล
+              </button>
+            </div>
+          </div>
+
+          <div className="max-h-48 overflow-y-auto border border-blue-100 rounded bg-white">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-slate-50 text-slate-500">
+                <tr>
+                  <th className="p-2 border-b">รหัสโซน</th>
+                  <th className="p-2 border-b">ขอบเขตบริการ</th>
+                  <th className="p-2 border-b">คำอธิบาย</th>
+                  <th className="p-2 border-b">รหัสไปรษณีย์</th>
+                </tr>
+              </thead>
+              <tbody>
+                {importPreview.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50">
+                    <td className="p-2 border-b font-mono font-bold text-blue-600">{item.code}</td>
+                    <td className="p-2 border-b text-slate-800">{item.name}</td>
+                    <td className="p-2 border-b text-slate-600">{item.description}</td>
+                    <td className="p-2 border-b">
+                      <div className="flex flex-wrap gap-1">
+                        {item.coverageZipcodes.map((zip) => (
+                          <span key={zip} className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 text-[10px]">
+                            {zip}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {importError && (
+        <div className="v-panel p-4 bg-rose-50 border-rose-200 text-rose-800 text-xs rounded-xl">
+          <span>⚠️ {importError}</span>
+        </div>
+      )}
 
       {/* VIEW MODE 1: ZONE MONITOR CARDS DASHBOARD */}
       {activeViewMode === 'monitor' && (
@@ -573,202 +763,6 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
       {/* VIEW MODE 2: ZONE MASTER DIRECTORY & IMPORT */}
       {activeViewMode === 'master' && (
         <div className="space-y-6">
-          {/* Action Buttons Row */}
-          <div className="v-panel p-4 bg-white border border-slate-200 rounded-xl flex flex-wrap items-center justify-between gap-3">
-            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-              <Layers className="h-4 w-4 text-blue-600" />
-              <span>ตารางข้อมูลและระบบนำเข้าโซนบริการ (Master Management)</span>
-            </h3>
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="v-btn-secondary py-1.5 flex items-center space-x-1 text-xs cursor-pointer"
-              >
-                <Upload className="h-3.5 w-3.5" />
-                <span>นำเข้าไฟล์ (.CSV / .JSON)</span>
-              </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept=".csv,.json"
-                className="hidden"
-              />
-
-              <button
-                onClick={handleLoadSampleData}
-                className="v-btn-secondary py-1.5 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 cursor-pointer"
-              >
-                โหลดข้อมูลตัวอย่างด่วน
-              </button>
-
-              <button
-                onClick={() => setShowAddForm(!showAddForm)}
-                className="v-btn-primary py-1.5 flex items-center space-x-1 text-xs cursor-pointer"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>เพิ่มโซนแมนนวล</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Add / Edit Manual Form */}
-          {showAddForm && (
-            <form onSubmit={handleAddSubmit} className="v-panel p-5 space-y-4 animate-fadeIn border-amber-500/40 bg-slate-50/50 rounded-2xl">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-                  {editingZoneId ? <Pencil className="h-4 w-4 text-amber-500" /> : <Plus className="h-4 w-4 text-blue-600" />}
-                  <span>{editingZoneId ? 'แก้ไขข้อมูลโซนบริการ (Edit Zone)' : 'เพิ่มโซนพื้นที่บริการใหม่ (Create Zone)'}</span>
-                </h3>
-                {editingZoneId && (
-                  <button
-                    type="button"
-                    onClick={handleResetForm}
-                    className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1 cursor-pointer"
-                  >
-                    <X className="h-3.5 w-3.5" /> ยกเลิกการแก้ไข
-                  </button>
-                )}
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">รหัสโซน (Zone Code) *</label>
-                  <input
-                    type="text"
-                    placeholder="เช่น Z05"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    className="v-input w-full font-mono font-bold bg-white"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">ชื่อพื้นที่ / ขอบเขตบริการ *</label>
-                  <div className="flex gap-1.5 mb-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!name.startsWith('[BKK]')) {
-                          setName('[BKK] ' + name.replace(/^\[(BKK|UPC)\]\s*/, ''));
-                        }
-                      }}
-                      className="px-2 py-1 text-[10px] font-bold rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 border border-amber-500/30 cursor-pointer"
-                    >
-                      + ใส่สัญลักษณ์ [BKK]
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!name.startsWith('[UPC]')) {
-                          setName('[UPC] ' + name.replace(/^\[(BKK|UPC)\]\s*/, ''));
-                        }
-                      }}
-                      className="px-2 py-1 text-[10px] font-bold rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-900 border border-blue-500/30 cursor-pointer"
-                    >
-                      + ใส่สัญลักษณ์ [UPC]
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="เช่น [BKK] กรุงเทพฯ (บางแค - ภาษีเจริญ) หรือ [UPC] เชียงใหม่"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="v-input w-full bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">คำอธิบาย</label>
-                  <input
-                    type="text"
-                    placeholder="เช่น โซนที่อยู่อาศัยฝั่งเหนือ"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="v-input w-full bg-white"
-                  />
-                </div>
-                <div className="flex items-end justify-between gap-3">
-                  <div className="flex-1">
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">รหัสไปรษณีย์ (คั่นด้วย Comma ,)</label>
-                    <input
-                      type="text"
-                      placeholder="เช่น 10260,10250"
-                      value={zipcodesStr}
-                      onChange={(e) => setZipcodesStr(e.target.value)}
-                      className="v-input w-full bg-white"
-                    />
-                  </div>
-                  <button type="submit" className={`${editingZoneId ? 'bg-amber-500 hover:bg-amber-600 text-slate-900' : 'v-btn-primary'} h-9 text-xs px-4 font-bold rounded-lg transition cursor-pointer`}>
-                    {editingZoneId ? 'บันทึกแก้ไข' : 'บันทึกสร้าง'}
-                  </button>
-                </div>
-              </div>
-            </form>
-          )}
-
-          {/* Import File Preview */}
-          {importPreview && (
-            <div className="v-panel p-5 bg-blue-50/50 border-blue-200 space-y-3 rounded-2xl">
-              <div className="flex items-center justify-between border-b border-blue-100 pb-2">
-                <div className="flex items-center space-x-2 text-blue-800 font-bold text-sm">
-                  <CheckCircle className="h-4 w-4 text-blue-600" />
-                  <span>ตรวจพบข้อมูลโซนใหม่พร้อมนำเข้า {importPreview.length} รายการ</span>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => setImportPreview(null)}
-                    className="px-3 py-1 bg-white border border-slate-300 rounded text-xs text-slate-600 hover:bg-slate-50 cursor-pointer"
-                  >
-                    ยกเลิก
-                  </button>
-                  <button
-                    onClick={handleConfirmImport}
-                    className="px-3 py-1 bg-blue-600 rounded text-xs text-white hover:bg-blue-700 font-semibold cursor-pointer"
-                  >
-                    ยืนยันการนำเข้าข้อมูล
-                  </button>
-                </div>
-              </div>
-
-              <div className="max-h-48 overflow-y-auto border border-blue-100 rounded bg-white">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-slate-50 text-slate-500">
-                    <tr>
-                      <th className="p-2 border-b">รหัสโซน</th>
-                      <th className="p-2 border-b">ขอบเขตบริการ</th>
-                      <th className="p-2 border-b">คำอธิบาย</th>
-                      <th className="p-2 border-b">รหัสไปรษณีย์</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {importPreview.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50">
-                        <td className="p-2 border-b font-mono font-bold text-blue-600">{item.code}</td>
-                        <td className="p-2 border-b text-slate-800">{item.name}</td>
-                        <td className="p-2 border-b text-slate-600">{item.description}</td>
-                        <td className="p-2 border-b">
-                          <div className="flex flex-wrap gap-1">
-                            {item.coverageZipcodes.map((zip) => (
-                              <span key={zip} className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 text-[10px]">
-                                {zip}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {importError && (
-            <div className="v-panel p-4 bg-rose-50 border-rose-200 text-rose-800 text-xs rounded-xl">
-              <span>⚠️ {importError}</span>
-            </div>
-          )}
-
           {/* Main Zone Directory Table */}
           <div className="v-panel overflow-hidden bg-white border border-slate-200 rounded-2xl">
             <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -869,7 +863,7 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
         </div>
       )}
 
-      {/* ZONE DETAIL DRILL-DOWN MODAL (พอ CLICK ที่ CARD เพื่อดูรายละเอียดโซนนั้นๆ) */}
+      {/* ZONE DETAIL DRILL-DOWN MODAL */}
       {selectedDetailZone && (
         <div className="fixed inset-0 z-150 flex items-center justify-center p-4 bg-slate-900/60 animate-fadeIn">
           <div className="v-panel p-6 bg-white w-full max-w-4xl border border-slate-200 rounded-2xl shadow-2xl space-y-4 text-xs max-h-[90vh] flex flex-col">
