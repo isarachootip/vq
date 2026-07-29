@@ -32,6 +32,9 @@ export const SkillManager: React.FC<SkillManagerProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const categories: SkillCategory[] = [
+    'CE',
+    'CEC',
+    'SOLAR',
     'Built-in Furniture',
     'Flooring & Tile',
     'Electrical & Smart Home',

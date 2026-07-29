@@ -20,6 +20,9 @@ interface ServiceCatalogManagerViewProps {
 }
 
 const CATEGORY_PRESETS = [
+  'CE - ระบบปรับอากาศ',
+  'CEC - บริการล้างและทำความสะอาด',
+  'SOLAR - ระบบพลังงานแสงอาทิตย์',
   'ทำความสะอาด',
   'งานหลังคาและดาดฟ้า',
   'ระบบปรับอากาศ',

@@ -30,6 +30,17 @@ interface DashboardViewProps {
   onAssignTechnician?: (bookingId: string, techId: string, techName: string) => void;
 }
 
+const CATEGORY_GROUPS = [
+  { code: 'ALL', name: 'ทุกหมวดหมู่บริการ (All Groups)' },
+  { code: 'CE', name: 'CE - หมวดเครื่องปรับอากาศ (Air Conditioning)' },
+  { code: 'CEC', name: 'CEC - หมวดงานบริการล้างทำความสะอาด (Clean & Service)' },
+  { code: 'SOLAR', name: 'SOLAR - หมวดระบบพลังงานแสงอาทิตย์ (Solar Cell)' },
+  { code: 'FITIN', name: 'Fit-In / Built-in - เฟอร์นิเจอร์บิวท์อิน' },
+  { code: 'ELEC', name: 'Electrical - งานระบบไฟฟ้า & Smart Home' },
+  { code: 'FLOOR', name: 'Flooring - งานพื้น ผนัง และฝ้าเพดาน' },
+  { code: 'PLUMB', name: 'Plumbing - งานระบบประปาและสุขภัณฑ์' },
+];
+
 export const DashboardView: React.FC<DashboardViewProps> = ({
   bookings,
   technicians,
@@ -51,11 +62,35 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [mCustName, setMCustName] = useState<string>('');
   const [mCustPhone, setMCustPhone] = useState<string>('');
   const [mLineId, setMLineId] = useState<string>('');
+  const [mCategoryCode, setMCategoryCode] = useState<string>('ALL');
   const [mServiceId, setMServiceId] = useState<string>(services[0]?.id || '');
   const [mZone, setMZone] = useState<string>('Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)');
   const [mDate, setMDate] = useState<string>('2026-07-24');
   const [mTimeSlot, setMTimeSlot] = useState<string>('Morning (09:00 - 12:00)');
   const [mSource, setMSource] = useState<'Line OA' | 'Call Center 1308' | 'Walk-in'>('Call Center 1308');
+
+  const matchCategoryGroup = (serviceCat: string, code: string) => {
+    if (code === 'ALL') return true;
+    const c = serviceCat.toLowerCase();
+    if (code === 'CE') return c.includes('ปรับอากาศ') || c.includes('ce') || c.includes('แอร์');
+    if (code === 'CEC') return c.includes('ล้าง') || c.includes('cec') || c.includes('ทำความสะอาด');
+    if (code === 'SOLAR') return c.includes('โซล่า') || c.includes('solar') || c.includes('แสงอาทิตย์');
+    if (code === 'FITIN') return c.includes('fit-in') || c.includes('built-in') || c.includes('เฟอร์นิเจอร์');
+    if (code === 'ELEC') return c.includes('ไฟฟ้า') || c.includes('smart') || c.includes('electrical');
+    if (code === 'FLOOR') return c.includes('พื้น') || c.includes('ผนัง') || c.includes('ฝ้า') || c.includes('flooring');
+    if (code === 'PLUMB') return c.includes('ประปา') || c.includes('สุขภัณฑ์') || c.includes('ห้องน้ำ') || c.includes('plumbing');
+    return true;
+  };
+
+  const filteredServicesForModal = services.filter((s) => matchCategoryGroup(s.category, mCategoryCode));
+
+  const handleCategoryCodeChange = (code: string) => {
+    setMCategoryCode(code);
+    const matches = services.filter((s) => matchCategoryGroup(s.category, code));
+    if (matches.length > 0) {
+      setMServiceId(matches[0].id);
+    }
+  };
 
   // Assign Technician Modal States
   const [assignModalBooking, setAssignModalBooking] = useState<QueueBooking | null>(null);
@@ -727,36 +762,55 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
               </div>
 
-              {/* Service & Zone row */}
+              {/* Service & Category Grouping Row */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-600">เลือกบริการงานติดตั้ง:</label>
+                  <label className="block font-bold text-slate-700 text-xs">1. เลือกหมวดหมู่งานติดตั้ง (Category Group):</label>
                   <select
-                    value={mServiceId}
-                    onChange={(e) => setMServiceId(e.target.value)}
-                    className="v-input w-full py-2"
+                    value={mCategoryCode}
+                    onChange={(e) => handleCategoryCodeChange(e.target.value)}
+                    className="v-input w-full py-2 bg-amber-50/40 border-amber-500/50 font-semibold text-slate-800"
                   >
-                    {services.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} (Min Level: {s.requiredSkillLevel})
+                    {CATEGORY_GROUPS.map((cg) => (
+                      <option key={cg.code} value={cg.code}>
+                        {cg.name}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-600">โซนพื้นที่ให้บริการ:</label>
+                  <label className="block font-bold text-slate-700 text-xs">2. เลือกบริการงานติดตั้ง (Service Item):</label>
                   <select
-                    value={mZone}
-                    onChange={(e) => setMZone(e.target.value)}
-                    className="v-input w-full py-2"
+                    value={mServiceId}
+                    onChange={(e) => setMServiceId(e.target.value)}
+                    className="v-input w-full py-2 font-medium"
                   >
-                    <option value="Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)">Zone 1: สุขุมวิท - บางนา</option>
-                    <option value="Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)">Zone 2: ราชพฤกษ์ - แจ้งวัฒนะ</option>
-                    <option value="Zone 3: ปทุมธานี (รังสิต - ลำลูกกา)">Zone 3: รังสิต - ลำลูกกา</option>
-                    <option value="Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์)">Zone 4: เทพารักษ์ - ศรีนครินทร์</option>
+                    {filteredServicesForModal.length === 0 ? (
+                      <option value="">-- ไม่พบบริการในหมวดหมู่นี้ --</option>
+                    ) : (
+                      filteredServicesForModal.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          [{s.category}] {s.name} (Min Level: {s.requiredSkillLevel})
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block font-bold text-slate-600">โซนพื้นที่ให้บริการ:</label>
+                <select
+                  value={mZone}
+                  onChange={(e) => setMZone(e.target.value)}
+                  className="v-input w-full py-2"
+                >
+                  <option value="Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)">Zone 1: สุขุมวิท - บางนา</option>
+                  <option value="Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)">Zone 2: ราชพฤกษ์ - แจ้งวัฒนะ</option>
+                  <option value="Zone 3: ปทุมธานี (รังสิต - ลำลูกกา)">Zone 3: รังสิต - ลำลูกกา</option>
+                  <option value="Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์)">Zone 4: เทพารักษ์ - ศรีนครินทร์</option>
+                </select>
               </div>
 
               {/* Date & Time slot */}
