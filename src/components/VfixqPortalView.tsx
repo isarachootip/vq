@@ -610,6 +610,18 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 rounded-xl border border-slate-200 bg-slate-100 space-y-2 text-xs">
+                  {selectedService.image && (
+                    <div className="relative h-44 rounded-lg overflow-hidden mb-3 border border-slate-200 shadow-sm bg-slate-900">
+                      <img 
+                        src={selectedService.image} 
+                        alt={selectedService.name} 
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded text-[10px] font-bold bg-slate-950/85 text-slate-200 border border-slate-700 shadow-sm">
+                        🏷️ {selectedService.category}
+                      </span>
+                    </div>
+                  )}
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-900/30 text-amber-500 border border-amber-500/20">Standard Package</span>
                   <h5 className="font-bold text-slate-800 text-xs mt-2">{selectedService.name}</h5>
                   <p className="text-[10px] text-slate-500 leading-normal">{selectedService.description}</p>

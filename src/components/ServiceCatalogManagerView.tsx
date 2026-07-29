@@ -247,7 +247,12 @@ export const ServiceCatalogManagerView: React.FC<ServiceCatalogManagerViewProps>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-600 mb-1">รูปภาพประกอบการติดตั้ง (Image File / URL):</label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block font-bold text-slate-600">รูปภาพประกอบการติดตั้ง (Service Cover Image):</label>
+                  <span className="text-[10px] text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                    💡 ขนาดแนะนำ: 16:9 หรือ 4:3 (800 x 450 px)
+                  </span>
+                </div>
                 
                 {/* Image File Uploader */}
                 <div className="flex items-center gap-4 p-3 bg-slate-100/50 rounded-xl border border-slate-200 mb-2">
