@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import type { Zone } from '../types';
-import { Map, Plus, Download, Upload, Trash, CheckCircle, Search } from 'lucide-react';
+import { Map, Plus, Download, Upload, Trash, CheckCircle, Search, Pencil, X } from 'lucide-react';
 
 interface ZoneManagerProps {
   zones: Zone[];
   onAddZone: (zone: Zone) => void;
   onAddMultipleZones: (zones: Zone[]) => void;
+  onUpdateZone?: (zone: Zone) => void;
   onDeleteZone: (zoneId: string) => void;
 }
 
@@ -13,10 +14,12 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
   zones,
   onAddZone,
   onAddMultipleZones,
+  onUpdateZone,
   onDeleteZone,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingZoneId, setEditingZoneId] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -34,14 +37,28 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
       z.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleStartEdit = (zone: Zone) => {
+    setEditingZoneId(zone.id);
+    setCode(zone.code);
+    setName(zone.name);
+    setDescription(zone.description);
+    setZipcodesStr(zone.coverageZipcodes.join(', '));
+    setShowAddForm(true);
+  };
+
+  const handleResetForm = () => {
+    setCode('');
+    setName('');
+    setDescription('');
+    setZipcodesStr('');
+    setEditingZoneId(null);
+    setShowAddForm(false);
+  };
+
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!code || !name) {
       alert('กรุณากรอกรหัสโซนและชื่อโซน');
-      return;
-    }
-    if (zones.some((z) => z.code.toUpperCase() === code.toUpperCase())) {
-      alert('รหัสโซนนี้มีอยู่ในระบบแล้ว');
       return;
     }
 
@@ -49,6 +66,26 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
       .split(',')
       .map((zip) => zip.trim())
       .filter((zip) => zip.length > 0);
+
+    if (editingZoneId) {
+      const updatedZone: Zone = {
+        id: editingZoneId,
+        code: code.toUpperCase(),
+        name,
+        description,
+        coverageZipcodes: zipcodes,
+      };
+      if (onUpdateZone) {
+        onUpdateZone(updatedZone);
+      }
+      handleResetForm();
+      return;
+    }
+
+    if (zones.some((z) => z.code.toUpperCase() === code.toUpperCase())) {
+      alert('รหัสโซนนี้มีอยู่ในระบบแล้ว');
+      return;
+    }
 
     const newZone: Zone = {
       id: `zone-${Date.now()}`,
@@ -59,11 +96,7 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
     };
 
     onAddZone(newZone);
-    setCode('');
-    setName('');
-    setDescription('');
-    setZipcodesStr('');
-    setShowAddForm(false);
+    handleResetForm();
   };
 
   const handleLoadSampleData = () => {
@@ -241,51 +274,69 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
 
       {/* Manual Form */}
       {showAddForm && (
-        <form onSubmit={handleAddSubmit} className="v-panel p-5 grid grid-cols-1 md:grid-cols-5 gap-4 animate-fadeIn">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">รหัสโซน (Zone Code) *</label>
-            <input
-              type="text"
-              placeholder="เช่น Z05"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="v-input w-full"
-            />
+        <form onSubmit={handleAddSubmit} className="v-panel p-5 space-y-4 animate-fadeIn border-amber-500/40 bg-slate-50/50">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+              {editingZoneId ? <Pencil className="h-4 w-4 text-amber-500" /> : <Plus className="h-4 w-4 text-blue-600" />}
+              <span>{editingZoneId ? 'แก้ไขข้อมูลโซนบริการ (Edit Zone)' : 'เพิ่มโซนพื้นที่บริการใหม่ (Create Zone)'}</span>
+            </h3>
+            {editingZoneId && (
+              <button
+                type="button"
+                onClick={handleResetForm}
+                className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+              >
+                <X className="h-3.5 w-3.5" /> ยกเลิกการแก้ไข
+              </button>
+            )}
           </div>
-          <div className="md:col-span-2">
-            <label className="block text-xs font-semibold text-slate-600 mb-1">ชื่อพื้นที่ / ขอบเขตบริการ *</label>
-            <input
-              type="text"
-              placeholder="เช่น นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="v-input w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">คำอธิบาย</label>
-            <input
-              type="text"
-              placeholder="เช่น โซนที่อยู่อาศัยฝั่งเหนือ"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="v-input w-full"
-            />
-          </div>
-          <div className="flex items-end justify-between gap-3">
-            <div className="flex-1">
-              <label className="block text-xs font-semibold text-slate-600 mb-1">รหัสไปรษณีย์ (คั่นด้วย Comma ,)</label>
+          
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">รหัสโซน (Zone Code) *</label>
               <input
                 type="text"
-                placeholder="เช่น 10260,10250"
-                value={zipcodesStr}
-                onChange={(e) => setZipcodesStr(e.target.value)}
+                placeholder="เช่น Z05"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="v-input w-full font-mono font-bold"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-slate-600 mb-1">ชื่อพื้นที่ / ขอบเขตบริการ *</label>
+              <input
+                type="text"
+                placeholder="เช่น นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="v-input w-full"
               />
             </div>
-            <button type="submit" className="v-btn-primary h-9 text-xs">
-              บันทึก
-            </button>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">คำอธิบาย</label>
+              <input
+                type="text"
+                placeholder="เช่น โซนที่อยู่อาศัยฝั่งเหนือ"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="v-input w-full"
+              />
+            </div>
+            <div className="flex items-end justify-between gap-3">
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-slate-600 mb-1">รหัสไปรษณีย์ (คั่นด้วย Comma ,)</label>
+                <input
+                  type="text"
+                  placeholder="เช่น 10260,10250"
+                  value={zipcodesStr}
+                  onChange={(e) => setZipcodesStr(e.target.value)}
+                  className="v-input w-full"
+                />
+              </div>
+              <button type="submit" className={`${editingZoneId ? 'bg-amber-500 hover:bg-amber-600 text-slate-900' : 'v-btn-primary'} h-9 text-xs px-4 font-bold rounded-lg transition`}>
+                {editingZoneId ? 'บันทึกแก้ไข' : 'บันทึกสร้าง'}
+              </button>
+            </div>
           </div>
         </form>
       )}
@@ -383,7 +434,7 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
               <th className="px-6 py-3 text-left">ชื่อขอบเขตพื้นที่บริการ</th>
               <th className="px-6 py-3 text-left">คำอธิบายรายละเอียด</th>
               <th className="px-6 py-3 text-left">รหัสไปรษณีย์ที่ครอบคลุม</th>
-              <th className="px-6 py-3 text-right">ลบข้อมูล</th>
+              <th className="px-6 py-3 text-right">จัดการ (Actions)</th>
             </tr>
           </thead>
           <tbody>
@@ -413,16 +464,26 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
                     </div>
                   </td>
                   <td className="px-6 py-3 text-right">
-                    <button
-                      onClick={() => {
-                        if (confirm(`คุณต้องการลบโซนพื้นที่ ${zone.name} หรือไม่?`)) {
-                          onDeleteZone(zone.id);
-                        }
-                      }}
-                      className="text-slate-400 hover:text-rose-600 transition-colors p-1"
-                    >
-                      <Trash className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => handleStartEdit(zone)}
+                        title="แก้ไขข้อมูลโซน"
+                        className="text-slate-400 hover:text-amber-600 transition-colors p-1.5 rounded hover:bg-amber-50"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`คุณต้องการลบโซนพื้นที่ ${zone.name} หรือไม่?`)) {
+                            onDeleteZone(zone.id);
+                          }
+                        }}
+                        title="ลบโซนบริการ"
+                        className="text-slate-400 hover:text-rose-600 transition-colors p-1.5 rounded hover:bg-rose-50"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

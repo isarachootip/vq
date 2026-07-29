@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import type { Skill, SkillCategory } from '../types';
-import { Wrench, Plus, Download, Upload, Trash, CheckCircle, Search } from 'lucide-react';
+import { Wrench, Plus, Download, Upload, Trash, CheckCircle, Search, Pencil, X } from 'lucide-react';
 
 interface SkillManagerProps {
   skills: Skill[];
   onAddSkill: (skill: Skill) => void;
   onAddMultipleSkills: (skills: Skill[]) => void;
+  onUpdateSkill?: (skill: Skill) => void;
   onDeleteSkill: (skillId: string) => void;
 }
 
@@ -13,10 +14,12 @@ export const SkillManager: React.FC<SkillManagerProps> = ({
   skills,
   onAddSkill,
   onAddMultipleSkills,
+  onUpdateSkill,
   onDeleteSkill,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingSkillId, setEditingSkillId] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [category, setCategory] = useState<SkillCategory>('Built-in Furniture');
   const [name, setName] = useState('');
@@ -44,12 +47,49 @@ export const SkillManager: React.FC<SkillManagerProps> = ({
       s.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleStartEdit = (skill: Skill) => {
+    setEditingSkillId(skill.id);
+    setCode(skill.code);
+    setCategory(skill.category);
+    setName(skill.name);
+    setDescription(skill.description || '');
+    setCertRequired(skill.certificationRequired);
+    setShowAddForm(true);
+  };
+
+  const handleResetForm = () => {
+    setCode('');
+    setCategory('Built-in Furniture');
+    setName('');
+    setDescription('');
+    setCertRequired(false);
+    setEditingSkillId(null);
+    setShowAddForm(false);
+  };
+
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!code || !name) {
       alert('กรุณากรอกรหัสทักษะและชื่อทักษะ');
       return;
     }
+
+    if (editingSkillId) {
+      const updatedSkill: Skill = {
+        id: editingSkillId,
+        code: code.toUpperCase(),
+        category,
+        name,
+        description,
+        certificationRequired: certRequired,
+      };
+      if (onUpdateSkill) {
+        onUpdateSkill(updatedSkill);
+      }
+      handleResetForm();
+      return;
+    }
+
     if (skills.some((s) => s.code.toUpperCase() === code.toUpperCase())) {
       alert('รหัสทักษะนี้มีอยู่ในระบบแล้ว');
       return;
@@ -65,11 +105,7 @@ export const SkillManager: React.FC<SkillManagerProps> = ({
     };
 
     onAddSkill(newSkill);
-    setCode('');
-    setName('');
-    setDescription('');
-    setCertRequired(false);
-    setShowAddForm(false);
+    handleResetForm();
   };
 
   const handleLoadSampleData = () => {
@@ -236,57 +272,75 @@ export const SkillManager: React.FC<SkillManagerProps> = ({
 
       {/* Manual Form */}
       {showAddForm && (
-        <form onSubmit={handleAddSubmit} className="v-panel p-5 grid grid-cols-1 md:grid-cols-5 gap-4 animate-fadeIn">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">รหัสทักษะ (Skill Code) *</label>
-            <input
-              type="text"
-              placeholder="เช่น SK-PLUMB"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="v-input w-full"
-            />
+        <form onSubmit={handleAddSubmit} className="v-panel p-5 space-y-4 animate-fadeIn border-amber-500/40 bg-slate-50/50">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+              {editingSkillId ? <Pencil className="h-4 w-4 text-amber-500" /> : <Plus className="h-4 w-4 text-blue-600" />}
+              <span>{editingSkillId ? 'แก้ไขข้อมูลทักษะความชำนาญ (Edit Skill)' : 'เพิ่มทักษะความชำนาญใหม่ (Create Skill)'}</span>
+            </h3>
+            {editingSkillId && (
+              <button
+                type="button"
+                onClick={handleResetForm}
+                className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+              >
+                <X className="h-3.5 w-3.5" /> ยกเลิกการแก้ไข
+              </button>
+            )}
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">หมวดหมู่หลัก</label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as SkillCategory)}
-              className="v-input w-full"
-            >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="md:col-span-2">
-            <label className="block text-xs font-semibold text-slate-600 mb-1">ชื่อทักษะ/ความสามารถ *</label>
-            <input
-              type="text"
-              placeholder="เช่น ติดตั้งสุขภัณฑ์อัจฉริยะ"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="v-input w-full"
-            />
-          </div>
-          <div className="flex items-end justify-between gap-3">
-            <div className="flex items-center h-9 space-x-2">
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">รหัสทักษะ (Skill Code) *</label>
               <input
-                type="checkbox"
-                id="certReq"
-                checked={certRequired}
-                onChange={(e) => setCertRequired(e.target.checked)}
-                className="h-4 w-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                type="text"
+                placeholder="เช่น SK-PLUMB"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                className="v-input w-full font-mono font-bold"
               />
-              <label htmlFor="certReq" className="text-xs font-semibold text-slate-600 select-none">
-                ต้องมีใบรับรอง (Cert)
-              </label>
             </div>
-            <button type="submit" className="v-btn-primary h-9 text-xs">
-              บันทึก
-            </button>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">หมวดหมู่หลัก</label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as SkillCategory)}
+                className="v-input w-full"
+              >
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-semibold text-slate-600 mb-1">ชื่อทักษะ/ความสามารถ *</label>
+              <input
+                type="text"
+                placeholder="เช่น ติดตั้งสุขภัณฑ์อัจฉริยะ"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="v-input w-full"
+              />
+            </div>
+            <div className="flex items-end justify-between gap-3">
+              <div className="flex items-center h-9 space-x-2">
+                <input
+                  type="checkbox"
+                  id="certReq"
+                  checked={certRequired}
+                  onChange={(e) => setCertRequired(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+                />
+                <label htmlFor="certReq" className="text-xs font-semibold text-slate-600 select-none cursor-pointer">
+                  ต้องมีใบรับรอง (Cert)
+                </label>
+              </div>
+              <button type="submit" className={`${editingSkillId ? 'bg-amber-500 hover:bg-amber-600 text-slate-900' : 'v-btn-primary'} h-9 text-xs px-4 font-bold rounded-lg transition`}>
+                {editingSkillId ? 'บันทึกแก้ไข' : 'บันทึกสร้าง'}
+              </button>
+            </div>
           </div>
         </form>
       )}
@@ -380,7 +434,7 @@ export const SkillManager: React.FC<SkillManagerProps> = ({
               <th className="px-6 py-3 text-left">หมวดหมู่หลัก (Category)</th>
               <th className="px-6 py-3 text-left">ชื่อทักษะ / ขีดความสามารถ</th>
               <th className="px-6 py-3 text-center">ต้องใช้ใบรับรอง</th>
-              <th className="px-6 py-3 text-right">ลบข้อมูล</th>
+              <th className="px-6 py-3 text-right">จัดการ (Actions)</th>
             </tr>
           </thead>
           <tbody>
@@ -406,16 +460,26 @@ export const SkillManager: React.FC<SkillManagerProps> = ({
                     </span>
                   </td>
                   <td className="px-6 py-3 text-right">
-                    <button
-                      onClick={() => {
-                        if (confirm(`คุณต้องการลบหมวดหมู่ทักษะ ${skill.name} หรือไม่?`)) {
-                          onDeleteSkill(skill.id);
-                        }
-                      }}
-                      className="text-slate-400 hover:text-rose-600 transition-colors p-1"
-                    >
-                      <Trash className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => handleStartEdit(skill)}
+                        title="แก้ไขข้อมูลทักษะ"
+                        className="text-slate-400 hover:text-amber-600 transition-colors p-1.5 rounded hover:bg-amber-50"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`คุณต้องการลบหมวดหมู่ทักษะ ${skill.name} หรือไม่?`)) {
+                            onDeleteSkill(skill.id);
+                          }
+                        }}
+                        title="ลบทักษะความชำนาญ"
+                        className="text-slate-400 hover:text-rose-600 transition-colors p-1.5 rounded hover:bg-rose-50"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

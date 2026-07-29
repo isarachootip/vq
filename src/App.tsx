@@ -242,12 +242,21 @@ function loadState<T>(key: string, defaultValue: T): T {
 }
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam) return tabParam;
+    return loadState<string>('vfixq_active_tab', 'dashboard');
+  });
   
   // Data States
   const [branches, setBranches] = useState<Branch[]>(INITIAL_BRANCHES);
-  const [zones, setZones] = useState<Zone[]>(INITIAL_ZONES);
-  const [skills, setSkills] = useState<Skill[]>(INITIAL_SKILLS);
+  const [zones, setZones] = useState<Zone[]>(() => 
+    loadState<Zone[]>('vfixq_zones', INITIAL_ZONES)
+  );
+  const [skills, setSkills] = useState<Skill[]>(() => 
+    loadState<Skill[]>('vfixq_skills', INITIAL_SKILLS)
+  );
 
   const [technicians, setTechnicians] = useState<Technician[]>(() => 
     loadState<Technician[]>('vfixq_technicians', INITIAL_TECHNICIANS)
@@ -322,21 +331,16 @@ export function App() {
   };
 
   // Watchers to persist state updates in localStorage
-  // Strip base64 imageUrls from banners before saving to avoid QuotaExceededError
   useEffect(() => {
-    const safeBanners = banners.map(b => ({
-      ...b,
-      imageUrl: b.imageUrl.startsWith('data:') ? '' : b.imageUrl
-    }));
-    safeLocalSet('vfixq_banners', safeBanners);
+    safeLocalSet('vfixq_active_tab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    safeLocalSet('vfixq_banners', banners);
   }, [banners]);
 
   useEffect(() => {
-    const safeServices = services.map(s => ({
-      ...s,
-      image: s.image.startsWith('data:') ? '' : s.image
-    }));
-    safeLocalSet('vfixq_services', safeServices);
+    safeLocalSet('vfixq_services', services);
   }, [services]);
 
   useEffect(() => {
@@ -344,8 +348,12 @@ export function App() {
   }, [techApplications]);
 
   useEffect(() => {
-    safeLocalSet('vfixq_services', services);
-  }, [services]);
+    safeLocalSet('vfixq_zones', zones);
+  }, [zones]);
+
+  useEffect(() => {
+    safeLocalSet('vfixq_skills', skills);
+  }, [skills]);
 
   useEffect(() => {
     safeLocalSet('vfixq_users', users);
@@ -374,12 +382,19 @@ export function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const [isBackend, setIsBackend] = useState<boolean>(() => {
-    return window.location.pathname.startsWith('/backend');
+    if (window.location.pathname.startsWith('/backend')) return true;
+    return loadState<boolean>('vfixq_is_backend', true);
   });
 
   useEffect(() => {
+    safeLocalSet('vfixq_is_backend', isBackend);
+  }, [isBackend]);
+
+  useEffect(() => {
     const handleLocationChange = () => {
-      setIsBackend(window.location.pathname.startsWith('/backend'));
+      if (window.location.pathname.startsWith('/backend')) {
+        setIsBackend(true);
+      }
     };
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
@@ -389,6 +404,7 @@ export function App() {
     const path = route ? '/backend' : '/';
     window.history.pushState({}, '', path);
     setIsBackend(route);
+    safeLocalSet('vfixq_is_backend', route);
   };
 
   const showToast = (msg: string) => {
@@ -564,6 +580,11 @@ export function App() {
     showToast(`นำเข้าข้อมูลสาขาสำเร็จ ${newBranches.length} รายการ`);
   };
 
+  const handleUpdateBranch = (updatedBranch: Branch) => {
+    setBranches((prev) => prev.map((b) => (b.id === updatedBranch.id ? updatedBranch : b)));
+    showToast(`ปรับปรุงข้อมูลสาขา ${updatedBranch.name} เรียบร้อยแล้ว`);
+  };
+
   const handleDeleteBranch = (id: string) => {
     setBranches((prev) => prev.filter((b) => b.id !== id));
     showToast('ลบข้อมูลสาขาสำเร็จ');
@@ -580,6 +601,11 @@ export function App() {
     showToast(`นำเข้าข้อมูลโซนสำเร็จ ${newZones.length} รายการ`);
   };
 
+  const handleUpdateZone = (updatedZone: Zone) => {
+    setZones((prev) => prev.map((z) => (z.id === updatedZone.id ? updatedZone : z)));
+    showToast(`อัปเดตข้อมูลโซน ${updatedZone.name} เรียบร้อยแล้ว`);
+  };
+
   const handleDeleteZone = (id: string) => {
     setZones((prev) => prev.filter((z) => z.id !== id));
     showToast('ลบข้อมูลโซนสำเร็จ');
@@ -594,6 +620,11 @@ export function App() {
   const handleAddMultipleSkills = (newSkills: Skill[]) => {
     setSkills((prev) => [...prev, ...newSkills]);
     showToast(`นำเข้าข้อมูลทักษะสำเร็จ ${newSkills.length} รายการ`);
+  };
+
+  const handleUpdateSkill = (updatedSkill: Skill) => {
+    setSkills((prev) => prev.map((s) => (s.id === updatedSkill.id ? updatedSkill : s)));
+    showToast(`อัปเดตข้อมูลทักษะ ${updatedSkill.name} เรียบร้อยแล้ว`);
   };
 
   const handleDeleteSkill = (id: string) => {
@@ -969,6 +1000,7 @@ export function App() {
               branches={branches}
               onAddBranch={handleAddBranch}
               onAddMultipleBranches={handleAddMultipleBranches}
+              onUpdateBranch={handleUpdateBranch}
               onDeleteBranch={handleDeleteBranch}
             />
           )}
@@ -1001,6 +1033,7 @@ export function App() {
               zones={zones}
               onAddZone={handleAddZone}
               onAddMultipleZones={handleAddMultipleZones}
+              onUpdateZone={handleUpdateZone}
               onDeleteZone={handleDeleteZone}
             />
           )}
@@ -1010,6 +1043,7 @@ export function App() {
               skills={skills}
               onAddSkill={handleAddSkill}
               onAddMultipleSkills={handleAddMultipleSkills}
+              onUpdateSkill={handleUpdateSkill}
               onDeleteSkill={handleDeleteSkill}
             />
           )}

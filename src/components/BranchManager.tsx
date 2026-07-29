@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import type { Branch } from '../types';
-import { Building, Plus, Download, Upload, Trash, CheckCircle, Search, Clock, Phone, MapPin } from 'lucide-react';
+import { Building, Plus, Download, Upload, Trash, CheckCircle, Search, Clock, Phone, MapPin, Pencil, X } from 'lucide-react';
 
 interface BranchManagerProps {
   branches: Branch[];
   onAddBranch: (branch: Branch) => void;
   onAddMultipleBranches: (branches: Branch[]) => void;
+  onUpdateBranch?: (branch: Branch) => void;
   onDeleteBranch: (branchId: string) => void;
 }
 
@@ -13,10 +14,12 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
   branches,
   onAddBranch,
   onAddMultipleBranches,
+  onUpdateBranch,
   onDeleteBranch,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
   
   // Form fields
   const [code, setCode] = useState('');
@@ -53,12 +56,69 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
     return matchesSearch && matchesGroup;
   });
 
+  const handleStartEdit = (branch: Branch) => {
+    setEditingBranchId(branch.id);
+    setCode(branch.code);
+    setName(branch.name);
+    setFullName(branch.fullName || '');
+    setProvince(branch.province);
+    setStatus(branch.status);
+    setStoreGroup(branch.storeGroup || 'TWD');
+    setAddress(branch.address || '');
+    setLatitude(branch.latitude ? String(branch.latitude) : '');
+    setLongitude(branch.longitude ? String(branch.longitude) : '');
+    setOpenTime(branch.openTime || '07:00');
+    setCloseTime(branch.closeTime || '21:00');
+    setPhone(branch.phone || '1308');
+    setShowAddForm(true);
+  };
+
+  const handleResetForm = () => {
+    setCode('');
+    setName('');
+    setFullName('');
+    setAddress('');
+    setLatitude('');
+    setLongitude('');
+    setOpenTime('07:00');
+    setCloseTime('21:00');
+    setPhone('1308');
+    setStoreGroup('TWD');
+    setStatus('Active');
+    setEditingBranchId(null);
+    setShowAddForm(false);
+  };
+
   const handleAddSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!code || !name) {
       alert('กรุณากรอกรหัสสาขาและชื่อสาขา');
       return;
     }
+
+    if (editingBranchId) {
+      const updatedBranch: Branch = {
+        id: editingBranchId,
+        code: code.toUpperCase(),
+        name,
+        province,
+        status,
+        fullName: fullName || undefined,
+        address: address || undefined,
+        latitude: latitude ? Number(latitude) : undefined,
+        longitude: longitude ? Number(longitude) : undefined,
+        openTime: openTime || '07:00',
+        closeTime: closeTime || '21:00',
+        phone: phone || '1308',
+        storeGroup: storeGroup || 'TWD',
+      };
+      if (onUpdateBranch) {
+        onUpdateBranch(updatedBranch);
+      }
+      handleResetForm();
+      return;
+    }
+
     if (branches.some((b) => b.code.toUpperCase() === code.toUpperCase())) {
       alert('รหัสสาขานี้มีอยู่ในระบบแล้ว');
       return;
@@ -81,17 +141,7 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
     };
 
     onAddBranch(newBranch);
-    setCode('');
-    setName('');
-    setFullName('');
-    setAddress('');
-    setLatitude('');
-    setLongitude('');
-    setOpenTime('07:00');
-    setCloseTime('21:00');
-    setPhone('1308');
-    setStoreGroup('TWD');
-    setShowAddForm(false);
+    handleResetForm();
   };
 
   // Preset quick importer
@@ -326,7 +376,24 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
 
       {/* Form / Import Previews */}
       {showAddForm && (
-        <form onSubmit={handleAddSubmit} className="v-panel p-5 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-fadeIn">
+        <form onSubmit={handleAddSubmit} className="v-panel p-5 space-y-4 animate-fadeIn border-amber-500/40 bg-slate-50/50">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+              {editingBranchId ? <Pencil className="h-4 w-4 text-amber-500" /> : <Plus className="h-4 w-4 text-blue-600" />}
+              <span>{editingBranchId ? 'แก้ไขข้อมูลสาขา (Edit Branch)' : 'เพิ่มข้อมูลสาขาใหม่ (Create Branch)'}</span>
+            </h3>
+            {editingBranchId && (
+              <button
+                type="button"
+                onClick={handleResetForm}
+                className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1"
+              >
+                <X className="h-3.5 w-3.5" /> ยกเลิกการแก้ไข
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">รหัสสาขา (Branch Code) *</label>
             <input
@@ -334,7 +401,7 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
               placeholder="เช่น B920"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              className="v-input w-full"
+              className="v-input w-full font-mono font-bold"
             />
           </div>
           <div>
@@ -440,8 +507,8 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
               className="v-input w-full"
             />
           </div>
-          <div className="flex items-end justify-between gap-3 md:col-span-2 lg:col-span-4 border-t border-slate-100 pt-3">
-            <div className="w-1/3">
+          <div className="flex items-end justify-between gap-3 md:col-span-3 lg:col-span-4 border-t border-slate-100 pt-3">
+            <div className="w-1/3 max-w-xs">
               <label className="block text-xs font-semibold text-slate-600 mb-1">สถานะ</label>
               <select
                 value={status}
@@ -455,15 +522,16 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
             <div className="flex space-x-2">
               <button
                 type="button"
-                onClick={() => setShowAddForm(false)}
+                onClick={handleResetForm}
                 className="v-btn-secondary py-2 text-xs"
               >
                 ยกเลิก
               </button>
-              <button type="submit" className="v-btn-primary py-2 text-xs px-6">
-                บันทึกข้อมูลสาขา
+              <button type="submit" className={`${editingBranchId ? 'bg-amber-500 hover:bg-amber-600 text-slate-900' : 'v-btn-primary'} py-2 text-xs px-6 font-bold rounded-lg transition`}>
+                {editingBranchId ? 'บันทึกแก้ไขสาขา' : 'บันทึกข้อมูลสาขา'}
               </button>
             </div>
+          </div>
           </div>
         </form>
       )}
@@ -577,7 +645,7 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
               <th className="px-6 py-3 text-left">เวลาทำการ / เบอร์โทร</th>
               <th className="px-6 py-3 text-left">พิกัด GPS (Google Maps)</th>
               <th className="px-6 py-3 text-center">สถานะ</th>
-              <th className="px-6 py-3 text-right">ลบข้อมูล</th>
+              <th className="px-6 py-3 text-right">จัดการ (Actions)</th>
             </tr>
           </thead>
           <tbody>
@@ -661,16 +729,26 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
                       </span>
                     </td>
                     <td className="px-6 py-3 text-right">
-                      <button
-                        onClick={() => {
-                          if (confirm(`คุณต้องการลบสาขา ${branch.name} หรือไม่?`)) {
-                            onDeleteBranch(branch.id);
-                          }
-                        }}
-                        className="text-slate-400 hover:text-rose-600 transition-colors p-1"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => handleStartEdit(branch)}
+                          title="แก้ไขข้อมูลสาขา"
+                          className="text-slate-400 hover:text-amber-600 transition-colors p-1.5 rounded hover:bg-amber-50"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`คุณต้องการลบสาขา ${branch.name} หรือไม่?`)) {
+                              onDeleteBranch(branch.id);
+                            }
+                          }}
+                          title="ลบสาขา"
+                          className="text-slate-400 hover:text-rose-600 transition-colors p-1.5 rounded hover:bg-rose-50"
+                        >
+                          <Trash className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
