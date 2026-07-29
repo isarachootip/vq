@@ -20,6 +20,30 @@ const formatDateDDMMYYYY = (dateStr: string | null) => {
   return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
 };
 
+const CATEGORY_GROUPS = [
+  { code: 'ALL', name: 'ทุกหมวดหมู่บริการ (All Groups)' },
+  { code: 'CE', name: 'CE - หมวดเครื่องปรับอากาศ (Air Conditioning)' },
+  { code: 'CEC', name: 'CEC - หมวดงานบริการล้างทำความสะอาด (Clean & Service)' },
+  { code: 'SOLAR', name: 'SOLAR - หมวดระบบพลังงานแสงอาทิตย์ (Solar Cell)' },
+  { code: 'FITIN', name: 'Fit-In / Built-in - เฟอร์นิเจอร์บิวท์อิน' },
+  { code: 'ELEC', name: 'Electrical - งานระบบไฟฟ้า & Smart Home' },
+  { code: 'FLOOR', name: 'Flooring - งานพื้น ผนัง และฝ้าเพดาน' },
+  { code: 'PLUMB', name: 'Plumbing - งานระบบประปาและสุขภัณฑ์' },
+];
+
+const matchCategoryGroup = (serviceCat: string, name: string, code: string) => {
+  if (code === 'ALL') return true;
+  const cat = (serviceCat + ' ' + name).toLowerCase();
+  if (code === 'CE') return cat.includes('ปรับอากาศ') || cat.includes('ce') || cat.includes('แอร์');
+  if (code === 'CEC') return cat.includes('ล้าง') || cat.includes('cec') || cat.includes('ทำความสะอาด');
+  if (code === 'SOLAR') return cat.includes('โซล่า') || cat.includes('solar') || cat.includes('แสงอาทิตย์');
+  if (code === 'FITIN') return cat.includes('fit-in') || cat.includes('built-in') || cat.includes('เฟอร์นิเจอร์');
+  if (code === 'ELEC') return cat.includes('ไฟฟ้า') || cat.includes('smart') || cat.includes('electrical');
+  if (code === 'FLOOR') return cat.includes('พื้น') || cat.includes('ผนัง') || cat.includes('ฝ้า') || cat.includes('flooring') || cat.includes('tile');
+  if (code === 'PLUMB') return cat.includes('ประปา') || cat.includes('สุขภัณฑ์') || cat.includes('ห้องน้ำ') || cat.includes('plumbing');
+  return true;
+};
+
 export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
   technicians,
   branches,
@@ -27,7 +51,12 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
   matchWeights,
   systemConfig,
 }) => {
+  const [selectedCategoryCode, setSelectedCategoryCode] = useState<string>('ALL');
   const [selectedInstId, setSelectedInstId] = useState<string>(INITIAL_INSTALLATION_TYPES[0].id);
+
+  const filteredInstallationTypes = INITIAL_INSTALLATION_TYPES.filter((type) =>
+    matchCategoryGroup(type.category, type.name, selectedCategoryCode)
+  );
   const [selectedZone, setSelectedZone] = useState<string>(SERVICE_ZONES[0]);
   const [bookingDate, setBookingDate] = useState<string>('2026-07-25');
   const [selectedSlotId, setSelectedSlotId] = useState<string>(AVAILABLE_TIME_SLOTS[0].id);
@@ -233,22 +262,60 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
               </select>
             </div>
 
-            {/* Installation Type Selection */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-600 mb-1">
-                ประเภทงานติดตั้ง (Type of Installation)
-              </label>
-              <select
-                value={selectedInstId}
-                onChange={(e) => setSelectedInstId(e.target.value)}
-                className="v-input w-full font-semibold"
-              >
-                {INITIAL_INSTALLATION_TYPES.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.name} (Min Level {type.minSkillLevel})
-                  </option>
-                ))}
-              </select>
+            {/* Two-Step Installation Selection Container (Step 1.0 -> Step 2.0) */}
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Step 1.0: Category Group */}
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700 text-[11px] flex items-center gap-1">
+                    <span className="bg-amber-500 text-slate-900 px-1.5 py-0.2 rounded text-[10px] font-black">1.0</span>
+                    <span>เลือกหมวดหมู่งานติดตั้ง (Category Group):</span>
+                  </label>
+                  <select
+                    value={selectedCategoryCode}
+                    onChange={(e) => {
+                      const code = e.target.value;
+                      setSelectedCategoryCode(code);
+                      const filtered = INITIAL_INSTALLATION_TYPES.filter((type) =>
+                        matchCategoryGroup(type.category, type.name, code)
+                      );
+                      if (filtered.length > 0) {
+                        setSelectedInstId(filtered[0].id);
+                      }
+                    }}
+                    className="v-input w-full py-2 bg-white font-semibold text-slate-800 text-xs border-slate-300"
+                  >
+                    {CATEGORY_GROUPS.map((cg) => (
+                      <option key={cg.code} value={cg.code}>
+                        {cg.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Step 2.0: Service Item */}
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700 text-[11px] flex items-center gap-1">
+                    <span className="bg-slate-800 text-white px-1.5 py-0.2 rounded text-[10px] font-black">2.0</span>
+                    <span>เลือกบริการงานติดตั้ง (Service Item):</span>
+                  </label>
+                  <select
+                    value={selectedInstId}
+                    onChange={(e) => setSelectedInstId(e.target.value)}
+                    className="v-input w-full py-2 bg-white font-medium text-slate-800 text-xs border-slate-300"
+                  >
+                    {filteredInstallationTypes.length === 0 ? (
+                      <option value="">-- ไม่พบบริการในหมวดหมู่นี้ --</option>
+                    ) : (
+                      filteredInstallationTypes.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          [{type.category}] {type.name} (Min Level {type.minSkillLevel})
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* Calculated Specs Card */}
