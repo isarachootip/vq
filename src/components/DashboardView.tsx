@@ -59,15 +59,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Manual Booking Modal States
   const [showManualBookingModal, setShowManualBookingModal] = useState<boolean>(false);
+  const [mTicketNo, setMTicketNo] = useState<string>('');
   const [mCustName, setMCustName] = useState<string>('');
   const [mCustPhone, setMCustPhone] = useState<string>('');
   const [mLineId, setMLineId] = useState<string>('');
   const [mCategoryCode, setMCategoryCode] = useState<string>('ALL');
   const [mServiceId, setMServiceId] = useState<string>(services[0]?.id || '');
+  const [mRegion, setMRegion] = useState<'BKK' | 'UPC'>('BKK');
   const [mZone, setMZone] = useState<string>('Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)');
+  const [mLat, setMLat] = useState<string>('13.75633');
+  const [mLng, setMLng] = useState<string>('100.50177');
   const [mDate, setMDate] = useState<string>('2026-07-24');
   const [mTimeSlot, setMTimeSlot] = useState<string>('Morning (09:00 - 12:00)');
   const [mSource, setMSource] = useState<'Line OA' | 'Call Center 1308' | 'Walk-in'>('Call Center 1308');
+  const [mTicketError, setMTicketError] = useState<string>('');
+
+  const generateRandomTicketNo = () => {
+    // Generate 10-digit numeric ticket number
+    const num = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+    setMTicketNo(num);
+    setMTicketError('');
+  };
 
   const matchCategoryGroup = (serviceCat: string, code: string) => {
     if (code === 'ALL') return true;
@@ -240,6 +252,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   const handleManualBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setMTicketError('');
+
+    // Ticket Number 10 digits validation
+    const cleanedTicket = mTicketNo.trim();
+    if (!cleanedTicket || !/^\d{10}$/.test(cleanedTicket)) {
+      setMTicketError('❌ เลขที่ Ticket ต้องเป็นตัวเลข 10 หลักเท่านั้น (เช่น 1092837465)');
+      return;
+    }
+
     if (!mCustName.trim() || !mCustPhone.trim()) return;
 
     const selectedService = services.find(s => s.id === mServiceId);
@@ -251,6 +272,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const newBooking: QueueBooking = {
       id: `booking-manual-${Date.now()}`,
       bookingRef,
+      ticketNo: cleanedTicket,
       customerName: mCustName,
       customerPhone: mCustPhone,
       lineId: mLineId,
@@ -258,6 +280,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       timeSlot: mTimeSlot,
       createdFrom: mSource,
       addressZone: mZone,
+      latitude: parseFloat(mLat) || 13.75633,
+      longitude: parseFloat(mLng) || 100.50177,
       installationTypeId: selectedService.id,
       installationTypeName: selectedService.name,
       requiredSkillLevel: selectedService.requiredSkillLevel,
@@ -269,6 +293,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     onConfirmBooking(newBooking);
     
     // Reset Form
+    setMTicketNo('');
     setMCustName('');
     setMCustPhone('');
     setMLineId('');
@@ -588,6 +613,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <tr key={b.id} className="hover:bg-slate-50">
                       <td className="px-4 py-3 font-mono">
                         <div className="font-bold text-slate-800">{b.bookingRef}</div>
+                        {b.ticketNo && (
+                          <div className="text-[10px] font-bold text-amber-700 bg-amber-500/10 border border-amber-500/30 px-1.5 py-0.2 rounded w-fit mt-0.5">
+                            🎫 Ticket: {b.ticketNo}
+                          </div>
+                        )}
                         <div className="text-[10px] text-slate-500 mt-0.5 font-bold">📅 {formatDateDDMMYYYY(b.bookingDate)} | {b.timeSlot}</div>
                         <div className="text-[9px] text-slate-400 mt-0.5">จาก {b.createdFrom}</div>
                       </td>
@@ -605,6 +635,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
                           <span className="truncate max-w-[160px]">{b.addressZone}</span>
                         </div>
+                        {b.latitude && b.longitude && (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${b.latitude},${b.longitude}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[9px] text-blue-600 font-mono font-bold hover:underline block mt-0.5"
+                          >
+                            📍 {b.latitude.toFixed(4)}, {b.longitude.toFixed(4)} ↗
+                          </a>
+                        )}
                       </td>
 
                       <td className="px-4 py-3 font-semibold text-slate-700">
@@ -724,6 +764,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
             <form onSubmit={handleManualBookingSubmit} className="space-y-4">
               
+              {/* Ticket No Row */}
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="font-extrabold text-slate-800 text-xs flex items-center gap-1.5">
+                    <span className="text-amber-600">🎫</span>
+                    <span>เลขที่ตั๋วงาน (Ticket No.) — 10 หลัก:</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={generateRandomTicketNo}
+                    className="text-[10px] font-bold text-amber-700 bg-amber-500/20 hover:bg-amber-500/30 px-2 py-0.5 rounded cursor-pointer transition border border-amber-500/30"
+                  >
+                    🎲 สุ่มเลข Ticket 10 หลัก
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  required
+                  maxLength={10}
+                  placeholder="กรอกเลขตั๋ว 10 หลัก เช่น 1092837465"
+                  value={mTicketNo}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setMTicketNo(val);
+                    if (val.length === 10) setMTicketError('');
+                    else if (val.length > 0) setMTicketError('⚠️ ต้องป้อนตัวเลขให้ครบ 10 หลัก (ปัจจุบัน ' + val.length + '/10)');
+                  }}
+                  className="v-input w-full py-2 font-mono text-sm font-black text-amber-900 tracking-widest bg-white"
+                />
+                {mTicketError && <p className="text-[10px] text-rose-600 font-bold">{mTicketError}</p>}
+              </div>
+
               {/* Customer Info row */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="space-y-1">
@@ -762,10 +834,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
               </div>
 
-              {/* Service & Category Grouping Row */}
+              {/* Service & Category Grouping Row (1.0 -> 2.0) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-700 text-xs">1. เลือกหมวดหมู่งานติดตั้ง (Category Group):</label>
+                  <label className="block font-bold text-slate-700 text-xs flex items-center gap-1">
+                    <span className="bg-amber-500 text-slate-900 px-1.5 py-0.2 rounded text-[10px] font-black">1.0</span>
+                    <span>เลือกหมวดหมู่งานติดตั้ง (Category Group):</span>
+                  </label>
                   <select
                     value={mCategoryCode}
                     onChange={(e) => handleCategoryCodeChange(e.target.value)}
@@ -799,19 +874,70 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="block font-bold text-slate-600">โซนพื้นที่ให้บริการ:</label>
-                <select
-                  value={mZone}
-                  onChange={(e) => setMZone(e.target.value)}
-                  className="v-input w-full py-2"
-                >
-                  <option value="Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)">Zone 1: สุขุมวิท - บางนา</option>
-                  <option value="Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)">Zone 2: ราชพฤกษ์ - แจ้งวัฒนะ</option>
-                  <option value="Zone 3: ปทุมธานี (รังสิต - ลำลูกกา)">Zone 3: รังสิต - ลำลูกกา</option>
-                  <option value="Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์)">Zone 4: เทพารักษ์ - ศรีนครินทร์</option>
+              <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700 text-xs">🌏 เลือกประเภทพื้นที่ (Region Type):</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMRegion('BKK');
+                        setMZone('Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)');
+                      }}
+                      className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-xs border cursor-pointer transition ${
+                        mRegion === 'BKK' 
+                          ? 'bg-amber-500 text-slate-900 border-amber-600 shadow-xs' 
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      🏙️ BKK (กรุงเทพฯ และปริมณฑล)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMRegion('UPC');
+                        setMZone('Zone UPC-N1: เชียงใหม่ - ลำพูน');
+                      }}
+                      className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-xs border cursor-pointer transition ${
+                        mRegion === 'UPC' 
+                          ? 'bg-amber-500 text-slate-900 border-amber-600 shadow-xs' 
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      🏞️ UPC (ต่างจังหวัด / ภูมิภาค)
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700 text-xs">📍 เลือกโซนพื้นที่ให้บริการ ({mRegion}):</label>
+                  <select
+                    value={mZone}
+                    onChange={(e) => setMZone(e.target.value)}
+                    className="v-input w-full py-2 bg-white font-semibold text-slate-800"
+                  >
+                  {mRegion === 'BKK' ? (
+                    <>
+                      <option value="Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)">Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)</option>
+                      <option value="Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)">Zone 2: นนทบุรี (ราชพฤกษ์ - ปากเกร็ด - แจ้งวัฒนะ)</option>
+                      <option value="Zone 3: ปทุมธานี (รังสิต - ลำลูกกา)">Zone 3: ปทุมธานี (รังสิต - คลองหลวง - ลำลูกกา)</option>
+                      <option value="Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์)">Zone 4: สมุทรปราการ (เทพารักษ์ - บางพลี - ศรีนครินทร์)</option>
+                      <option value="Zone 5: กรุงเทพฯ ฝั่งธนบุรี (ตลิ่งชัน - บางแค)">Zone 5: กรุงเทพฯ ฝั่งธนบุรี (ตลิ่งชัน - บางแค - เพชรเกษม)</option>
+                      <option value="Zone 6: กรุงเทพฯ ตอนเหนือ (จตุจักร - ลาดพร้าว)">Zone 6: กรุงเทพฯ ตอนเหนือ (จตุจักร - ลาดพร้าว - สายไหม)</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="Zone UPC-N1: เชียงใหม่ - ลำพูน">Zone UPC-N1: ภาคเหนือ (เชียงใหม่ - ลำพูน - เชียงราย)</option>
+                      <option value="Zone UPC-NE1: ขอนแก่น - อุดรธานี">Zone UPC-NE1: ภาคอีสาน (ขอนแก่น - อุดรธานี - นครราชสีมา)</option>
+                      <option value="Zone UPC-E1: ชลบุรี - ระยอง">Zone UPC-E1: ภาคตะวันออก (ชลบุรี - พัทยา - ระยอง)</option>
+                      <option value="Zone UPC-S1: ภูเก็ต - สุราษฎร์ธานี">Zone UPC-S1: ภาคใต้ (ภูเก็ต - สุราษฎร์ธานี - หาดใหญ่)</option>
+                      <option value="Zone UPC-W1: นครปฐม - ราชบุรี">Zone UPC-W1: ภาคตะวันตก (นครปฐม - ราชบุรี - กาญจนบุรี)</option>
+                      <option value="Zone UPC-C1: พิษณุโลก - นครสวรรค์">Zone UPC-C1: ภาคกลางบน (พิษณุโลก - นครสวรรค์ - พิจิตร)</option>
+                    </>
+                  )}
                 </select>
               </div>
+            </div>
 
               {/* Date & Time slot */}
               <div className="grid grid-cols-2 gap-4">

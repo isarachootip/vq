@@ -303,10 +303,34 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-slate-600 mb-1">ชื่อพื้นที่ / ขอบเขตบริการ *</label>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">ชื่อพื้นที่ / ขอบเขตบริการ (ระบุภูมิภาค) *</label>
+              <div className="flex gap-1.5 mb-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!name.startsWith('[BKK]')) {
+                      setName('[BKK] ' + name.replace(/^\[(BKK|UPC)\]\s*/, ''));
+                    }
+                  }}
+                  className="px-2 py-1 text-[10px] font-bold rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-900 border border-amber-500/30 cursor-pointer"
+                >
+                  + ใส่สัญลักษณ์ [BKK]
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!name.startsWith('[UPC]')) {
+                      setName('[UPC] ' + name.replace(/^\[(BKK|UPC)\]\s*/, ''));
+                    }
+                  }}
+                  className="px-2 py-1 text-[10px] font-bold rounded bg-blue-500/20 hover:bg-blue-500/30 text-blue-900 border border-blue-500/30 cursor-pointer"
+                >
+                  + ใส่สัญลักษณ์ [UPC]
+                </button>
+              </div>
               <input
                 type="text"
-                placeholder="เช่น นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)"
+                placeholder="เช่น [BKK] กรุงเทพฯ (บางแค - ภาษีเจริญ) หรือ [UPC] เชียงใหม่ (หางดง)"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="v-input w-full"

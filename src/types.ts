@@ -82,10 +82,13 @@ export interface TimeSlot {
 export interface QueueBooking {
   id: string;
   bookingRef: string;
+  ticketNo?: string; // 10-digit ticket number
   customerName: string;
   customerPhone: string;
   lineId?: string;
   addressZone: string;
+  latitude?: number;
+  longitude?: number;
   installationTypeId: string;
   installationTypeName: string;
   requiredSkillLevel: 1 | 2 | 3;

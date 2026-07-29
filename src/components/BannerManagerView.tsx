@@ -239,35 +239,46 @@ export const BannerManagerView: React.FC<BannerManagerViewProps> = ({
                         if (!file) return;
                         setUploadError('');
                         setIsUploading(true);
+                          setUploadError('');
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            if (!event.target?.result) return;
+                            const img = new Image();
+                            img.onload = () => {
+                              const MAX_WIDTH = 800;
+                              const scale = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
+                              const canvas = document.createElement('canvas');
+                              canvas.width = img.width * scale;
+                              canvas.height = img.height * scale;
+                              const ctx = canvas.getContext('2d');
+                              if (ctx) {
+                                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                                setImageUrl(canvas.toDataURL('image/jpeg', 0.7));
+                              }
+                            };
+                            img.src = event.target.result as string;
+                          };
+                          reader.readAsDataURL(f);
+                        };
+
                         try {
                           if (isStorageConfigured(minioConfig)) {
-                            // อัปโหลดไป MinIO — ได้ URL กลับมา
-                            const url = await uploadImageToStorage(file, 'vservice-banners', minioConfig);
-                            setImageUrl(url);
+                            try {
+                              const url = await uploadImageToStorage(file, 'vservice-banners', minioConfig);
+                              setImageUrl(url);
+                              setUploadError('');
+                            } catch (minioErr: any) {
+                              console.warn('MinIO upload failed, auto-falling back to compressed image:', minioErr);
+                              setUploadError('');
+                              convertToBase64(file);
+                            }
                           } else {
-                            // Fallback: Compress แล้วเก็บเป็น Base64
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                              if (!event.target?.result) return;
-                              const img = new Image();
-                              img.onload = () => {
-                                const MAX_WIDTH = 1200;
-                                const scale = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
-                                const canvas = document.createElement('canvas');
-                                canvas.width = img.width * scale;
-                                canvas.height = img.height * scale;
-                                const ctx = canvas.getContext('2d');
-                                if (ctx) {
-                                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                                  setImageUrl(canvas.toDataURL('image/jpeg', 0.8));
-                                }
-                              };
-                              img.src = event.target.result as string;
-                            };
-                            reader.readAsDataURL(file);
+                            setUploadError('');
+                            convertToBase64(file);
                           }
                         } catch (err: any) {
-                          setUploadError(err.message || 'อัปโหลดล้มเหลว กรุณาตรวจสอบการตั้งค่า MinIO');
+                          setUploadError('');
+                          convertToBase64(file);
                         } finally {
                           setIsUploading(false);
                         }

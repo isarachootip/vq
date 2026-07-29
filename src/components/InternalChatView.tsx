@@ -212,10 +212,11 @@ export const InternalChatView: React.FC<InternalChatViewProps> = ({
               </p>
               
               <div className="bg-white p-2 rounded-lg border border-emerald-500/20 text-center space-y-1">
-                {/* Mock LINE QR Code */}
-                <div className="w-14 h-14 bg-slate-900 rounded mx-auto flex items-center justify-center font-mono text-[8px] text-slate-400 font-bold border border-slate-800">
-                  LINE OA
-                </div>
+                <img 
+                  src="/line_qr.svg" 
+                  alt="LINE QR Code" 
+                  className="w-16 h-16 mx-auto rounded object-contain border border-emerald-500/20 p-0.5 bg-white"
+                />
                 <span className="text-[9px] block font-bold text-emerald-700">@vfixq_line</span>
               </div>
             </div>
