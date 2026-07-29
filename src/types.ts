@@ -1,12 +1,6 @@
 export type TierLevel = 'Gold' | 'Silver' | 'Bronze' | 'Cooldown' | 'Suspended';
 
-export type SkillCategory = 
-  | 'Built-in Furniture' 
-  | 'Flooring & Tile' 
-  | 'Electrical & Smart Home' 
-  | 'Plumbing & Sanitary' 
-  | 'Air Condition & HVAC' 
-  | 'Curtains & Wallpaper';
+export type SkillCategory = string;
 
 export interface Branch {
   id: string;
