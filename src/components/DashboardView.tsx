@@ -42,6 +42,54 @@ const CATEGORY_GROUPS = [
   { code: 'PLUMB', name: 'Plumbing - งานระบบประปาและสุขภัณฑ์' },
 ];
 
+export const detectZoneFromCoordinates = (lat: number, lng: number): { region: 'BKK' | 'UPC'; zone: string } => {
+  if (isNaN(lat) || isNaN(lng)) {
+    return { region: 'BKK', zone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)' };
+  }
+
+  // BKK Metro Area bounding box: Lat 13.35 - 14.25, Lng 100.2 - 100.95
+  if (lat >= 13.35 && lat <= 14.25 && lng >= 100.2 && lng <= 100.95) {
+    if (lat >= 13.95) {
+      return { region: 'BKK', zone: 'Zone 3: ปทุมธานี (รังสิต - ลำลูกกา)' };
+    }
+    if (lat >= 13.82 && lng <= 100.53) {
+      return { region: 'BKK', zone: 'Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)' };
+    }
+    if (lat <= 13.62 && lng >= 100.6) {
+      return { region: 'BKK', zone: 'Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์)' };
+    }
+    if (lng <= 100.48) {
+      return { region: 'BKK', zone: 'Zone 5: กรุงเทพฯ ฝั่งธนบุรี (ตลิ่งชัน - บางแค)' };
+    }
+    if (lat >= 13.80) {
+      return { region: 'BKK', zone: 'Zone 6: กรุงเทพฯ ตอนเหนือ (จตุจักร - ลาดพร้าว)' };
+    }
+    return { region: 'BKK', zone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)' };
+  }
+
+  // UPC Regions
+  if (lat < 11.8) {
+    return { region: 'UPC', zone: 'Zone UPC-S1: ภูเก็ต - สุราษฎร์ธานี' };
+  }
+  if (lat > 17.2) {
+    return { region: 'UPC', zone: 'Zone UPC-N1: เชียงใหม่ - ลำพูน' };
+  }
+  if (lng > 101.5) {
+    return { region: 'UPC', zone: 'Zone UPC-NE1: ขอนแก่น - อุดรธานี' };
+  }
+  if (lng > 100.8 && lat <= 13.8) {
+    return { region: 'UPC', zone: 'Zone UPC-E1: ชลบุรี - ระยอง' };
+  }
+  if (lng < 100.1 && lat >= 13.2 && lat <= 14.8) {
+    return { region: 'UPC', zone: 'Zone UPC-W1: นครปฐม - ราชบุรี' };
+  }
+  if (lat >= 14.8) {
+    return { region: 'UPC', zone: 'Zone UPC-C1: พิษณุโลก - นครสวรรค์' };
+  }
+
+  return { region: 'UPC', zone: 'Zone UPC-S1: ภูเก็ต - สุราษฎร์ธานี' };
+};
+
 export const DashboardView: React.FC<DashboardViewProps> = ({
   bookings,
   technicians,
@@ -76,6 +124,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [mSource, setMSource] = useState<'Line OA' | 'Call Center 1308' | 'Walk-in'>('Call Center 1308');
   const [mTicketError, setMTicketError] = useState<string>('');
   const [showMapPicker, setShowMapPicker] = useState<boolean>(false);
+  const [autoZoneMessage, setAutoZoneMessage] = useState<string>('');
+
+  const handleUpdateCoordinates = (latVal: string, lngVal: string) => {
+    setMLat(latVal);
+    setMLng(lngVal);
+    const latNum = parseFloat(latVal);
+    const lngNum = parseFloat(lngVal);
+    if (!isNaN(latNum) && !isNaN(lngNum)) {
+      const detected = detectZoneFromCoordinates(latNum, lngNum);
+      setMRegion(detected.region);
+      setMZone(detected.zone);
+      setAutoZoneMessage(`⚡ กำหนดให้อยู่อัตโนมัติ: ${detected.zone}`);
+    }
+  };
 
   const generateRandomTicketNo = () => {
     // Generate 10-digit numeric ticket number
@@ -878,119 +940,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
               </div>
 
-              {/* Service & Category Grouping Row (1.0 -> 2.0) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="block font-bold text-slate-700 text-xs flex items-center gap-1">
-                    <span className="bg-amber-500 text-slate-900 px-1.5 py-0.2 rounded text-[10px] font-black">1.0</span>
-                    <span>เลือกหมวดหมู่งานติดตั้ง (Category Group):</span>
-                  </label>
-                  <select
-                    value={mCategoryCode}
-                    onChange={(e) => handleCategoryCodeChange(e.target.value)}
-                    className="v-input w-full py-2 bg-amber-50/40 border-amber-500/50 font-semibold text-slate-800"
-                  >
-                    {CATEGORY_GROUPS.map((cg) => (
-                      <option key={cg.code} value={cg.code}>
-                        {cg.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block font-bold text-slate-700 text-xs">2. เลือกบริการงานติดตั้ง (Service Item):</label>
-                  <select
-                    value={mServiceId}
-                    onChange={(e) => setMServiceId(e.target.value)}
-                    className="v-input w-full py-2 font-medium"
-                  >
-                    {filteredServicesForModal.length === 0 ? (
-                      <option value="">-- ไม่พบบริการในหมวดหมู่นี้ --</option>
-                    ) : (
-                      filteredServicesForModal.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          [{s.category}] {s.name} (Min Level: {s.requiredSkillLevel})
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <div className="space-y-1">
-                  <label className="block font-bold text-slate-700 text-xs">🌏 เลือกประเภทพื้นที่ (Region Type):</label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMRegion('BKK');
-                        setMZone('Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)');
-                      }}
-                      className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-xs border cursor-pointer transition ${
-                        mRegion === 'BKK' 
-                          ? 'bg-amber-500 text-slate-900 border-amber-600 shadow-xs' 
-                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      🏙️ BKK (กรุงเทพฯ และปริมณฑล)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMRegion('UPC');
-                        setMZone('Zone UPC-N1: เชียงใหม่ - ลำพูน');
-                      }}
-                      className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-xs border cursor-pointer transition ${
-                        mRegion === 'UPC' 
-                          ? 'bg-amber-500 text-slate-900 border-amber-600 shadow-xs' 
-                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      🏞️ UPC (ต่างจังหวัด / ภูมิภาค)
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block font-bold text-slate-700 text-xs">📍 เลือกโซนพื้นที่ให้บริการ ({mRegion}):</label>
-                  <select
-                    value={mZone}
-                    onChange={(e) => setMZone(e.target.value)}
-                    className="v-input w-full py-2 bg-white font-semibold text-slate-800"
-                  >
-                  {mRegion === 'BKK' ? (
-                    <>
-                      <option value="Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)">Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)</option>
-                      <option value="Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)">Zone 2: นนทบุรี (ราชพฤกษ์ - ปากเกร็ด - แจ้งวัฒนะ)</option>
-                      <option value="Zone 3: ปทุมธานี (รังสิต - ลำลูกกา)">Zone 3: ปทุมธานี (รังสิต - คลองหลวง - ลำลูกกา)</option>
-                      <option value="Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์)">Zone 4: สมุทรปราการ (เทพารักษ์ - บางพลี - ศรีนครินทร์)</option>
-                      <option value="Zone 5: กรุงเทพฯ ฝั่งธนบุรี (ตลิ่งชัน - บางแค)">Zone 5: กรุงเทพฯ ฝั่งธนบุรี (ตลิ่งชัน - บางแค - เพชรเกษม)</option>
-                      <option value="Zone 6: กรุงเทพฯ ตอนเหนือ (จตุจักร - ลาดพร้าว)">Zone 6: กรุงเทพฯ ตอนเหนือ (จตุจักร - ลาดพร้าว - สายไหม)</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="Zone UPC-N1: เชียงใหม่ - ลำพูน">Zone UPC-N1: ภาคเหนือ (เชียงใหม่ - ลำพูน - เชียงราย)</option>
-                      <option value="Zone UPC-NE1: ขอนแก่น - อุดรธานี">Zone UPC-NE1: ภาคอีสาน (ขอนแก่น - อุดรธานี - นครราชสีมา)</option>
-                      <option value="Zone UPC-E1: ชลบุรี - ระยอง">Zone UPC-E1: ภาคตะวันออก (ชลบุรี - พัทยา - ระยอง)</option>
-                      <option value="Zone UPC-S1: ภูเก็ต - สุราษฎร์ธานี">Zone UPC-S1: ภาคใต้ (ภูเก็ต - สุราษฎร์ธานี - หาดใหญ่)</option>
-                      <option value="Zone UPC-W1: นครปฐม - ราชบุรี">Zone UPC-W1: ภาคตะวันตก (นครปฐม - ราชบุรี - กาญจนบุรี)</option>
-                      <option value="Zone UPC-C1: พิษณุโลก - นครสวรรค์">Zone UPC-C1: ภาคกลางบน (พิษณุโลก - นครสวรรค์ - พิจิตร)</option>
-                    </>
-                  )}
-                </select>
-              </div>
-            </div>
-
-              {/* Lat/Long and Interactive Map Picker */}
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+              {/* Location & GPS Coordinates Section FIRST with Auto Zone Detection */}
+              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-3">
                 <div className="flex justify-between items-center">
-                  <label className="block font-bold text-slate-700 text-xs">🗺️ กำหนดพิกัดสถานที่ติดตั้ง (GPS Coordinates):</label>
+                  <label className="block font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                    <span className="text-amber-600">🗺️</span>
+                    <span>1. เลือกพิกัดสถานที่ติดตั้ง (GPS Coordinates) & ปักหมุด GIS:</span>
+                  </label>
                   <button
                     type="button"
                     onClick={() => setShowMapPicker(true)}
-                    className="v-btn-primary py-1 px-2.5 text-[10px] flex items-center gap-1 font-bold shadow-xs cursor-pointer"
+                    className="v-btn-primary py-1 px-2.5 text-[10px] flex items-center gap-1 font-bold shadow-xs cursor-pointer bg-amber-500 hover:bg-amber-600 text-slate-900 border-0"
                   >
                     <span>📍 ปักหมุดเลือกพิกัดบนแผนที่ (ฟรี GIS)</span>
                   </button>
@@ -1003,7 +963,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       type="text"
                       placeholder="เช่น 13.75633"
                       value={mLat}
-                      onChange={(e) => setMLat(e.target.value)}
+                      onChange={(e) => handleUpdateCoordinates(e.target.value, mLng)}
                       className="v-input w-full py-1.5 font-mono text-xs bg-white"
                     />
                   </div>
@@ -1013,7 +973,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       type="text"
                       placeholder="เช่น 100.50177"
                       value={mLng}
-                      onChange={(e) => setMLng(e.target.value)}
+                      onChange={(e) => handleUpdateCoordinates(mLat, e.target.value)}
                       className="v-input w-full py-1.5 font-mono text-xs bg-white"
                     />
                   </div>
@@ -1028,6 +988,126 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <MapPin className="h-3 w-3 text-blue-500" />
                   <span>เปิด Google Maps ตรวจสอบตำแหน่งพิกัดบ้านลูกค้า ↗</span>
                 </a>
+
+                {/* Region & Auto Zone selection derived from GPS */}
+                <div className="pt-2.5 border-t border-amber-500/20 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block font-bold text-slate-800 text-xs">🌏 โซนพื้นที่ให้บริการ (ระบุตาม GPS อัตโนมัติ):</label>
+                    {autoZoneMessage && (
+                      <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300 animate-pulse">
+                        {autoZoneMessage}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMRegion('BKK');
+                        setMZone('Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)');
+                        setAutoZoneMessage('');
+                      }}
+                      className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-xs border cursor-pointer transition ${
+                        mRegion === 'BKK' 
+                          ? 'bg-amber-500 text-slate-900 border-amber-600 shadow-xs' 
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      🏙️ BKK (กรุงเทพฯ และปริมณฑล)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMRegion('UPC');
+                        setMZone('Zone UPC-N1: เชียงใหม่ - ลำพูน');
+                        setAutoZoneMessage('');
+                      }}
+                      className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-xs border cursor-pointer transition ${
+                        mRegion === 'UPC' 
+                          ? 'bg-amber-500 text-slate-900 border-amber-600 shadow-xs' 
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      🏞️ UPC (ต่างจังหวัด / ภูมิภาค)
+                    </button>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block font-bold text-slate-700 text-xs">📍 เลือกโซนพื้นที่ให้บริการ ({mRegion}):</label>
+                    <select
+                      value={mZone}
+                      onChange={(e) => {
+                        setMZone(e.target.value);
+                        setAutoZoneMessage('');
+                      }}
+                      className="v-input w-full py-2 bg-white font-semibold text-slate-800 border-amber-500/40"
+                    >
+                      {mRegion === 'BKK' ? (
+                        <>
+                          <option value="Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)">Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)</option>
+                          <option value="Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)">Zone 2: นนทบุรี (ราชพฤกษ์ - ปากเกร็ด - แจ้งวัฒนะ)</option>
+                          <option value="Zone 3: ปทุมธานี (รังสิต - ลำลูกกา)">Zone 3: ปทุมธานี (รังสิต - คลองหลวง - ลำลูกกา)</option>
+                          <option value="Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์)">Zone 4: สมุทรปราการ (เทพารักษ์ - บางพลี - ศรีนครินทร์)</option>
+                          <option value="Zone 5: กรุงเทพฯ ฝั่งธนบุรี (ตลิ่งชัน - บางแค)">Zone 5: กรุงเทพฯ ฝั่งธนบุรี (ตลิ่งชัน - บางแค - เพชรเกษม)</option>
+                          <option value="Zone 6: กรุงเทพฯ ตอนเหนือ (จตุจักร - ลาดพร้าว)">Zone 6: กรุงเทพฯ ตอนเหนือ (จตุจักร - ลาดพร้าว - สายไหม)</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value="Zone UPC-N1: เชียงใหม่ - ลำพูน">Zone UPC-N1: ภาคเหนือ (เชียงใหม่ - ลำพูน - เชียงราย)</option>
+                          <option value="Zone UPC-NE1: ขอนแก่น - อุดรธานี">Zone UPC-NE1: ภาคอีสาน (ขอนแก่น - อุดรธานี - นครราชสีมา)</option>
+                          <option value="Zone UPC-E1: ชลบุรี - ระยอง">Zone UPC-E1: ภาคตะวันออก (ชลบุรี - พัทยา - ระยอง)</option>
+                          <option value="Zone UPC-S1: ภูเก็ต - สุราษฎร์ธานี">Zone UPC-S1: ภาคใต้ (ภูเก็ต - สุราษฎร์ธานี - หาดใหญ่)</option>
+                          <option value="Zone UPC-W1: นครปฐม - ราชบุรี">Zone UPC-W1: ภาคตะวันตก (นครปฐม - ราชบุรี - กาญจนบุรี)</option>
+                          <option value="Zone UPC-C1: พิษณุโลก - นครสวรรค์">Zone UPC-C1: ภาคกลางบน (พิษณุโลก - นครสวรรค์ - พิจิตร)</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Service & Category Grouping Row (2.0 -> 3.0) AFTER Location is selected */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700 text-xs flex items-center gap-1">
+                    <span className="bg-amber-500 text-slate-900 px-1.5 py-0.2 rounded text-[10px] font-black">1.0</span>
+                    <span>เลือกหมวดหมู่งานติดตั้ง (Category Group):</span>
+                  </label>
+                  <select
+                    value={mCategoryCode}
+                    onChange={(e) => handleCategoryCodeChange(e.target.value)}
+                    className="v-input w-full py-2 bg-white border-slate-300 font-semibold text-slate-800"
+                  >
+                    {CATEGORY_GROUPS.map((cg) => (
+                      <option key={cg.code} value={cg.code}>
+                        {cg.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-700 text-xs flex items-center gap-1">
+                    <span className="bg-slate-800 text-white px-1.5 py-0.2 rounded text-[10px] font-black">2.0</span>
+                    <span>เลือกบริการงานติดตั้ง (Service Item):</span>
+                  </label>
+                  <select
+                    value={mServiceId}
+                    onChange={(e) => setMServiceId(e.target.value)}
+                    className="v-input w-full py-2 bg-white font-medium text-slate-800"
+                  >
+                    {filteredServicesForModal.length === 0 ? (
+                      <option value="">-- ไม่พบบริการในหมวดหมู่นี้ --</option>
+                    ) : (
+                      filteredServicesForModal.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          [{s.category}] {s.name} (Min Level: {s.requiredSkillLevel})
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
               </div>
 
               {/* Date & Time slot */}
@@ -1228,8 +1308,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           initialLat={parseFloat(mLat) || 13.75633}
           initialLng={parseFloat(mLng) || 100.50177}
           onSelectCoordinates={(lat, lng) => {
-            setMLat(String(lat));
-            setMLng(String(lng));
+            handleUpdateCoordinates(String(lat), String(lng));
           }}
           onClose={() => setShowMapPicker(false)}
         />

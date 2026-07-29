@@ -211,14 +211,27 @@ export const InternalChatView: React.FC<InternalChatViewProps> = ({
                 ช่างติดตั้งได้รับใบงานจองผ่านระบบแจ้งเตือนไลน์ส่วนตัวประสานงาน
               </p>
               
-              <div className="bg-white p-2 rounded-lg border border-emerald-500/20 text-center space-y-1">
-                <img 
-                  src="/line_qr.svg" 
-                  alt="LINE QR Code" 
-                  className="w-16 h-16 mx-auto rounded object-contain border border-emerald-500/20 p-0.5 bg-white"
-                />
-                <span className="text-[9px] block font-bold text-emerald-700">@vfixq_line</span>
-              </div>
+              <a
+                href="https://lin.ee/xm7zN6c"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative z-10 bg-white p-3 rounded-xl border-2 border-emerald-500/30 text-center space-y-2 block hover:border-emerald-500 hover:shadow-md transition-all duration-300 cursor-pointer group no-underline hover:scale-102"
+                title="กดเพื่อแอด LINE OA https://lin.ee/xm7zN6c"
+              >
+                <div className="relative inline-block">
+                  <img 
+                    src="/line_qr.png" 
+                    alt="LINE QR Code" 
+                    className="w-16 h-16 mx-auto rounded-lg object-contain border border-emerald-500/20 p-1 bg-white group-hover:scale-105 transition-transform"
+                  />
+                </div>
+                <div>
+                  <span className="text-[10px] block font-extrabold text-emerald-700">@vfixq_line</span>
+                  <span className="inline-flex items-center justify-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-md mt-1 shadow-xs transition-all">
+                    💬 คลิกเปิด LINE OA ↗
+                  </span>
+                </div>
+              </a>
             </div>
           </div>
         ) : (

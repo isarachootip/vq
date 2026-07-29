@@ -1031,10 +1031,13 @@ export function App() {
           {activeTab === 'zone-manager' && (
             <ZoneManager
               zones={zones}
+              bookings={bookings}
+              technicians={technicians}
               onAddZone={handleAddZone}
               onAddMultipleZones={handleAddMultipleZones}
               onUpdateZone={handleUpdateZone}
               onDeleteZone={handleDeleteZone}
+              onDispatchToKanna={handleDispatchToKanna}
             />
           )}
 

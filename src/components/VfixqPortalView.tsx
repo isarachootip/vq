@@ -444,22 +444,23 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
           </div>
 
           {/* Categories Grid Selector (15 Categories - styled premium) */}
-          <div className="v-panel p-5 bg-white space-y-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              ค้นหาตามหมวดหมู่งานติดตั้งและบริการทั้งหมด (15 Categories)
+          <div className="v-panel p-5 bg-white space-y-4 shadow-sm border border-slate-200/80 rounded-2xl">
+            <h3 className="text-sm sm:text-base font-bold text-slate-700 tracking-wide flex items-center gap-2">
+              <span>ค้นหาตามหมวดหมู่งานติดตั้งและบริการทั้งหมด</span>
+              <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">15 Categories</span>
             </h3>
             
-            <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 gap-3">
+            <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 gap-2.5 sm:gap-3">
               <button
                 onClick={() => setActiveCategory('ทั้งหมด')}
-                className={`p-2.5 rounded-lg text-center text-xs font-bold transition cursor-pointer border ${
+                className={`p-3 rounded-xl text-center transition-all cursor-pointer border flex flex-col items-center justify-center min-h-[76px] sm:min-h-[84px] gap-1.5 ${
                   activeCategory === 'ทั้งหมด' 
-                    ? 'bg-blue-600 text-slate-900 border-blue-600 font-black' 
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                    ? 'bg-amber-500 text-slate-950 border-amber-500 font-bold shadow-md scale-102' 
+                    : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 hover:border-amber-400'
                 }`}
               >
-                <div>🏡</div>
-                <span className="block mt-1 truncate">ทั้งหมด</span>
+                <div className="text-xl sm:text-2xl">🏡</div>
+                <span className="block text-xs sm:text-sm font-bold leading-tight">ทั้งหมด</span>
               </button>
 
               {categoriesGrid.map((cat) => {
@@ -468,14 +469,14 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
                   <button
                     key={cat.name}
                     onClick={() => setActiveCategory(cat.name)}
-                    className={`p-2.5 rounded-lg text-center text-xs font-bold transition cursor-pointer border ${
+                    className={`p-2.5 sm:p-3 rounded-xl text-center transition-all cursor-pointer border flex flex-col items-center justify-center min-h-[76px] sm:min-h-[84px] gap-1.5 ${
                       isSelected 
-                        ? 'bg-blue-600 text-slate-900 border-blue-600 font-black' 
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+                        ? 'bg-amber-500 text-slate-950 border-amber-500 font-bold shadow-md scale-102' 
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-800 border-slate-200/80 hover:border-amber-400'
                     }`}
                   >
-                    <div className="text-base">{cat.icon}</div>
-                    <span className="block mt-1 truncate text-[10px]">{cat.name}</span>
+                    <div className="text-xl sm:text-2xl">{cat.icon}</div>
+                    <span className="block text-xs sm:text-[13px] font-semibold leading-tight line-clamp-2 px-0.5">{cat.name}</span>
                   </button>
                 );
               })}
@@ -1289,14 +1290,30 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
         </div>
 
         <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row items-center gap-4">
-          <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm w-fit shrink-0 text-center">
-            <img 
-              src="/line_qr.svg" 
-              alt="LINE QR Code" 
-              className="w-20 h-20 mx-auto rounded-lg object-contain border border-emerald-500/20 p-1 bg-white shadow-xs"
-            />
-            <span className="text-[10px] block mt-1.5 font-bold text-emerald-600 tracking-wider">@vservice_line</span>
-          </div>
+          <a
+            href="https://lin.ee/xm7zN6c"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative z-10 bg-white p-3 rounded-2xl border-2 border-emerald-500/40 shadow-sm w-fit shrink-0 text-center hover:border-emerald-500 hover:shadow-lg transition-all duration-300 cursor-pointer group block no-underline bg-gradient-to-b from-white to-emerald-50/30 hover:scale-102"
+            title="กดเพื่อเปิดแอป LINE เพิ่มเพื่อน https://lin.ee/xm7zN6c"
+          >
+            <div className="relative inline-block">
+              <img 
+                src="/line_qr.png" 
+                alt="LINE QR Code" 
+                className="w-24 h-24 mx-auto rounded-xl object-contain border border-emerald-500/30 p-1.5 bg-white shadow-xs group-hover:scale-105 transition-transform"
+              />
+              <span className="absolute -bottom-1 -right-1 bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-md flex items-center gap-0.5">
+                LINE 💬
+              </span>
+            </div>
+            <div className="mt-2 space-y-1">
+              <span className="text-xs block font-black text-emerald-700 tracking-wider">@vservice_line</span>
+              <span className="inline-flex items-center justify-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg shadow-sm transition-all group-hover:bg-emerald-600">
+                💬 แอด LINE เพิ่มเพื่อน (คลิกที่นี่) ↗
+              </span>
+            </div>
+          </a>
           <div className="space-y-1.5">
             <div className="font-bold text-slate-800">ดาวน์โหลดแอปช่าง vService</div>
             <div className="flex items-center gap-2">
