@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { QueueBooking, Technician, ServiceItem } from '../types';
 import { CustomDateInput } from './CustomDateInput';
+import { InteractiveMapPickerModal } from './InteractiveMapPickerModal';
 import { 
   Clock, 
   CheckCircle2, 
@@ -73,6 +74,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [mTimeSlot, setMTimeSlot] = useState<string>('Morning (09:00 - 12:00)');
   const [mSource, setMSource] = useState<'Line OA' | 'Call Center 1308' | 'Walk-in'>('Call Center 1308');
   const [mTicketError, setMTicketError] = useState<string>('');
+  const [showMapPicker, setShowMapPicker] = useState<boolean>(false);
 
   const generateRandomTicketNo = () => {
     // Generate 10-digit numeric ticket number
@@ -937,7 +939,53 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   )}
                 </select>
               </div>
-            </div>
+
+              {/* Lat/Long and Interactive Map Picker */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
+                <div className="flex justify-between items-center">
+                  <label className="block font-bold text-slate-700 text-xs">🗺️ กำหนดพิกัดสถานที่ติดตั้ง (GPS Coordinates):</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowMapPicker(true)}
+                    className="v-btn-primary py-1 px-2.5 text-[10px] flex items-center gap-1 font-bold shadow-xs cursor-pointer"
+                  >
+                    <span>📍 ปักหมุดเลือกพิกัดบนแผนที่ (ฟรี GIS)</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="block font-bold text-slate-600 text-[11px]">📍 ละติจูด (Latitude):</label>
+                    <input
+                      type="text"
+                      placeholder="เช่น 13.75633"
+                      value={mLat}
+                      onChange={(e) => setMLat(e.target.value)}
+                      className="v-input w-full py-1.5 font-mono text-xs bg-white"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block font-bold text-slate-600 text-[11px]">📍 ลองจิจูด (Longitude):</label>
+                    <input
+                      type="text"
+                      placeholder="เช่น 100.50177"
+                      value={mLng}
+                      onChange={(e) => setMLng(e.target.value)}
+                      className="v-input w-full py-1.5 font-mono text-xs bg-white"
+                    />
+                  </div>
+                </div>
+
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${mLat || '13.75633'},${mLng || '100.50177'}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[10px] text-blue-600 font-bold hover:underline flex items-center gap-1 justify-end"
+                >
+                  <MapPin className="h-3 w-3 text-blue-500" />
+                  <span>เปิด Google Maps ตรวจสอบตำแหน่งพิกัดบ้านลูกค้า ↗</span>
+                </a>
+              </div>
 
               {/* Date & Time slot */}
               <div className="grid grid-cols-2 gap-4">
@@ -1129,6 +1177,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
         </div>
+      {/* Interactive OpenStreetMap GIS Picker Modal */}
+      {showMapPicker && (
+        <InteractiveMapPickerModal
+          initialLat={parseFloat(mLat) || 13.75633}
+          initialLng={parseFloat(mLng) || 100.50177}
+          onSelectCoordinates={(lat, lng) => {
+            setMLat(String(lat));
+            setMLng(String(lng));
+          }}
+          onClose={() => setShowMapPicker(false)}
+        />
       )}
 
     </div>
