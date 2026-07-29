@@ -939,6 +939,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   )}
                 </select>
               </div>
+            </div>
 
               {/* Lat/Long and Interactive Map Picker */}
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5">
@@ -1177,6 +1178,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
         </div>
+      )}
+
       {/* Interactive OpenStreetMap GIS Picker Modal */}
       {showMapPicker && (
         <InteractiveMapPickerModal

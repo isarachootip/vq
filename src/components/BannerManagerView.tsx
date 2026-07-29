@@ -239,6 +239,8 @@ export const BannerManagerView: React.FC<BannerManagerViewProps> = ({
                         if (!file) return;
                         setUploadError('');
                         setIsUploading(true);
+
+                        const convertToBase64 = (f: File) => {
                           setUploadError('');
                           const reader = new FileReader();
                           reader.onload = (event) => {
