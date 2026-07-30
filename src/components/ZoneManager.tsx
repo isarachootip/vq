@@ -16,7 +16,9 @@ import {
   Filter, 
   ExternalLink,
   Send,
-  Eye
+  Eye,
+  LayoutGrid,
+  List
 } from 'lucide-react';
 
 interface ZoneManagerProps {
@@ -41,6 +43,7 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
   onDispatchToKanna,
 }) => {
   const [activeViewMode, setActiveViewMode] = useState<'monitor' | 'master'>('monitor');
+  const [monitorSubView, setMonitorSubView] = useState<'card' | 'list'>('card');
   const [searchQuery, setSearchQuery] = useState('');
   const [regionFilter, setRegionFilter] = useState<'ALL' | 'BKK' | 'UPC'>('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'NORMAL' | 'MEDIUM' | 'HIGH'>('ALL');
@@ -618,10 +621,10 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
         </div>
       )}
 
-      {/* VIEW MODE 1: ZONE MONITOR CARDS DASHBOARD */}
+      {/* VIEW MODE 1: ZONE MONITOR CARDS & MONITOR LIST DASHBOARD */}
       {activeViewMode === 'monitor' && (
         <div className="space-y-5">
-          {/* Filters & Search Control Bar */}
+          {/* Filters, Search, and Sub-View Toggle Control Bar */}
           <div className="v-panel p-4 bg-white border border-slate-200 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-xs">
             <div className="relative flex-1 max-w-md">
               <input
@@ -634,7 +637,35 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
               <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-600">
+            <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-600">
+              {/* Card / List Sub-View Switcher for Zone Monitor */}
+              <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button
+                  onClick={() => setMonitorSubView('card')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border-0 ${
+                    monitorSubView === 'card'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 bg-transparent'
+                  }`}
+                  title="แสดงมุมมองการ์ดมอนิเตอร์ (Card Grid)"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                  <span>🎴 การ์ด (Card)</span>
+                </button>
+                <button
+                  onClick={() => setMonitorSubView('list')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border-0 ${
+                    monitorSubView === 'list'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 bg-transparent'
+                  }`}
+                  title="แสดงมุมมองตารางรายการ (List Table)"
+                >
+                  <List className="h-4 w-4" />
+                  <span>📋 รายการ (List)</span>
+                </button>
+              </div>
+
               <span className="flex items-center gap-1 text-slate-400">
                 <Filter className="h-3.5 w-3.5" />
                 <span>ภูมิภาค:</span>
@@ -667,96 +698,248 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
             </div>
           </div>
 
-          {/* Zone Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredZones.length === 0 ? (
-              <div className="v-panel p-12 text-center text-slate-400 col-span-full border border-dashed border-slate-200">
-                ไม่พบข้อมูลโซนตรงตามเงื่อนไขค้นหา
-              </div>
-            ) : (
-              filteredZones.map((zone) => {
-                const zBookings = getBookingsForZone(zone);
-                const zTechs = getTechniciansForZone(zone);
-                const health = getZoneHealthStatus(zBookings);
-                const pendingCount = zBookings.filter((b) => b.status === 'Pending Dispatch').length;
+          {/* SUB-VIEW 1: ZONE CARDS GRID */}
+          {monitorSubView === 'card' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fadeIn">
+              {filteredZones.length === 0 ? (
+                <div className="v-panel p-12 text-center text-slate-400 col-span-full border border-dashed border-slate-200">
+                  ไม่พบข้อมูลโซนตรงตามเงื่อนไขค้นหา
+                </div>
+              ) : (
+                filteredZones.map((zone) => {
+                  const zBookings = getBookingsForZone(zone);
+                  const zTechs = getTechniciansForZone(zone);
+                  const health = getZoneHealthStatus(zBookings);
+                  const pendingCount = zBookings.filter((b) => b.status === 'Pending Dispatch').length;
 
-                return (
-                  <div
-                    key={zone.id}
-                    onClick={() => {
-                      setSelectedDetailZone(zone);
-                      setDetailTab('bookings');
-                    }}
-                    className="v-panel bg-white p-5 border border-slate-200 hover:border-blue-500 rounded-2xl shadow-xs hover:shadow-lg transition-all duration-300 cursor-pointer group flex flex-col justify-between relative overflow-hidden"
-                  >
-                    {/* Top Status Bar */}
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-black text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-xs">
-                              {zone.code}
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              {zone.name.includes('[BKK]') ? '🏙️ BKK' : zone.name.includes('[UPC]') ? '🏞️ UPC' : '🗺️ ZONE'}
-                            </span>
+                  return (
+                    <div
+                      key={zone.id}
+                      onClick={() => {
+                        setSelectedDetailZone(zone);
+                        setDetailTab('bookings');
+                      }}
+                      className="v-panel bg-white p-5 border border-slate-200 hover:border-blue-500 rounded-2xl shadow-xs hover:shadow-lg transition-all duration-300 cursor-pointer group flex flex-col justify-between relative overflow-hidden"
+                    >
+                      {/* Top Status Bar */}
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-black text-blue-600 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded text-xs">
+                                {zone.code}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                {zone.name.includes('[BKK]') ? '🏙️ BKK' : zone.name.includes('[UPC]') ? '🏞️ UPC' : '🗺️ ZONE'}
+                              </span>
+                            </div>
+                            <h3 className="font-extrabold text-slate-800 text-sm mt-1 group-hover:text-blue-600 transition-colors line-clamp-1">
+                              {zone.name}
+                            </h3>
                           </div>
-                          <h3 className="font-extrabold text-slate-800 text-sm mt-1 group-hover:text-blue-600 transition-colors line-clamp-1">
-                            {zone.name}
-                          </h3>
+
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full border shrink-0 ${health.color}`}>
+                            {health.label}
+                          </span>
                         </div>
 
-                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full border shrink-0 ${health.color}`}>
-                          {health.label}
+                        {/* Queue & Capacity Metrics */}
+                        <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                          <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
+                            <span className="text-[10px] text-slate-400 block font-bold">คิวรวม</span>
+                            <strong className="text-sm font-extrabold text-slate-800">{zBookings.length}</strong>
+                          </div>
+                          <div className="p-2 rounded-xl bg-amber-50 border border-amber-100">
+                            <span className="text-[10px] text-amber-700 block font-bold">รอจัดสรร</span>
+                            <strong className="text-sm font-extrabold text-amber-900">{pendingCount}</strong>
+                          </div>
+                          <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-100">
+                            <span className="text-[10px] text-emerald-700 block font-bold">ทีมช่าง</span>
+                            <strong className="text-sm font-extrabold text-emerald-900">{zTechs.length} ทีม</strong>
+                          </div>
+                        </div>
+
+                        {/* Capacity load bar */}
+                        <div className="space-y-1 pt-1">
+                          <div className="flex justify-between text-[10px] text-slate-400 font-bold">
+                            <span>ภาระงานในโซน (Load Capacity)</span>
+                            <span>{Math.min(100, zBookings.length * 20)}%</span>
+                          </div>
+                          <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-500 rounded-full ${
+                                zBookings.length >= 5 ? 'bg-rose-500' : zBookings.length >= 2 ? 'bg-amber-500' : 'bg-emerald-500'
+                              }`}
+                              style={{ width: `${Math.min(100, Math.max(10, zBookings.length * 20))}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom CTA Button */}
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-blue-600 font-bold group-hover:text-blue-700">
+                        <span className="flex items-center gap-1 text-[11px]">
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>คลิกเพื่อดูรายละเอียดเชิงลึก</span>
                         </span>
-                      </div>
-
-                      {/* Queue & Capacity Metrics */}
-                      <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                        <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
-                          <span className="text-[10px] text-slate-400 block font-bold">คิวรวม</span>
-                          <strong className="text-sm font-extrabold text-slate-800">{zBookings.length}</strong>
-                        </div>
-                        <div className="p-2 rounded-xl bg-amber-50 border border-amber-100">
-                          <span className="text-[10px] text-amber-700 block font-bold">รอจัดสรร</span>
-                          <strong className="text-sm font-extrabold text-amber-900">{pendingCount}</strong>
-                        </div>
-                        <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-100">
-                          <span className="text-[10px] text-emerald-700 block font-bold">ทีมช่าง</span>
-                          <strong className="text-sm font-extrabold text-emerald-900">{zTechs.length} ทีม</strong>
-                        </div>
-                      </div>
-
-                      {/* Capacity load bar */}
-                      <div className="space-y-1 pt-1">
-                        <div className="flex justify-between text-[10px] text-slate-400 font-bold">
-                          <span>ภาระงานในโซน (Load Capacity)</span>
-                          <span>{Math.min(100, zBookings.length * 20)}%</span>
-                        </div>
-                        <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                          <div 
-                            className={`h-full transition-all duration-500 rounded-full ${
-                              zBookings.length >= 5 ? 'bg-rose-500' : zBookings.length >= 2 ? 'bg-amber-500' : 'bg-emerald-500'
-                            }`}
-                            style={{ width: `${Math.min(100, Math.max(10, zBookings.length * 20))}%` }}
-                          />
-                        </div>
+                        <ChevronRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
+                  );
+                })
+              )}
+            </div>
+          )}
 
-                    {/* Bottom CTA Button */}
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-blue-600 font-bold group-hover:text-blue-700">
-                      <span className="flex items-center gap-1 text-[11px]">
-                        <Eye className="h-3.5 w-3.5" />
-                        <span>คลิกเพื่อดูรายละเอียดเชิงลึก</span>
-                      </span>
-                      <ChevronRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+          {/* SUB-VIEW 2: ZONE MONITOR LIST TABLE */}
+          {monitorSubView === 'list' && (
+            <div className="v-panel overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-xs animate-fadeIn">
+              <div className="overflow-x-auto">
+                <table className="v-table w-full text-xs text-left">
+                  <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                    <tr>
+                      <th className="px-4 py-3.5">รหัสโซน (Code)</th>
+                      <th className="px-4 py-3.5">ขอบเขตพื้นที่บริการ (Zone Name)</th>
+                      <th className="px-4 py-3.5 text-center">สถานะสุขภาพ (Health)</th>
+                      <th className="px-4 py-3.5 text-center">คิวรวม / รอจัดสรร / ทีมช่าง</th>
+                      <th className="px-4 py-3.5">ภาระงาน (Load Capacity)</th>
+                      <th className="px-4 py-3.5">รหัสไปรษณีย์</th>
+                      <th className="px-4 py-3.5 text-right">จัดการ (Actions)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredZones.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-8 text-center text-slate-400">
+                          ไม่พบข้อมูลโซนตรงตามเงื่อนไขค้นหา
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredZones.map((zone) => {
+                        const zBookings = getBookingsForZone(zone);
+                        const zTechs = getTechniciansForZone(zone);
+                        const health = getZoneHealthStatus(zBookings);
+                        const pendingCount = zBookings.filter((b) => b.status === 'Pending Dispatch').length;
+
+                        return (
+                          <tr key={zone.id} className="hover:bg-slate-50/80 transition-colors">
+                            {/* Code */}
+                            <td className="px-4 py-3">
+                              <span className="font-mono font-black text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded text-xs">
+                                {zone.code}
+                              </span>
+                            </td>
+
+                            {/* Zone Name */}
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase">
+                                  {zone.name.includes('[BKK]') ? '🏙️ BKK' : zone.name.includes('[UPC]') ? '🏞️ UPC' : '🗺️ ZONE'}
+                                </span>
+                                <strong className="text-slate-800 text-xs">{zone.name}</strong>
+                              </div>
+                              {zone.description && (
+                                <span className="text-[10px] text-slate-400 block line-clamp-1">{zone.description}</span>
+                              )}
+                            </td>
+
+                            {/* Health Badge */}
+                            <td className="px-4 py-3 text-center">
+                              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${health.color}`}>
+                                {health.label}
+                              </span>
+                            </td>
+
+                            {/* Metrics */}
+                            <td className="px-4 py-3 text-center">
+                              <div className="flex items-center justify-center space-x-2 text-[11px]">
+                                <span className="font-bold text-slate-800">คิวรวม {zBookings.length}</span>
+                                <span className="text-slate-300">|</span>
+                                <span className="font-bold text-amber-700">รอจัดสรร {pendingCount}</span>
+                                <span className="text-slate-300">|</span>
+                                <span className="font-bold text-emerald-700">ช่าง {zTechs.length} ทีม</span>
+                              </div>
+                            </td>
+
+                            {/* Capacity Load Progress Bar */}
+                            <td className="px-4 py-3 w-40">
+                              <div className="space-y-1">
+                                <div className="flex justify-between text-[10px] text-slate-500 font-bold">
+                                  <span>Load</span>
+                                  <span>{Math.min(100, zBookings.length * 20)}%</span>
+                                </div>
+                                <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                  <div 
+                                    className={`h-full rounded-full ${
+                                      zBookings.length >= 5 ? 'bg-rose-500' : zBookings.length >= 2 ? 'bg-amber-500' : 'bg-emerald-500'
+                                    }`}
+                                    style={{ width: `${Math.min(100, Math.max(10, zBookings.length * 20))}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Zip Codes */}
+                            <td className="px-4 py-3">
+                              <div className="flex flex-wrap gap-1 max-w-xs">
+                                {zone.coverageZipcodes.length === 0 ? (
+                                  <span className="text-slate-400 italic text-[10px]">ไม่จำกัด</span>
+                                ) : (
+                                  zone.coverageZipcodes.slice(0, 3).map((zip) => (
+                                    <span key={zip} className="px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 text-[10px]">
+                                      {zip}
+                                    </span>
+                                  ))
+                                )}
+                                {zone.coverageZipcodes.length > 3 && (
+                                  <span className="text-[9px] text-slate-400 font-bold">+{zone.coverageZipcodes.length - 3}</span>
+                                )}
+                              </div>
+                            </td>
+
+                            {/* Actions */}
+                            <td className="px-4 py-3 text-right">
+                              <div className="flex items-center justify-end space-x-1">
+                                <button
+                                  onClick={() => {
+                                    setSelectedDetailZone(zone);
+                                    setDetailTab('bookings');
+                                  }}
+                                  className="px-2.5 py-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold border border-blue-200 transition-colors flex items-center gap-1 cursor-pointer"
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                  <span>ดูรายละเอียด</span>
+                                </button>
+
+                                <button
+                                  onClick={() => handleStartEdit(zone)}
+                                  title="แก้ไขโซน"
+                                  className="p-1.5 text-slate-400 hover:text-amber-600 rounded hover:bg-amber-50 cursor-pointer"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`คุณต้องการลบโซนพื้นที่ ${zone.name} หรือไม่?`)) {
+                                      onDeleteZone(zone.id);
+                                    }
+                                  }}
+                                  title="ลบโซน"
+                                  className="p-1.5 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 cursor-pointer"
+                                >
+                                  <Trash className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
