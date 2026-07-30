@@ -1,6 +1,18 @@
 import React, { useState, useRef } from 'react';
 import type { Technician, SkillCategory, Branch } from '../types';
-import { Users, Star, MapPin, Search, Upload, Download, CheckCircle, Trash } from 'lucide-react';
+import { 
+  Users, 
+  Star, 
+  MapPin, 
+  Search, 
+  Upload, 
+  Download, 
+  CheckCircle, 
+  Trash, 
+  LayoutGrid, 
+  List, 
+  Pencil 
+} from 'lucide-react';
 
 interface SkillMatrixViewProps {
   technicians: Technician[];
@@ -17,6 +29,7 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
   onAddMultipleTechnicians,
   onDeleteTechnician,
 }) => {
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedTier, setSelectedTier] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -100,33 +113,35 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
         tier: 'Gold',
         rating: 4.90,
-        completedJobs: 95,
+        completedJobs: 110,
         penaltyPoints: 0,
         activePenaltiesCount: 0,
-        primaryZone: 'Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ - บางบัวทอง)',
-        secondaryZones: ['Zone 3: ปทุมธานี (รังสิต - ลำลูกกา - คลองหลวง)'],
-        skills: [{ category: 'Air Condition & HVAC', level: 3, isCertified: true }],
+        primaryZone: 'Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)',
+        secondaryZones: [],
+        skills: [
+          { category: 'Air Condition & HVAC', level: 3, isCertified: true },
+          { category: 'Electrical & Smart Home', level: 2, isCertified: true },
+        ],
         dailyCapacityHours: 8,
         bookedHoursToday: 0,
         status: 'Available',
-        branchId: 'br-03',
-      }
+        branchId: 'br-02',
+      },
     ];
 
-    const nonDuplicateSamples = sampleTechs.filter(
+    const nonDuplicates = sampleTechs.filter(
       (sample) => !technicians.some((t) => t.code === sample.code)
     );
 
-    if (nonDuplicateSamples.length === 0) {
-      alert('ข้อมูลช่างตัวอย่างชุดนี้ได้รับการนำเข้าแล้วทั้งหมด');
+    if (nonDuplicates.length === 0) {
+      alert('ข้อมูลทีมช่างตัวอย่างชุดนี้ได้รับการนำเข้าครบถ้วนแล้ว');
       return;
     }
 
-    onAddMultipleTechnicians(nonDuplicateSamples);
-    alert(`นำเข้าข้อมูลช่างตัวอย่างสำเร็จ ${nonDuplicateSamples.length} ทีม!`);
+    onAddMultipleTechnicians(nonDuplicates);
+    alert(`นำเข้าทีมช่างตัวอย่าง ${nonDuplicates.length} ทีม สำเร็จ!`);
   };
 
-  // CSV/JSON File Import
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -159,22 +174,11 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
         const validated: Technician[] = parsedData
           .filter((item: any) => item.code && item.name)
           .map((item: any, idx: number) => {
-            // Skill parser
-            let skillsList = [];
+            let parsedSkills: any[] = [];
             if (item.skills && Array.isArray(item.skills)) {
-              skillsList = item.skills;
-            } else if (item.primarySkillCategory) {
-              skillsList.push({
-                category: item.primarySkillCategory as SkillCategory,
-                level: Number(item.primarySkillLevel || 1) as 1 | 2 | 3,
-                isCertified: String(item.isCertified).toLowerCase() === 'true',
-              });
+              parsedSkills = item.skills;
             } else {
-              skillsList.push({
-                category: 'Built-in Furniture' as SkillCategory,
-                level: 1 as 1 | 2 | 3,
-                isCertified: false,
-              });
+              parsedSkills = [{ category: 'Built-in Furniture', level: 2, isCertified: true }];
             }
 
             return {
@@ -182,19 +186,19 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
               code: String(item.code).toUpperCase().trim(),
               name: String(item.name).trim(),
               phone: String(item.phone || '080-000-0000').trim(),
-              avatar: String(item.avatar || 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=150').trim(),
-              tier: (item.tier || 'Silver') as Technician['tier'],
-              rating: Number(item.rating || 4.5),
-              completedJobs: Number(item.completedJobs || 0),
-              penaltyPoints: Number(item.penaltyPoints || 0),
-              activePenaltiesCount: Number(item.activePenaltiesCount || 0),
-              primaryZone: String(item.primaryZone || 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)').trim(),
-              secondaryZones: item.secondaryZones ? String(item.secondaryZones).split(';').map(z => z.trim()) : [],
-              skills: skillsList,
-              dailyCapacityHours: Number(item.dailyCapacityHours || 8),
+              avatar: String(item.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150'),
+              tier: (item.tier as any) || 'Silver',
+              rating: Number(item.rating) || 4.5,
+              completedJobs: Number(item.completedJobs) || 0,
+              penaltyPoints: Number(item.penaltyPoints) || 0,
+              activePenaltiesCount: 0,
+              primaryZone: String(item.primaryZone || 'Zone 1: กรุงเทพฯ').trim(),
+              secondaryZones: [],
+              skills: parsedSkills,
+              dailyCapacityHours: 8,
               bookedHoursToday: 0,
-              status: (item.status || 'Available') as Technician['status'],
-              branchId: item.branchId || undefined,
+              status: (item.status as any) || 'Available',
+              branchId: String(item.branchId || 'br-01').trim(),
             };
           });
 
@@ -213,7 +217,6 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
 
   const handleConfirmImport = () => {
     if (!importPreview) return;
-
     const uniqueImports = importPreview.filter(
       (imported) => !technicians.some((t) => t.code === imported.code)
     );
@@ -222,7 +225,7 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
       alert('ไม่สามารถนำเข้าได้ เนื่องจากรหัสช่างทั้งหมดมีอยู่ในระบบแล้ว');
     } else {
       onAddMultipleTechnicians(uniqueImports);
-      alert(`นำเข้าข้อมูลทีมช่างใหม่สำเร็จ ${uniqueImports.length} ทีม`);
+      alert(`นำเข้าข้อมูลช่างสำเร็จ ${uniqueImports.length} ทีม`);
     }
     setImportPreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -232,20 +235,21 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
     const template = [
       {
         code: 'T-GOLD-99',
-        name: 'ทีมช่างนำเข้าตัวอย่าง',
-        phone: '081-111-2222',
+        name: 'ทีมช่างทดสอบนำเข้า 1',
+        phone: '081-111-2233',
         tier: 'Gold',
+        rating: 4.85,
+        completedJobs: 50,
+        penaltyPoints: 0,
         primaryZone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)',
-        primarySkillCategory: 'Electrical & Smart Home',
-        primarySkillLevel: 3,
-        isCertified: true,
         branchId: 'br-01',
-      }
+        skills: [{ category: 'Built-in Furniture', level: 3, isCertified: true }],
+      },
     ];
     const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(template, null, 2));
     const downloadAnchor = document.createElement('a');
     downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute('download', 'technician_template.json');
+    downloadAnchor.setAttribute('download', 'technicians_template.json');
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -253,8 +257,8 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header & Filter Row */}
-      <div className="v-panel p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      {/* Header & Action Row */}
+      <div className="v-panel p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl shadow-xs">
         <div>
           <div className="flex items-center space-x-2">
             <Users className="h-6 w-6 text-blue-600" />
@@ -269,7 +273,7 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="v-btn-secondary py-1.5 flex items-center space-x-1 text-xs"
+            className="v-btn-secondary py-1.5 flex items-center space-x-1 text-xs cursor-pointer"
           >
             <Upload className="h-3.5 w-3.5" />
             <span>นำเข้าไฟล์ช่าง (.CSV / .JSON)</span>
@@ -284,7 +288,7 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
 
           <button
             onClick={handleLoadSampleData}
-            className="v-btn-secondary py-1.5 text-xs text-blue-600 border-blue-200 hover:bg-blue-50"
+            className="v-btn-secondary py-1.5 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 cursor-pointer"
           >
             โหลดช่างตัวอย่างด่วน
           </button>
@@ -293,7 +297,7 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
 
       {/* Import File Preview */}
       {importPreview && (
-        <div className="v-panel p-5 bg-blue-50/50 border-blue-200 space-y-3">
+        <div className="v-panel p-5 bg-blue-50/50 border-blue-200 space-y-3 rounded-2xl">
           <div className="flex items-center justify-between border-b border-blue-100 pb-2">
             <div className="flex items-center space-x-2 text-blue-800 font-bold text-sm">
               <CheckCircle className="h-4 w-4 text-blue-600" />
@@ -302,13 +306,13 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
             <div className="flex space-x-2">
               <button
                 onClick={() => setImportPreview(null)}
-                className="px-3 py-1 bg-white border border-slate-300 rounded text-xs text-slate-600 hover:bg-slate-50"
+                className="px-3 py-1 bg-white border border-slate-300 rounded text-xs text-slate-600 hover:bg-slate-50 cursor-pointer"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={handleConfirmImport}
-                className="px-3 py-1 bg-blue-600 rounded text-xs text-white hover:bg-blue-700 font-semibold"
+                className="px-3 py-1 bg-blue-600 rounded text-xs text-white hover:bg-blue-700 font-semibold cursor-pointer"
               >
                 ยืนยันการนำเข้าข้อมูล
               </button>
@@ -347,13 +351,13 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
       )}
 
       {importError && (
-        <div className="v-panel p-4 bg-rose-50 border-rose-200 text-rose-800 text-xs">
+        <div className="v-panel p-4 bg-rose-50 border-rose-200 text-rose-800 text-xs rounded-xl">
           <span>⚠️ {importError}</span>
         </div>
       )}
 
-      {/* Filter and Search Panel */}
-      <div className="v-panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white">
+      {/* Filter, Search, and View Mode Switcher Panel */}
+      <div className="v-panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl shadow-xs">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
             <input
@@ -361,7 +365,7 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
               placeholder="ค้นหาชื่อช่าง, รหัสช่าง, โซน..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="v-input w-48 md:w-64 pl-8"
+              className="v-input w-48 md:w-64 pl-8 text-xs py-1.5"
             />
             <Search className="h-3.5 w-3.5 text-slate-400 absolute left-2.5 top-2.5" />
           </div>
@@ -369,7 +373,7 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="v-input"
+            className="v-input py-1.5 text-xs"
           >
             <option value="ALL">ทุกหมวดหมู่ Skill</option>
             {categories.map((c) => (
@@ -380,7 +384,7 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
           <select
             value={selectedTier}
             onChange={(e) => setSelectedTier(e.target.value)}
-            className="v-input"
+            className="v-input py-1.5 text-xs"
           >
             <option value="ALL">ทุกระดับ Tier</option>
             <option value="Gold">Gold Tier</option>
@@ -389,242 +393,484 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
           </select>
         </div>
 
-        <button
-          onClick={handleDownloadTemplate}
-          className="text-xs text-slate-500 hover:text-slate-700 flex items-center space-x-1"
-        >
-          <Download className="h-3.5 w-3.5" />
-          <span>ดาวน์โหลดเทมเพลต JSON</span>
-        </button>
+        <div className="flex items-center gap-3 justify-between md:justify-end">
+          {/* Card / List View Mode Switcher */}
+          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button
+              onClick={() => setViewMode('card')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border-0 ${
+                viewMode === 'card'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 bg-transparent'
+              }`}
+              title="แสดงมุมมองการ์ด (Grid/Card View)"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              <span>🎴 การ์ด (Card)</span>
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border-0 ${
+                viewMode === 'list'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 bg-transparent'
+              }`}
+              title="แสดงมุมมองตารางรายการ (Table/List View)"
+            >
+              <List className="h-4 w-4" />
+              <span>📋 รายการ (List)</span>
+            </button>
+          </div>
+
+          <button
+            onClick={handleDownloadTemplate}
+            className="text-xs text-slate-500 hover:text-slate-700 flex items-center space-x-1 cursor-pointer shrink-0"
+          >
+            <Download className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">เทมเพลต JSON</span>
+          </button>
+        </div>
       </div>
 
-      {/* Technician Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTechs.map((tech) => (
-          <div
-            key={tech.id}
-            className="v-panel v-panel-hover p-5 flex flex-col justify-between space-y-4 bg-white"
-          >
-            {/* Top Profile Info */}
-            <div className="space-y-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  <img
-                    src={tech.avatar}
-                    alt={tech.name}
-                    className="h-12 w-12 rounded-lg object-cover border border-slate-200 shadow-sm"
-                  />
-                  <div>
-                    <h3 className="font-bold text-slate-800 text-sm line-clamp-1">{tech.name}</h3>
-                    <div className="flex items-center space-x-2 text-[11px] text-slate-500 mt-0.5">
-                      <span className="font-mono text-blue-600 font-semibold">{tech.code}</span>
-                      <span>•</span>
-                      <span className="text-slate-600 font-semibold">{getBranchName(tech.branchId)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getTierBadgeClass(tech.tier)}`}>
-                  {tech.tier}
-                </span>
-              </div>
-
-              {/* Performance Metrics Bar */}
-              <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-center text-xs">
-                <div>
-                  <div className="text-[10px] text-slate-400 font-semibold">คะแนนเรตติ้ง</div>
-                  <div className="font-bold text-amber-500 flex items-center justify-center space-x-0.5 mt-0.5">
-                    <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
-                    <span>{tech.rating}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] text-slate-400 font-semibold">งานสำเร็จ</div>
-                  <div className="font-bold text-slate-700 mt-0.5">{tech.completedJobs} งาน</div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] text-slate-400 font-semibold">คะแนนโดนปรับ</div>
-                  <div className={`font-bold mt-0.5 ${tech.penaltyPoints > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                    {tech.penaltyPoints} คะแนน
-                  </div>
-                </div>
-              </div>
-
-              {/* Service Zone */}
-              <div className="text-xs text-slate-600 flex items-start space-x-1.5 bg-slate-50/50 p-2 rounded border border-slate-100">
-                <MapPin className="h-3.5 w-3.5 text-blue-500 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-bold block text-slate-700">พื้นที่หลัก:</span>
-                  <span className="line-clamp-1">{tech.primaryZone}</span>
-                </div>
-              </div>
-
-              {/* Skill Matrix List */}
-              <div className="space-y-2 pt-2 border-t border-slate-100">
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  ระดับทักษะความสามารถ ({tech.skills.length} ทักษะ)
-                </div>
-                <div className="space-y-1">
-                  {tech.skills.map((skill, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-100 text-xs"
-                    >
-                      <span className="text-slate-700 font-medium">{skill.category}</span>
-                      <div className="flex items-center space-x-1.5">
-                        {skill.isCertified && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            Cert
-                          </span>
-                        )}
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                          Level {skill.level}
-                        </span>
+      {/* VIEW MODE 1: CARD GRID VIEW */}
+      {viewMode === 'card' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
+          {filteredTechs.length === 0 ? (
+            <div className="v-panel p-12 text-center text-slate-400 col-span-full border border-dashed border-slate-200">
+              ไม่พบข้อมูลทีมช่างตรงตามเงื่อนไขการค้นหา
+            </div>
+          ) : (
+            filteredTechs.map((tech) => (
+              <div
+                key={tech.id}
+                className="v-panel v-panel-hover p-5 flex flex-col justify-between space-y-4 bg-white border border-slate-200 rounded-2xl shadow-xs"
+              >
+                {/* Top Profile Info */}
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={tech.avatar}
+                        alt={tech.name}
+                        className="h-12 w-12 rounded-lg object-cover border border-slate-200 shadow-xs"
+                      />
+                      <div>
+                        <h3 className="font-bold text-slate-800 text-sm line-clamp-1">{tech.name}</h3>
+                        <div className="flex items-center space-x-2 text-[11px] text-slate-500 mt-0.5">
+                          <span className="font-mono text-blue-600 font-semibold">{tech.code}</span>
+                          <span>•</span>
+                          <span className="text-slate-600 font-semibold">{getBranchName(tech.branchId)}</span>
+                        </div>
                       </div>
                     </div>
-                  ))}
+
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getTierBadgeClass(tech.tier)}`}>
+                      {tech.tier}
+                    </span>
+                  </div>
+
+                  {/* Performance Metrics Bar */}
+                  <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-100 text-center text-xs">
+                    <div>
+                      <div className="text-[10px] text-slate-400 font-semibold">คะแนนเรตติ้ง</div>
+                      <div className="font-bold text-amber-500 flex items-center justify-center space-x-0.5 mt-0.5">
+                        <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-500" />
+                        <span>{tech.rating}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-[10px] text-slate-400 font-semibold">งานสำเร็จ</div>
+                      <div className="font-bold text-slate-700 mt-0.5">{tech.completedJobs} งาน</div>
+                    </div>
+
+                    <div>
+                      <div className="text-[10px] text-slate-400 font-semibold">คะแนนโดนปรับ</div>
+                      <div className={`font-bold mt-0.5 ${tech.penaltyPoints > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                        {tech.penaltyPoints} คะแนน
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Service Zone */}
+                  <div className="text-xs text-slate-600 flex items-start space-x-1.5 bg-slate-50/50 p-2 rounded border border-slate-100">
+                    <MapPin className="h-3.5 w-3.5 text-blue-500 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold block text-slate-700">พื้นที่หลัก:</span>
+                      <span className="line-clamp-1">{tech.primaryZone}</span>
+                    </div>
+                  </div>
+
+                  {/* Skill Matrix List */}
+                  <div className="space-y-2 pt-2 border-t border-slate-100">
+                    <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      ระดับทักษะความสามารถ ({tech.skills.length} ทักษะ)
+                    </div>
+                    <div className="space-y-1">
+                      {tech.skills.map((skill, i) => (
+                        <div
+                          key={i}
+                          className="flex items-center justify-between p-2 rounded bg-slate-50 border border-slate-100 text-xs"
+                        >
+                          <span className="text-slate-700 font-medium">{skill.category}</span>
+                          <div className="flex items-center space-x-1.5">
+                            {skill.isCertified && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Cert
+                              </span>
+                            )}
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                              Level {skill.level}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Footer Actions */}
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                  <span className={`text-[11px] font-bold flex items-center space-x-1 ${tech.status === 'Available' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <span>● สถานะ:</span>
+                    <span>{tech.status}</span>
+                  </span>
+
+                  <div className="flex space-x-1">
+                    {onDeleteTechnician && (
+                      <button
+                        onClick={() => {
+                          if (confirm(`ต้องการลบทีมช่าง ${tech.name} หรือไม่?`)) {
+                            onDeleteTechnician(tech.id);
+                          }
+                        }}
+                        className="p-1 text-slate-400 hover:text-rose-600 cursor-pointer"
+                        title="ลบทีมช่าง"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setEditingTech(tech)}
+                      className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer"
+                    >
+                      แก้ไขข้อมูลช่าง
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            ))
+          )}
+        </div>
+      )}
 
-            {/* Card Footer Actions */}
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-              <span className={`text-[11px] font-bold flex items-center space-x-1 ${tech.status === 'Available' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                <span>● สถานะ:</span>
-                <span>{tech.status}</span>
-              </span>
+      {/* VIEW MODE 2: TABLE / LIST VIEW */}
+      {viewMode === 'list' && (
+        <div className="v-panel overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-xs animate-fadeIn">
+          <div className="overflow-x-auto">
+            <table className="v-table w-full text-xs text-left">
+              <thead className="bg-slate-50 text-slate-600 font-bold border-b border-slate-200">
+                <tr>
+                  <th className="px-4 py-3.5">ทีมช่าง & รหัส (Technician)</th>
+                  <th className="px-4 py-3.5">สังกัดสาขา (Branch)</th>
+                  <th className="px-4 py-3.5">พื้นที่บริการหลัก (Primary Zone)</th>
+                  <th className="px-4 py-3.5 text-center">เรตติ้ง / งานสำเร็จ / Penalty</th>
+                  <th className="px-4 py-3.5 text-center">ระดับ Tier</th>
+                  <th className="px-4 py-3.5 text-center">สถานะงาน</th>
+                  <th className="px-4 py-3.5">ทักษะความชำนาญ (Skills Matrix)</th>
+                  <th className="px-4 py-3.5 text-right">จัดการ (Actions)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredTechs.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-6 py-8 text-center text-slate-400">
+                      ไม่พบข้อมูลทีมช่างตรงตามเงื่อนไขการค้นหา
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTechs.map((tech) => (
+                    <tr key={tech.id} className="hover:bg-slate-50/80 transition-colors">
+                      {/* Name & Avatar */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center space-x-3">
+                          <img
+                            src={tech.avatar}
+                            alt={tech.name}
+                            className="h-10 w-10 rounded-lg object-cover border border-slate-200 shrink-0"
+                          />
+                          <div>
+                            <strong className="block font-bold text-slate-800 text-xs">{tech.name}</strong>
+                            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mt-0.5">
+                              <span className="font-mono text-blue-600 font-bold">{tech.code}</span>
+                              <span>•</span>
+                              <span>📞 {tech.phone}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
 
-              <div className="flex space-x-1">
-                {onDeleteTechnician && (
-                  <button
-                    onClick={() => {
-                      if (confirm(`ต้องการลบทีมช่าง ${tech.name} หรือไม่?`)) {
-                        onDeleteTechnician(tech.id);
-                      }
-                    }}
-                    className="p-1 text-slate-400 hover:text-rose-600"
-                  >
-                    <Trash className="h-4 w-4" />
-                  </button>
+                      {/* Branch */}
+                      <td className="px-4 py-3 text-slate-700 font-semibold">
+                        {getBranchName(tech.branchId)}
+                      </td>
+
+                      {/* Primary Zone */}
+                      <td className="px-4 py-3 text-slate-600 max-w-[180px]">
+                        <span className="line-clamp-1">{tech.primaryZone}</span>
+                      </td>
+
+                      {/* Performance */}
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center space-x-2 text-[11px]">
+                          <span className="font-bold text-amber-600 flex items-center gap-0.5">
+                            <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
+                            {tech.rating}
+                          </span>
+                          <span className="text-slate-300">|</span>
+                          <span className="text-slate-700 font-semibold">{tech.completedJobs} งาน</span>
+                          <span className="text-slate-300">|</span>
+                          <span className={`font-bold ${tech.penaltyPoints > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                            {tech.penaltyPoints} แต้ม
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Tier */}
+                      <td className="px-4 py-3 text-center">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getTierBadgeClass(tech.tier)}`}>
+                          {tech.tier}
+                        </span>
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-4 py-3 text-center">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          tech.status === 'Available' 
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                        }`}>
+                          ● {tech.status}
+                        </span>
+                      </td>
+
+                      {/* Skills List */}
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {tech.skills.map((s, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] border border-slate-200 font-medium flex items-center gap-1"
+                            >
+                              <span>{s.category}</span>
+                              <span className="font-bold text-blue-600">L{s.level}</span>
+                              {s.isCertified && <span className="text-[9px] text-emerald-600 font-bold">✓</span>}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end space-x-1">
+                          <button
+                            onClick={() => setEditingTech(tech)}
+                            title="แก้ไขข้อมูลช่าง"
+                            className="p-1.5 text-slate-400 hover:text-amber-600 rounded hover:bg-amber-50 cursor-pointer transition-colors"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          {onDeleteTechnician && (
+                            <button
+                              onClick={() => {
+                                if (confirm(`ต้องการลบทีมช่าง ${tech.name} หรือไม่?`)) {
+                                  onDeleteTechnician(tech.id);
+                                }
+                              }}
+                              title="ลบทีมช่าง"
+                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded hover:bg-rose-50 cursor-pointer transition-colors"
+                            >
+                              <Trash className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
-                <button
-                  onClick={() => setEditingTech(tech)}
-                  className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors"
-                >
-                  แก้ไขข้อมูลช่าง
-                </button>
-              </div>
-            </div>
+              </tbody>
+            </table>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* Edit Modal */}
+      {/* Edit Technician Modal Dialog */}
       {editingTech && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="v-panel p-6 max-w-lg w-full space-y-4 bg-white animate-scaleUp">
-            <h3 className="text-base font-bold text-slate-800 border-b border-slate-100 pb-2">
-              แก้ไขข้อมูลและพารามิเตอร์ช่าง: {editingTech.name}
-            </h3>
+        <div className="fixed inset-0 z-150 flex items-center justify-center p-4 bg-slate-900/50 animate-fadeIn">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              onUpdateTechnician(editingTech);
+              setEditingTech(null);
+            }}
+            className="v-panel p-6 bg-white w-full max-w-xl border border-slate-200 space-y-4 text-xs shadow-2xl rounded-2xl max-h-[90vh] overflow-y-auto"
+          >
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                <Pencil className="h-4 w-4 text-amber-500" />
+                <span>แก้ไขข้อมูลช่าง & สิทธิ์การรับงาน ({editingTech.code})</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setEditingTech(null)}
+                className="text-slate-400 hover:text-slate-600 text-sm font-bold border-0 bg-transparent cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">สังกัดสาขาหลัก (Branch)</label>
+                <label className="block text-slate-600 font-semibold mb-1">ชื่อทีมช่าง / บริษัท *</label>
+                <input
+                  type="text"
+                  value={editingTech.name}
+                  onChange={(e) => setEditingTech({ ...editingTech, name: e.target.value })}
+                  className="v-input w-full bg-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1">เบอร์โทรศัพท์ *</label>
+                <input
+                  type="text"
+                  value={editingTech.phone}
+                  onChange={(e) => setEditingTech({ ...editingTech, phone: e.target.value })}
+                  className="v-input w-full bg-white"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1">สังกัดสาขาดูแลงาน</label>
                 <select
                   value={editingTech.branchId || ''}
-                  onChange={(e) =>
-                    setEditingTech({ ...editingTech, branchId: e.target.value || undefined })
-                  }
-                  className="v-input w-full"
+                  onChange={(e) => setEditingTech({ ...editingTech, branchId: e.target.value })}
+                  className="v-input w-full bg-white"
                 >
-                  <option value="">-- ไม่ระบุสาขา --</option>
-                  {branches.map((br) => (
-                    <option key={br.id} value={br.id}>
-                      {br.code} - {br.name}
+                  {branches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      [{b.code}] {b.name}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">ระดับ Tier งานช่าง</label>
+                <label className="block text-slate-600 font-semibold mb-1">ระดับ Tier ช่าง</label>
                 <select
                   value={editingTech.tier}
-                  onChange={(e) =>
-                    setEditingTech({ ...editingTech, tier: e.target.value as Technician['tier'] })
-                  }
-                  className="v-input w-full"
+                  onChange={(e) => setEditingTech({ ...editingTech, tier: e.target.value as any })}
+                  className="v-input w-full bg-white font-bold"
                 >
-                  <option value="Gold">Gold Tier (สิทธิคิวแรกสุด)</option>
-                  <option value="Silver">Silver Tier (มาตรฐาน)</option>
-                  <option value="Bronze">Bronze Tier (ทั่วไป)</option>
-                  <option value="Cooldown">Penalty Cooldown (พักจ่ายงาน)</option>
+                  <option value="Gold">🥇 Gold Tier</option>
+                  <option value="Silver">🥈 Silver Tier</option>
+                  <option value="Bronze">🥉 Bronze Tier</option>
+                  <option value="Cooldown">🛑 Cooldown (พักงานชั่วคราว)</option>
+                  <option value="Suspended">❌ Suspended (ระงับสิทธิ์)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">เบอร์โทรศัพท์ติดต่อ</label>
+                <label className="block text-slate-600 font-semibold mb-1">คะแนนโดนปรับสะสม (Penalty Points)</label>
                 <input
-                  type="text"
-                  value={editingTech.phone}
-                  onChange={(e) =>
-                    setEditingTech({ ...editingTech, phone: e.target.value })
-                  }
-                  className="v-input w-full"
+                  type="number"
+                  value={editingTech.penaltyPoints}
+                  onChange={(e) => setEditingTech({ ...editingTech, penaltyPoints: Number(e.target.value) })}
+                  className="v-input w-full font-mono font-bold bg-white"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">คะแนน Penalty สะสม</label>
-                  <input
-                    type="number"
-                    value={editingTech.penaltyPoints}
-                    onChange={(e) =>
-                      setEditingTech({ ...editingTech, penaltyPoints: parseInt(e.target.value) || 0 })
-                    }
-                    className="v-input w-full"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">สถานะคิวช่าง</label>
-                  <select
-                    value={editingTech.status}
-                    onChange={(e) =>
-                      setEditingTech({ ...editingTech, status: e.target.value as Technician['status'] })
-                    }
-                    className="v-input w-full"
-                  >
-                    <option value="Available">Available (ว่างพร้อมรับงาน)</option>
-                    <option value="On Job">On Job (กำลังเดินทาง/ติดตั้ง)</option>
-                    <option value="In Cooldown">In Cooldown (โดนทำโทษพักงาน)</option>
-                    <option value="Offline">Offline (หยุดงาน)</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-slate-600 font-semibold mb-1">สถานะความพร้อม</label>
+                <select
+                  value={editingTech.status}
+                  onChange={(e) => setEditingTech({ ...editingTech, status: e.target.value as any })}
+                  className="v-input w-full bg-white font-bold"
+                >
+                  <option value="Available">🟢 Available (พร้อมรับงาน)</option>
+                  <option value="On Job">🟡 On Job (กำลังปฏิบัติงาน)</option>
+                  <option value="In Cooldown">🔴 In Cooldown (ติดบทลงโทษ)</option>
+                  <option value="Offline">⚫ Offline (ปิดรับงาน)</option>
+                </select>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex justify-end space-x-2">
+            <div>
+              <label className="block text-slate-600 font-semibold mb-1">พื้นที่ให้บริการหลัก (Primary Zone)</label>
+              <input
+                type="text"
+                value={editingTech.primaryZone}
+                onChange={(e) => setEditingTech({ ...editingTech, primaryZone: e.target.value })}
+                className="v-input w-full bg-white"
+              />
+            </div>
+
+            {/* Skill Matrix Editor */}
+            <div className="space-y-2 border-t pt-3">
+              <label className="block text-slate-700 font-bold">ปรับระดับทักษะความเชี่ยวชาญ (Skill Matrix):</label>
+              <div className="space-y-2 max-h-48 overflow-y-auto p-2 bg-slate-50 border rounded-lg">
+                {editingTech.skills.map((skill, index) => (
+                  <div key={index} className="flex items-center justify-between gap-2 p-2 bg-white rounded border border-slate-200">
+                    <span className="font-semibold text-slate-800 text-xs flex-1">{skill.category}</span>
+                    <select
+                      value={skill.level}
+                      onChange={(e) => {
+                        const newSkills = [...editingTech.skills];
+                        newSkills[index].level = Number(e.target.value) as any;
+                        setEditingTech({ ...editingTech, skills: newSkills });
+                      }}
+                      className="v-input py-1 px-2 text-xs"
+                    >
+                      <option value={1}>Level 1 (Basic)</option>
+                      <option value={2}>Level 2 (Advanced)</option>
+                      <option value={3}>Level 3 (Master)</option>
+                    </select>
+
+                    <label className="flex items-center space-x-1 text-xs cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={skill.isCertified}
+                        onChange={(e) => {
+                          const newSkills = [...editingTech.skills];
+                          newSkills[index].isCertified = e.target.checked;
+                          setEditingTech({ ...editingTech, skills: newSkills });
+                        }}
+                      />
+                      <span>Certified</span>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-3 border-t flex justify-end space-x-2">
               <button
+                type="button"
                 onClick={() => setEditingTech(null)}
-                className="px-4 py-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold border border-slate-200"
+                className="v-btn-secondary text-xs py-1.5 cursor-pointer"
               >
                 ยกเลิก
               </button>
               <button
-                onClick={() => {
-                  onUpdateTechnician(editingTech);
-                  setEditingTech(null);
-                }}
-                className="v-btn-primary text-xs"
+                type="submit"
+                className="v-btn-primary text-xs py-1.5 px-4 font-bold cursor-pointer"
               >
                 บันทึกการแก้ไข
               </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
     </div>
