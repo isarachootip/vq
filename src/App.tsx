@@ -571,8 +571,10 @@ export function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const [isBackend, setIsBackend] = useState<boolean>(() => {
+    const savedUser = loadState<UserAccount | null>('vfixq_current_user', null);
+    if (!savedUser) return false;
     if (window.location.pathname.startsWith('/backend')) return true;
-    return loadState<boolean>('vfixq_is_backend', true);
+    return loadState<boolean>('vfixq_is_backend', false);
   });
 
   useEffect(() => {
@@ -582,12 +584,21 @@ export function App() {
   useEffect(() => {
     const handleLocationChange = () => {
       if (window.location.pathname.startsWith('/backend')) {
-        setIsBackend(true);
+        if (!currentUser) {
+          window.history.replaceState({}, '', '/');
+          setIsBackend(false);
+          setIsLoginModalOpen(true);
+        } else {
+          setIsBackend(true);
+        }
+      } else {
+        setIsBackend(false);
       }
     };
+    handleLocationChange();
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
-  }, []);
+  }, [currentUser]);
 
   const navigateToBackend = (route: boolean) => {
     if (route) {
