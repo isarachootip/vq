@@ -1198,6 +1198,7 @@ export function App() {
             <SmartBookingView
               technicians={technicians}
               branches={branches}
+              zones={zones}
               matchWeights={matchWeights}
               systemConfig={systemConfig}
               onConfirmBooking={(b) => {

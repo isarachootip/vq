@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Technician, QueueBooking, Branch, MatchWeights, SystemConfig } from '../types';
+import type { Technician, QueueBooking, Branch, Zone, MatchWeights, SystemConfig } from '../types';
 import { CustomDateInput } from './CustomDateInput';
 import { INITIAL_INSTALLATION_TYPES, SERVICE_ZONES, AVAILABLE_TIME_SLOTS } from '../mockData';
 import { MapPin, CheckCircle2, ShieldAlert, UserCheck, Sparkles } from 'lucide-react';
@@ -7,6 +7,7 @@ import { MapPin, CheckCircle2, ShieldAlert, UserCheck, Sparkles } from 'lucide-r
 interface SmartBookingViewProps {
   technicians: Technician[];
   branches: Branch[];
+  zones?: Zone[];
   onConfirmBooking: (newBooking: QueueBooking) => void;
   matchWeights?: MatchWeights;
   systemConfig?: SystemConfig;
@@ -47,6 +48,7 @@ const matchCategoryGroup = (serviceCat: string, name: string, code: string) => {
 export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
   technicians,
   branches,
+  zones,
   onConfirmBooking,
   matchWeights,
   systemConfig,
@@ -57,7 +59,23 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
   const filteredInstallationTypes = INITIAL_INSTALLATION_TYPES.filter((type) =>
     matchCategoryGroup(type.category, type.name, selectedCategoryCode)
   );
-  const [selectedZone, setSelectedZone] = useState<string>(SERVICE_ZONES[0]);
+
+  // Dynamic Zone Options (Support all 87 system zones)
+  const zoneOptions = (zones && zones.length > 0)
+    ? zones.map((z) => ({
+        id: z.id,
+        code: z.code,
+        name: z.name,
+        displayName: `${z.name}`
+      }))
+    : SERVICE_ZONES.map((z, idx) => ({
+        id: `z-${idx}`,
+        code: `Z-0${idx + 1}`,
+        name: z,
+        displayName: z
+      }));
+
+  const [selectedZone, setSelectedZone] = useState<string>(() => zoneOptions[0]?.name || '');
   const [bookingDate, setBookingDate] = useState<string>('2026-07-25');
   const [selectedSlotId, setSelectedSlotId] = useState<string>(AVAILABLE_TIME_SLOTS[0].id);
   const [customerName, setCustomerName] = useState<string>('คุณอนุรักษ์ เลิศวิริยะ');
@@ -108,9 +126,18 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
       tech.tier === 'Suspended' ||
       tech.penaltyPoints >= sysConfig.cooldownThreshold;
 
-    // 3. Zone Match
-    const isPrimaryZone = tech.primaryZone === selectedZone;
-    const isSecondaryZone = tech.secondaryZones.includes(selectedZone);
+    // 3. Flexible Zone Match
+    const cleanSelZone = selectedZone.toLowerCase().replace(/^\[[a-z]+\]\s*/i, '').trim();
+    const isPrimaryZone =
+      tech.primaryZone === selectedZone ||
+      (tech.primaryZone || '').toLowerCase().includes(selectedZone.toLowerCase()) ||
+      (cleanSelZone.length > 3 && (tech.primaryZone || '').toLowerCase().includes(cleanSelZone));
+
+    const isSecondaryZone =
+      tech.secondaryZones.includes(selectedZone) ||
+      (tech.secondaryZones || []).some(
+        (sz) => sz.toLowerCase().includes(selectedZone.toLowerCase()) || (cleanSelZone.length > 3 && sz.toLowerCase().includes(cleanSelZone))
+      );
     const zoneSupported = isPrimaryZone || isSecondaryZone;
 
     // 4. Branch Match (Optional weight bonus if technician is from the selected branch)
@@ -349,11 +376,11 @@ export const SmartBookingView: React.FC<SmartBookingViewProps> = ({
               <select
                 value={selectedZone}
                 onChange={(e) => setSelectedZone(e.target.value)}
-                className="v-input w-full"
+                className="v-input w-full font-medium"
               >
-                {SERVICE_ZONES.map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone}
+                {zoneOptions.map((z) => (
+                  <option key={z.id} value={z.name}>
+                    {z.displayName}
                   </option>
                 ))}
               </select>
