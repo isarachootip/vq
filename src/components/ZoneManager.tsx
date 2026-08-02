@@ -221,23 +221,94 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
   };
 
   const handleLoadSampleData = () => {
-    const sampleZones: Zone[] = [
-      { id: 'zone-s1', code: 'Z05', name: 'เชียงใหม่ (ตัวเมือง - หางดง - สันทราย)', description: 'พื้นที่ให้บริการเขตภาคเหนือตอนบนครอบคลุมอำเภอหลัก', coverageZipcodes: ['50000', '50230', '50210'] },
-      { id: 'zone-s2', code: 'Z06', name: 'ชลบุรี (พัทยา - ศรีราชา - บางละมุง)', description: 'พื้นที่ให้บริการเขตนวัตกรรมและอุตสาหกรรมภาคตะวันออก', coverageZipcodes: ['20150', '20110', '20260'] },
-      { id: 'zone-s3', code: 'Z07', name: 'ภูเก็ต (กะทู้ - ถลาง - เมืองภูเก็ต)', description: 'โซนท่องเที่ยวพิเศษครอบคลุมเกาะภูเก็ตทั้งหมด', coverageZipcodes: ['83000', '83120', '83110'] },
+    handleLoadBkkPreset();
+  };
+
+  const handleLoadBkkPreset = () => {
+    const bkkPresetZones: Zone[] = [
+      {
+        id: 'zone-bkk-c1',
+        code: 'Z01-C1',
+        name: '[BKK] กรุงเทพฯ ชั้นใน (เมืองเก่า / พญาไท - ราชเทวี)',
+        description: 'ครอบคลุมเขตพระนคร, ดุสิต, ป้อมปราบศัตรูพ่าย, สัมพันธวงศ์, พญาไท, ราชเทวี',
+        coverageZipcodes: ['10100', '10200', '10300', '10400']
+      },
+      {
+        id: 'zone-bkk-c2',
+        code: 'Z01-C2',
+        name: '[BKK] กรุงเทพฯ ชั้นใน (ศูนย์กลางธุรกิจ / สาทร - สีลม - บางรัก - พระราม 3)',
+        description: 'ครอบคลุมเขตปทุมวัน, บางรัก, สาทร, ยานนาวา, บางคอแหลม',
+        coverageZipcodes: ['10120', '10330', '10500']
+      },
+      {
+        id: 'zone-bkk-c3',
+        code: 'Z01-C3',
+        name: '[BKK] กรุงเทพฯ ชั้นใน (สุขุมวิท / ดินแดง - ห้วยขวาง - คลองเตย)',
+        description: 'ครอบคลุมเขตดินแดง, ห้วยขวาง, วัฒนา, คลองเตย',
+        coverageZipcodes: ['10110', '10310']
+      },
+      {
+        id: 'zone-bkk-n1',
+        code: 'Z01-N1',
+        name: '[BKK] กรุงเทพฯ เหนือตอนล่าง (จตุจักร - บางซื่อ - ลาดพร้าว)',
+        description: 'ครอบคลุมเขตจตุจักร, บางซื่อ, ลาดพร้าว',
+        coverageZipcodes: ['10800', '10900', '10230']
+      },
+      {
+        id: 'zone-bkk-n2',
+        code: 'Z01-N2',
+        name: '[BKK] กรุงเทพฯ เหนือตอนบน (หลักสี่ - ดอนเมือง - สายไหม - บางเขน)',
+        description: 'ครอบคลุมเขตหลักสี่, ดอนเมือง, สายไหม, บางเขน',
+        coverageZipcodes: ['10210', '10220']
+      },
+      {
+        id: 'zone-bkk-e1',
+        code: 'Z01-E1',
+        name: '[BKK] กรุงเทพฯ ตะวันออก (บางกะปิ - บึงกุ่ม - สะพานสูง - วังทองหลาง - คันนายาว)',
+        description: 'ครอบคลุมเขตบางกะปิ, บึงกุ่ม, สะพานสูง, วังทองหลาง, คันนายาว',
+        coverageZipcodes: ['10240', '10310']
+      },
+      {
+        id: 'zone-bkk-e2',
+        code: 'Z01-E2',
+        name: '[BKK] กรุงเทพฯ ตะวันออกนอก (มีนบุรี - ลาดกระบัง - หนองจอก - คลองสามวา)',
+        description: 'ครอบคลุมเขตคลองสามวา, หนองจอก, มีนบุรี, ลาดกระบัง',
+        coverageZipcodes: ['10510', '10520']
+      },
+      {
+        id: 'zone-bkk-se',
+        code: 'Z01-SE',
+        name: '[BKK] กรุงเทพฯ ตะวันออกใต้ (ประเวศ - สวนหลวง - บางนา)',
+        description: 'ครอบคลุมเขตประเวศ, สวนหลวง, บางนา',
+        coverageZipcodes: ['10250', '10260']
+      },
+      {
+        id: 'zone-bkk-w1',
+        code: 'Z01-W1',
+        name: '[BKK] กรุงเทพฯ ฝั่งธนบุรีเหนือ (ธนบุรี - คลองสาน - บางกอกน้อย - บางพลัด - ตลิ่งชัน - ทวีวัฒนา)',
+        description: 'ครอบคลุมเขตธนบุรี, คลองสาน, บางกอกใหญ่, บางกอกน้อย, บางพลัด, ตลิ่งชัน, ทวีวัฒนา',
+        coverageZipcodes: ['10170', '10600', '10700']
+      },
+      {
+        id: 'zone-bkk-w2',
+        code: 'Z01-W2',
+        name: '[BKK] กรุงเทพฯ ฝั่งธนบุรีใต้ (ภาษีเจริญ - บางแค - หนองแขม - ราษฎร์บูรณะ - ทุ่งครุ - จอมทอง - บางขุนเทียน - บางบอน)',
+        description: 'ครอบคลุมเขตภาษีเจริญ, บางแค, หนองแขม, ราษฎร์บูรณะ, ทุ่งครุ, จอมทอง, บางขุนเทียน, บางบอน',
+        coverageZipcodes: ['10140', '10150', '10160']
+      }
     ];
 
-    const nonDuplicateSamples = sampleZones.filter(
+    const nonDuplicateSamples = bkkPresetZones.filter(
       (sample) => !zones.some((z) => z.code === sample.code)
     );
 
     if (nonDuplicateSamples.length === 0) {
-      alert('ข้อมูลโซนตัวอย่างชุดนี้ได้รับการนำเข้าแล้วทั้งหมด');
+      alert('ชุดข้อมูลโซนกรุงเทพฯ (10 โซน) ได้รับการนำเข้าเรียบร้อยแล้วทั้งหมด');
       return;
     }
 
     onAddMultipleZones(nonDuplicateSamples);
-    alert(`นำเข้าข้อมูลพื้นที่/โซนตัวอย่าง ${nonDuplicateSamples.length} โซน สำเร็จ!`);
+    alert(`นำเข้าข้อมูลโซนกรุงเทพมหานครแบบครอบคลุม 50 เขต (${nonDuplicateSamples.length} โซน) สำเร็จ!`);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -391,12 +462,20 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
               className="hidden"
             />
 
+            {/* Load BKK Preset Button */}
+            <button
+              onClick={handleLoadBkkPreset}
+              className="v-btn-secondary py-2 px-3 text-xs text-emerald-700 bg-emerald-50 border-emerald-300 hover:bg-emerald-100 cursor-pointer rounded-xl font-medium flex items-center gap-1.5"
+            >
+              <span>🗺️ โหลด 10 โซน กทม.</span>
+            </button>
+
             {/* Load Sample Button */}
             <button
               onClick={handleLoadSampleData}
               className="v-btn-secondary py-2 px-3 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 cursor-pointer rounded-xl hidden sm:inline-flex"
             >
-              โหลดตัวอย่าง
+              โหลดตัวอย่างอื่น
             </button>
 
             {/* Mode Switcher Buttons */}

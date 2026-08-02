@@ -41,11 +41,42 @@ export interface TechnicianSkill {
   isCertified: boolean;
 }
 
+export interface SlotConfig {
+  id: string;
+  name: string; // e.g. "Slot 1: เช้า"
+  timeRange: string; // e.g. "08:00 - 12:00"
+  capacity: number; // capacity per slot
+  enabled: boolean;
+}
+
+export interface SkillScore {
+  category: string;
+  score: number; // 0 - 100
+  lastEvaluatedAt?: string;
+  autoReducedLevel?: boolean;
+}
+
 export interface Technician {
   id: string;
   code: string;
   name: string;
   phone: string;
+  phones?: string[]; // Multiple phone numbers
+  taxId?: string; // เลขผู้เสียภาษี / ID
+  companyName?: string; // ชื่อบริษัท / ร้าน
+  companyType?: 'บุคคลธรรมดา' | 'นิติบุคคล';
+  email?: string;
+  lineId?: string;
+  workDays?: string[]; // e.g. ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.']
+  jobTypes?: string[]; // e.g. ['ติดตั้ง', 'service MTN']
+  serviceZones?: string[]; // e.g. ['นครปฐม', 'ราชบุรี', 'นนทบุรี']
+  skillsExpertise?: string[]; // e.g. ['งานไฟฟ้า', 'ติดตั้งแอร์']
+  slots?: SlotConfig[];
+  certificates?: { id: string; name: string; size?: string; type?: string }[];
+  criminalRecord?: 'ไม่มี' | 'มี';
+  creditTermDays?: number;
+  level?: string;
+  skillScores?: SkillScore[];
   avatar: string;
   tier: TierLevel;
   rating: number; // e.g. 4.8

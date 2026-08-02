@@ -1,0 +1,647 @@
+[
+  {
+    "id": "zone-bkk-c1",
+    "code": "Z01-C1",
+    "name": "[BKK] กรุงเทพฯ ชั้นใน (เมืองเก่า / พญาไท - ราชเทวี)",
+    "description": "ครอบคลุมเขตพระนคร, ดุสิต, ป้อมปราบศัตรูพ่าย, สัมพันธวงศ์, พญาไท, ราชเทวี",
+    "coverageZipcodes": [
+      "10100",
+      "10200",
+      "10300",
+      "10400"
+    ]
+  },
+  {
+    "id": "zone-bkk-c2",
+    "code": "Z01-C2",
+    "name": "[BKK] กรุงเทพฯ ชั้นใน (ศูนย์กลางธุรกิจ / สาทร - สีลม - บางรัก - พระราม 3)",
+    "description": "ครอบคลุมเขตปทุมวัน, บางรัก, สาทร, ยานนาวา, บางคอแหลม",
+    "coverageZipcodes": [
+      "10120",
+      "10330",
+      "10500"
+    ]
+  },
+  {
+    "id": "zone-bkk-c3",
+    "code": "Z01-C3",
+    "name": "[BKK] กรุงเทพฯ ชั้นใน (สุขุมวิท / ดินแดง - ห้วยขวาง - คลองเตย)",
+    "description": "ครอบคลุมเขตดินแดง, ห้วยขวาง, วัฒนา, คลองเตย",
+    "coverageZipcodes": [
+      "10110",
+      "10310"
+    ]
+  },
+  {
+    "id": "zone-bkk-n1",
+    "code": "Z01-N1",
+    "name": "[BKK] กรุงเทพฯ เหนือตอนล่าง (จตุจักร - บางซื่อ - ลาดพร้าว)",
+    "description": "ครอบคลุมเขตจตุจักร, บางซื่อ, ลาดพร้าว",
+    "coverageZipcodes": [
+      "10800",
+      "10900",
+      "10230"
+    ]
+  },
+  {
+    "id": "zone-bkk-n2",
+    "code": "Z01-N2",
+    "name": "[BKK] กรุงเทพฯ เหนือตอนบน (หลักสี่ - ดอนเมือง - สายไหม - บางเขน)",
+    "description": "ครอบคลุมเขตหลักสี่, ดอนเมือง, สายไหม, บางเขน",
+    "coverageZipcodes": [
+      "10210",
+      "10220"
+    ]
+  },
+  {
+    "id": "zone-bkk-e1",
+    "code": "Z01-E1",
+    "name": "[BKK] กรุงเทพฯ ตะวันออก (บางกะปิ - บึงกุ่ม - สะพานสูง - วังทองหลาง - คันนายาว)",
+    "description": "ครอบคลุมเขตบางกะปิ, บึงกุ่ม, สะพานสูง, วังทองหลาง, คันนายาว",
+    "coverageZipcodes": [
+      "10240",
+      "10310"
+    ]
+  },
+  {
+    "id": "zone-bkk-e2",
+    "code": "Z01-E2",
+    "name": "[BKK] กรุงเทพฯ ตะวันออกนอก (มีนบุรี - ลาดกระบัง - หนองจอก - คลองสามวา)",
+    "description": "ครอบคลุมเขตคลองสามวา, หนองจอก, มีนบุรี, ลาดกระบัง",
+    "coverageZipcodes": [
+      "10510",
+      "10520"
+    ]
+  },
+  {
+    "id": "zone-bkk-se",
+    "code": "Z01-SE",
+    "name": "[BKK] กรุงเทพฯ ตะวันออกใต้ (ประเวศ - สวนหลวง - บางนา)",
+    "description": "ครอบคลุมเขตประเวศ, สวนหลวง, บางนา",
+    "coverageZipcodes": [
+      "10250",
+      "10260"
+    ]
+  },
+  {
+    "id": "zone-bkk-w1",
+    "code": "Z01-W1",
+    "name": "[BKK] กรุงเทพฯ ฝั่งธนบุรีเหนือ (ธนบุรี - คลองสาน - บางกอกน้อย - บางพลัด - ตลิ่งชัน - ทวีวัฒนา)",
+    "description": "ครอบคลุมเขตธนบุรี, คลองสาน, บางกอกใหญ่, บางกอกน้อย, บางพลัด, ตลิ่งชัน, ทวีวัฒนา",
+    "coverageZipcodes": [
+      "10170",
+      "10600",
+      "10700"
+    ]
+  },
+  {
+    "id": "zone-bkk-w2",
+    "code": "Z01-W2",
+    "name": "[BKK] กรุงเทพฯ ฝั่งธนบุรีใต้ (ภาษีเจริญ - บางแค - หนองแขม - ราษฎร์บูรณะ - ทุ่งครุ - จอมทอง - บางขุนเทียน - บางบอน)",
+    "description": "ครอบคลุมเขตภาษีเจริญ, บางแค, หนองแขม, ราษฎร์บูรณะ, ทุ่งครุ, จอมทอง, บางขุนเทียน, บางบอน",
+    "coverageZipcodes": [
+      "10140",
+      "10150",
+      "10160"
+    ]
+  },
+  {
+    "id": "zone-2",
+    "code": "Z02",
+    "name": "[BKK] นนทบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค BKK (นนทบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-3",
+    "code": "Z03",
+    "name": "[BKK] ปทุมธานี",
+    "description": "พื้นที่ให้บริการภูมิภาค BKK (ปทุมธานี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-4",
+    "code": "Z04",
+    "name": "[BKK] สมุทรปราการ",
+    "description": "พื้นที่ให้บริการภูมิภาค BKK (สมุทรปราการ)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-5",
+    "code": "Z05",
+    "name": "[CT] กำแพงเพชร",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (กำแพงเพชร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-6",
+    "code": "Z06",
+    "name": "[CT] ชัยนาท",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (ชัยนาท)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-7",
+    "code": "Z07",
+    "name": "[CT] นครนายก",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (นครนายก)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-8",
+    "code": "Z08",
+    "name": "[CT] นครปฐม",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (นครปฐม)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-9",
+    "code": "Z09",
+    "name": "[CT] นครสวรรค์",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (นครสวรรค์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-10",
+    "code": "Z10",
+    "name": "[CT] อยุธยา",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (อยุธยา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-11",
+    "code": "Z11",
+    "name": "[CT] พระนครศรีอยุธยา",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (พระนครศรีอยุธยา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-12",
+    "code": "Z12",
+    "name": "[CT] พิจิตร",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (พิจิตร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-13",
+    "code": "Z13",
+    "name": "[CT] พิษณุโลก",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (พิษณุโลก)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-14",
+    "code": "Z14",
+    "name": "[CT] เพชรบูรณ์",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (เพชรบูรณ์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-15",
+    "code": "Z15",
+    "name": "[CT] ลพบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (ลพบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-16",
+    "code": "Z16",
+    "name": "[CT] สมุทรสงคราม",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (สมุทรสงคราม)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-17",
+    "code": "Z17",
+    "name": "[CT] สมุทรสาคร",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (สมุทรสาคร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-18",
+    "code": "Z18",
+    "name": "[CT] สระบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (สระบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-19",
+    "code": "Z19",
+    "name": "[CT] สิงห์บุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (สิงห์บุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-20",
+    "code": "Z20",
+    "name": "[CT] สุโขทัย",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (สุโขทัย)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-21",
+    "code": "Z21",
+    "name": "[CT] สุพรรณบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (สุพรรณบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-22",
+    "code": "Z22",
+    "name": "[CT] อ่างทอง",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (อ่างทอง)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-23",
+    "code": "Z23",
+    "name": "[CT] อุทัยธานี",
+    "description": "พื้นที่ให้บริการภูมิภาค CT (อุทัยธานี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-24",
+    "code": "Z24",
+    "name": "[ET] จันทบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (จันทบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-25",
+    "code": "Z25",
+    "name": "[ET] ฉะเชิงเทรา",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (ฉะเชิงเทรา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-26",
+    "code": "Z26",
+    "name": "[ET] ชลบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (ชลบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-27",
+    "code": "Z27",
+    "name": "[ET] ตราด",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (ตราด)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-28",
+    "code": "Z28",
+    "name": "[ET] ปราจีนบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (ปราจีนบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-29",
+    "code": "Z29",
+    "name": "[ET] ระยอง",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (ระยอง)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-30",
+    "code": "Z30",
+    "name": "[ET] สระแก้ว",
+    "description": "พื้นที่ให้บริการภูมิภาค ET (สระแก้ว)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-31",
+    "code": "Z31",
+    "name": "[NE] กาฬสินธุ์",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (กาฬสินธุ์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-32",
+    "code": "Z32",
+    "name": "[NE] ขอนแก่น",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (ขอนแก่น)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-33",
+    "code": "Z33",
+    "name": "[NE] ชัยภูมิ",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (ชัยภูมิ)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-34",
+    "code": "Z34",
+    "name": "[NE] นครพนม",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (นครพนม)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-35",
+    "code": "Z35",
+    "name": "[NE] นครราชสีมา",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (นครราชสีมา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-36",
+    "code": "Z36",
+    "name": "[NE] บึงกาฬ",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (บึงกาฬ)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-37",
+    "code": "Z37",
+    "name": "[NE] บุรีรัมย์",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (บุรีรัมย์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-38",
+    "code": "Z38",
+    "name": "[NE] มหาสารคาม",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (มหาสารคาม)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-39",
+    "code": "Z39",
+    "name": "[NE] มุกดาหาร",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (มุกดาหาร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-40",
+    "code": "Z40",
+    "name": "[NE] ยโสธร",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (ยโสธร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-41",
+    "code": "Z41",
+    "name": "[NE] ร้อยเอ็ด",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (ร้อยเอ็ด)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-42",
+    "code": "Z42",
+    "name": "[NE] เลย",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (เลย)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-43",
+    "code": "Z43",
+    "name": "[NE] ศรีสะเกษ",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (ศรีสะเกษ)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-44",
+    "code": "Z44",
+    "name": "[NE] สกลนคร",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (สกลนคร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-45",
+    "code": "Z45",
+    "name": "[NE] สุรินทร์",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (สุรินทร์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-46",
+    "code": "Z46",
+    "name": "[NE] หนองคาย",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (หนองคาย)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-47",
+    "code": "Z47",
+    "name": "[NE] หนองบัวลำภู",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (หนองบัวลำภู)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-48",
+    "code": "Z48",
+    "name": "[NE] อำนาจเจริญ",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (อำนาจเจริญ)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-49",
+    "code": "Z49",
+    "name": "[NE] อุดรธานี",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (อุดรธานี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-50",
+    "code": "Z50",
+    "name": "[NE] อุบลราชธานี",
+    "description": "พื้นที่ให้บริการภูมิภาค NE (อุบลราชธานี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-51",
+    "code": "Z51",
+    "name": "[NT] เชียงราย",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (เชียงราย)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-52",
+    "code": "Z52",
+    "name": "[NT] เชียงใหม่",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (เชียงใหม่)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-53",
+    "code": "Z53",
+    "name": "[NT] น่าน",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (น่าน)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-54",
+    "code": "Z54",
+    "name": "[NT] พะเยา",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (พะเยา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-55",
+    "code": "Z55",
+    "name": "[NT] แพร่",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (แพร่)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-56",
+    "code": "Z56",
+    "name": "[NT] แม่ฮ่องสอน",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (แม่ฮ่องสอน)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-57",
+    "code": "Z57",
+    "name": "[NT] ลำปาง",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (ลำปาง)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-58",
+    "code": "Z58",
+    "name": "[NT] ลำพูน",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (ลำพูน)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-59",
+    "code": "Z59",
+    "name": "[NT] อุตรดิตถ์",
+    "description": "พื้นที่ให้บริการภูมิภาค NT (อุตรดิตถ์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-60",
+    "code": "Z60",
+    "name": "[ST] กระบี่",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (กระบี่)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-61",
+    "code": "Z61",
+    "name": "[ST] ชุมพร",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (ชุมพร)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-62",
+    "code": "Z62",
+    "name": "[ST] ตรัง",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (ตรัง)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-63",
+    "code": "Z63",
+    "name": "[ST] นครศรีธรรมราช",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (นครศรีธรรมราช)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-64",
+    "code": "Z64",
+    "name": "[ST] นราธิวาส",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (นราธิวาส)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-65",
+    "code": "Z65",
+    "name": "[ST] ปัตตานี",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (ปัตตานี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-66",
+    "code": "Z66",
+    "name": "[ST] พังงา",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (พังงา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-67",
+    "code": "Z67",
+    "name": "[ST] พัทลุง",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (พัทลุง)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-68",
+    "code": "Z68",
+    "name": "[ST] ภูเก็ต",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (ภูเก็ต)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-69",
+    "code": "Z69",
+    "name": "[ST] ยะลา",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (ยะลา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-70",
+    "code": "Z70",
+    "name": "[ST] ระนอง",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (ระนอง)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-71",
+    "code": "Z71",
+    "name": "[ST] สงขลา",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (สงขลา)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-72",
+    "code": "Z72",
+    "name": "[ST] สตูล",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (สตูล)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-73",
+    "code": "Z73",
+    "name": "[ST] สุราษฎร์ธานี",
+    "description": "พื้นที่ให้บริการภูมิภาค ST (สุราษฎร์ธานี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-74",
+    "code": "Z74",
+    "name": "[WE] กาญจนบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค WE (กาญจนบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-75",
+    "code": "Z75",
+    "name": "[WE] ตาก",
+    "description": "พื้นที่ให้บริการภูมิภาค WE (ตาก)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-76",
+    "code": "Z76",
+    "name": "[WE] ประจวบคีรีขันธ์",
+    "description": "พื้นที่ให้บริการภูมิภาค WE (ประจวบคีรีขันธ์)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-77",
+    "code": "Z77",
+    "name": "[WE] เพชรบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค WE (เพชรบุรี)",
+    "coverageZipcodes": []
+  },
+  {
+    "id": "zone-78",
+    "code": "Z78",
+    "name": "[WE] ราชบุรี",
+    "description": "พื้นที่ให้บริการภูมิภาค WE (ราชบุรี)",
+    "coverageZipcodes": []
+  }
+]

@@ -93,3 +93,20 @@
 ### 5.3 การล้างแต้มความประพฤติและอุทธรณ์
 * **การชำระค่าปรับ**: เมื่อช่างชำระยอดปรับในระบบ E-CN สำเร็จ สถานะจะขึ้นเป็น "Fine Paid" เพื่อปลดล็อคการหักแต้มสะสมเพิ่มเติม
 * **การยื่นเอกสารอุทธรณ์**: ช่างยื่นหลักฐานเหตุสุดวิสัยผ่านสาขา หากแอดมินหลังบ้านตรวจสอบและอนุมัติ "Appealed" ระบบจะดึงแต้มความประพฤติคืนและยกเลิกสถานะพักงาน (Cooldown) ให้ช่างกลับมาเปิดรับคิวงานปกติได้ทันที
+
+---
+
+## 6. สถาปัตยกรรมฐานข้อมูลและโครงสร้างพื้นฐานบน Coolify (Database & Infrastructure)
+
+รายละเอียดเกี่ยวกับระบบฐานข้อมูลที่ใช้งานบนสภาพแวดล้อม **Coolify (VPS Deployment)**:
+
+* **ฐานข้อมูลหลัก (Primary RDBMS Database)**: **PostgreSQL**
+  * สำหรับจัดเก็บตาราง `zones` และ `technicians` รวมถึงประวัติ Skill Matrix
+  * การเชื่อมต่อผ่าน `DATABASE_URL` หรือ `POSTGRES_HOST/PORT/USER/PASSWORD/DB` (Database: `vservice_db`)
+  * คำสั่งยิง Seed Data: `npm run db:seed`
+* **ระบบจัดเก็บไฟล์สื่อ (Object Storage Service)**: **MinIO Storage** (S3-Compatible)
+  * ใช้จัดเก็บรูปแบนเนอร์หน้าร้าน รูปโปรไฟล์ช่าง และรูปภาพบริการใน Buckets (`vservice-banners`, `vservice-services`, `vservice-avatars`)
+* **ระบบสำรองข้อมูล (Local JSON Fallback)**:
+  * ในกรณีที่ไม่ได้เชื่อมต่อ PostgreSQL ระบบหลังบ้านจะบันทึกและอ่านข้อมูลสำรองจาก `./data/` (`zones.json`, `technicians.json`) โดยอัตโนมัติ
+* **คู่มือการตั้งค่าแบบละเอียด**: ดูรายละเอียดการตั้งค่าฐานข้อมูลเพิ่มเติมได้ใน [system_guide.md](file:///c:/atgv/vq/docs/system_guide.md)
+

@@ -29,7 +29,13 @@
    ```bash
    npm run dev
    ```
-3. เข้าชมระบบผ่าน Browser: [http://localhost:5173/](http://localhost:5173/)
+3. (Optional) ยิง Seed Data ขึ้น PostgreSQL:
+   ```bash
+   npm run db:seed
+   # หรือกำหนด connection string:
+   DATABASE_URL="postgres://postgres:postgres@localhost:5432/vservice_db" npm run db:seed
+   ```
+4. เข้าชมระบบผ่าน Browser: [http://localhost:5173/](http://localhost:5173/)
 
 ---
 

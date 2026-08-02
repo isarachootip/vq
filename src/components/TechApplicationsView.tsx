@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import type { TechnicianApplication } from '../types';
+import type { TechnicianApplication, Technician } from '../types';
+import { TechDetailProfileModal } from './TechDetailProfileModal';
 import { 
   Users, 
   Search, 
@@ -8,7 +9,10 @@ import {
   UserCheck, 
   Briefcase, 
   FileSignature, 
-  AlertCircle 
+  AlertCircle,
+  LayoutGrid,
+  List,
+  Eye
 } from 'lucide-react';
 
 interface TechApplicationsViewProps {
@@ -24,6 +28,8 @@ export const TechApplicationsView: React.FC<TechApplicationsViewProps> = ({
 }) => {
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
+  const [selectedTechModal, setSelectedTechModal] = useState<Technician | null>(null);
 
   const filteredApps = applications.filter((app) => {
     const matchesStatus = selectedStatus === 'ALL' || app.status === selectedStatus;
@@ -90,6 +96,32 @@ export const TechApplicationsView: React.FC<TechApplicationsViewProps> = ({
           <p className="text-xs text-slate-500">
             ตรวจสอบข้อมูลผู้สมัครงานช่าง vFixQ ประเมินทักษะฝีมือ และปรับสถานะเอกสารตามลำดับขั้นรับช่างใหม่
           </p>
+        </div>
+
+        {/* View Mode Toggle Buttons */}
+        <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+          <button
+            onClick={() => setViewMode('card')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              viewMode === 'card'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+            <span>แบบการ์ด (Card View)</span>
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              viewMode === 'list'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <List className="h-3.5 w-3.5" />
+            <span>แบบรายการ (List View)</span>
+          </button>
         </div>
       </div>
 
@@ -172,169 +204,308 @@ export const TechApplicationsView: React.FC<TechApplicationsViewProps> = ({
         </div>
       </div>
 
-      {/* 4. Main Applications Table */}
-      <div className="v-panel overflow-hidden bg-white border border-slate-200">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="font-bold text-slate-800 text-sm">🗂️ รายการใบสมัครช่างติดตั้ง ({filteredApps.length} รายการ)</h3>
-          <span className="text-[10px] text-slate-400">อัปเดตเรียลไทม์เมื่อช่างกรอกข้อมูลจากหน้าร้าน</span>
+      {/* 4. Main Applications Section (Card View vs List View) */}
+      {viewMode === 'card' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fadeIn">
+          {filteredApps.length === 0 ? (
+            <div className="col-span-full p-12 text-center text-slate-400 bg-white border rounded-2xl">
+              ไม่พบรายการใบสมัครช่างตามตัวกรองนี้
+            </div>
+          ) : (
+            filteredApps.map((app) => (
+              <div key={app.id} className="v-panel p-5 bg-white border border-slate-200 rounded-2xl space-y-4 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <span className="font-mono text-xs font-bold text-blue-600">{app.refNum}</span>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadge(app.status)}`}>
+                      {getStatusTextTh(app.status)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <div className="h-12 w-12 rounded-xl border border-slate-200 overflow-hidden bg-slate-100 shrink-0">
+                      {app.avatarUrl ? (
+                        <img src={app.avatarUrl} alt={app.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">ไม่มีรูป</div>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-800 text-sm">{app.name}</h4>
+                      <p className="text-xs text-slate-500 font-mono">📞 {app.phone}</p>
+                      <p className="text-[11px] text-blue-600">💬 LINE: {app.lineId}</p>
+                    </div>
+                  </div>
+
+                  <div className="text-xs space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                    <p className="text-slate-700 font-semibold">{app.zone}</p>
+                    <p className="text-[11px] text-slate-500">ประสบการณ์: {app.experience}</p>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block mb-1">ทักษะความชำนาญ:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {app.skills.map((s) => (
+                        <span key={s} className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-[10px] text-slate-700 font-semibold">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => setSelectedTechModal({
+                      id: app.id,
+                      code: app.refNum,
+                      name: app.name,
+                      phone: app.phone,
+                      phones: [app.phone],
+                      email: 'somchai@email.com',
+                      lineId: app.lineId,
+                      companyName: 'บจก. ช่างฝีมือไทย',
+                      taxId: '1-2345-67890-12-3',
+                      avatar: app.avatarUrl || '',
+                      tier: 'Silver',
+                      rating: 4.8,
+                      completedJobs: 20,
+                      penaltyPoints: 0,
+                      activePenaltiesCount: 0,
+                      primaryZone: app.zone,
+                      secondaryZones: [],
+                      skills: app.skills.map(s => ({ category: s, level: 1, isCertified: true })),
+                      skillsExpertise: app.skills,
+                      jobTypes: ['ติดตั้ง', 'service MTN'],
+                      serviceZones: [app.zone],
+                      dailyCapacityHours: 8,
+                      bookedHoursToday: 2,
+                      status: 'Available'
+                    })}
+                    className="px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs flex items-center gap-1 cursor-pointer"
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                    <span>ดู Detail Profile</span>
+                  </button>
+
+                  <div className="flex items-center gap-1">
+                    {app.status === 'accept' && (
+                      <button onClick={() => onUpdateStatus(app.id, 'approve')} className="px-2.5 py-1 rounded bg-yellow-500 text-slate-900 font-bold text-xs cursor-pointer">
+                        Approve
+                      </button>
+                    )}
+                    {app.status === 'approve' && (
+                      <button onClick={() => onUpdateStatus(app.id, 'sign contract')} className="px-2.5 py-1 rounded bg-purple-600 text-white font-bold text-xs cursor-pointer">
+                        Sign Contract
+                      </button>
+                    )}
+                    {app.status === 'sign contract' && (
+                      <button onClick={() => onUpdateStatus(app.id, 'employee')} className="px-2.5 py-1 rounded bg-emerald-600 text-white font-bold text-xs cursor-pointer">
+                        Employee
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
+      ) : (
+        <div className="v-panel overflow-hidden bg-white border border-slate-200">
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="font-bold text-slate-800 text-sm">🗂️ รายการใบสมัครช่างติดตั้ง ({filteredApps.length} รายการ)</h3>
+            <span className="text-[10px] text-slate-400">อัปเดตเรียลไทม์เมื่อช่างกรอกข้อมูลจากหน้าร้าน</span>
+          </div>
 
-        <div className="overflow-x-auto text-xs">
-          <table className="v-table">
-            <thead>
-              <tr>
-                <th className="px-4 py-3 text-left">รหัสใบสมัคร / วันที่</th>
-                <th className="px-4 py-3 text-left">รูปโปรไฟล์</th>
-                <th className="px-4 py-3 text-left">ข้อมูลหัวหน้าทีม</th>
-                <th className="px-4 py-3 text-left">พิกัดรับงาน / ประสบการณ์</th>
-                <th className="px-4 py-3 text-left">ทักษะความชำนาญ</th>
-                <th className="px-4 py-3 text-left">สถานะสมัคร (Status)</th>
-                <th className="px-4 py-3 text-right">การจัดการสถานะ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredApps.length === 0 ? (
+          <div className="overflow-x-auto text-xs">
+            <table className="v-table">
+              <thead>
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-400 italic">
-                    ไม่พบรายการใบสมัครช่างตามตัวกรองนี้
-                  </td>
+                  <th className="px-4 py-3 text-left">รหัสใบสมัคร / วันที่</th>
+                  <th className="px-4 py-3 text-left">รูปโปรไฟล์</th>
+                  <th className="px-4 py-3 text-left">ข้อมูลหัวหน้าทีม</th>
+                  <th className="px-4 py-3 text-left">พิกัดรับงาน / ประสบการณ์</th>
+                  <th className="px-4 py-3 text-left">ทักษะความชำนาญ</th>
+                  <th className="px-4 py-3 text-left">สถานะสมัคร (Status)</th>
+                  <th className="px-4 py-3 text-right">การจัดการสถานะ</th>
                 </tr>
-              ) : (
-                filteredApps.map((app) => (
-                  <tr key={app.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-mono">
-                      <div className="font-bold text-slate-800">{app.refNum}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">{app.appliedAt}</div>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <div className="h-10 w-10 rounded-lg border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center text-slate-400 font-mono text-[9px] relative shadow-inner">
-                        {app.avatarUrl ? (
-                          <img src={app.avatarUrl} alt={app.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span>ไม่มีรูป</span>
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-slate-800">{app.name}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">📞 {app.phone}</div>
-                      <div className="text-[10px] text-blue-600 mt-0.5">💬 LINE: {app.lineId}</div>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-slate-800">{app.zone.split(':')[0]}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">ประสบการณ์ {app.experience}</div>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1 max-w-[200px]">
-                        {app.skills.map((s) => (
-                          <span 
-                            key={s} 
-                            className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[9px] text-slate-600 font-semibold"
-                          >
-                            {s.split(' ')[0]}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadge(app.status)}`}>
-                        {getStatusTextTh(app.status)}
-                      </span>
-                    </td>
-
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1 flex-wrap">
-                        
-                        {/* Status Transition buttons */}
-                        {app.status === 'accept' && (
-                          <>
-                            <button
-                              onClick={() => onUpdateStatus(app.id, 'approve')}
-                              className="px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold text-[10px] cursor-pointer border-0 shadow-xs flex items-center gap-0.5"
-                              title="ผ่านการประเมินเบื้องต้น"
-                            >
-                              <UserCheck className="h-3 w-3" />
-                              <span>Approve</span>
-                            </button>
-                            <button
-                              onClick={() => onUpdateStatus(app.id, 'reject')}
-                              className="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-[10px] cursor-pointer border border-rose-200"
-                              title="ปฏิเสธใบสมัคร"
-                            >
-                              <span>Reject</span>
-                            </button>
-                          </>
-                        )}
-
-                        {app.status === 'approve' && (
-                          <>
-                            <button
-                              onClick={() => onUpdateStatus(app.id, 'sign contract')}
-                              className="px-2 py-1 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold text-[10px] cursor-pointer border-0 shadow-xs flex items-center gap-0.5"
-                              title="เตรียมเซ็นสัญญา"
-                            >
-                              <FileSignature className="h-3 w-3" />
-                              <span>Sign Contract</span>
-                            </button>
-                            <button
-                              onClick={() => onUpdateStatus(app.id, 'reject')}
-                              className="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-[10px] cursor-pointer border border-rose-200"
-                            >
-                              <span>Reject</span>
-                            </button>
-                          </>
-                        )}
-
-                        {app.status === 'sign contract' && (
-                          <>
-                            <button
-                              onClick={() => onUpdateStatus(app.id, 'employee')}
-                              className="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] cursor-pointer border-0 shadow-xs flex items-center gap-0.5"
-                              title="บรรจุเป็นช่างเข้าสู่ระบบงานติดตั้ง"
-                            >
-                              <Briefcase className="h-3 w-3" />
-                              <span>Employee</span>
-                            </button>
-                            <button
-                              onClick={() => onUpdateStatus(app.id, 'reject')}
-                              className="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-[10px] cursor-pointer border border-rose-200"
-                            >
-                              <span>Reject</span>
-                            </button>
-                          </>
-                        )}
-
-                        {app.status === 'employee' && (
-                          <span className="text-emerald-600 font-bold text-[10px] flex items-center gap-0.5 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
-                            <Check className="h-3.5 w-3.5" />
-                            <span>บรรจุเป็นช่างแล้ว</span>
-                          </span>
-                        )}
-
-                        {app.status === 'reject' && (
-                          <button
-                            onClick={() => onDeleteApplication(app.id)}
-                            className="px-2 py-1 rounded bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 font-semibold text-[10px] cursor-pointer border border-slate-200"
-                            title="ลบเอกสารใบสมัคร"
-                          >
-                            <span>ลบใบสมัคร</span>
-                          </button>
-                        )}
-
-                      </div>
+              </thead>
+              <tbody>
+                {filteredApps.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-slate-400 italic">
+                      ไม่พบรายการใบสมัครช่างตามตัวกรองนี้
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredApps.map((app) => (
+                    <tr key={app.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 font-mono">
+                        <div className="font-bold text-slate-800">{app.refNum}</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">{app.appliedAt}</div>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <div className="h-10 w-10 rounded-lg border border-slate-200 overflow-hidden bg-slate-100 flex items-center justify-center text-slate-400 font-mono text-[9px] relative shadow-inner">
+                          {app.avatarUrl ? (
+                            <img src={app.avatarUrl} alt={app.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span>ไม่มีรูป</span>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <div className="font-semibold text-slate-800">{app.name}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">📞 {app.phone}</div>
+                        <div className="text-[10px] text-blue-600 mt-0.5">💬 LINE: {app.lineId}</div>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <div className="font-semibold text-slate-800">{app.zone.split(':')[0]}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">ประสบการณ์ {app.experience}</div>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1 max-w-[200px]">
+                          {app.skills.map((s) => (
+                            <span 
+                              key={s} 
+                              className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[9px] text-slate-600 font-semibold"
+                            >
+                              {s.split(' ')[0]}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${getStatusBadge(app.status)}`}>
+                          {getStatusTextTh(app.status)}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1 flex-wrap">
+                          <button
+                            onClick={() => setSelectedTechModal({
+                              id: app.id,
+                              code: app.refNum,
+                              name: app.name,
+                              phone: app.phone,
+                              phones: [app.phone],
+                              email: 'somchai@email.com',
+                              lineId: app.lineId,
+                              companyName: 'บจก. ช่างฝีมือไทย',
+                              taxId: '1-2345-67890-12-3',
+                              avatar: app.avatarUrl || '',
+                              tier: 'Silver',
+                              rating: 4.8,
+                              completedJobs: 20,
+                              penaltyPoints: 0,
+                              activePenaltiesCount: 0,
+                              primaryZone: app.zone,
+                              secondaryZones: [],
+                              skills: app.skills.map(s => ({ category: s, level: 1, isCertified: true })),
+                              skillsExpertise: app.skills,
+                              jobTypes: ['ติดตั้ง', 'service MTN'],
+                              serviceZones: [app.zone],
+                              dailyCapacityHours: 8,
+                              bookedHoursToday: 2,
+                              status: 'Available'
+                            })}
+                            className="px-2 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-[10px] cursor-pointer border border-blue-200 flex items-center gap-0.5"
+                          >
+                            <Eye className="h-3 w-3" />
+                            <span>Profile</span>
+                          </button>
+                          
+                          {/* Status Transition buttons */}
+                          {app.status === 'accept' && (
+                            <>
+                              <button
+                                onClick={() => onUpdateStatus(app.id, 'approve')}
+                                className="px-2 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold text-[10px] cursor-pointer border-0 shadow-xs flex items-center gap-0.5"
+                                title="ผ่านการประเมินเบื้องต้น"
+                              >
+                                <UserCheck className="h-3 w-3" />
+                                <span>Approve</span>
+                              </button>
+                              <button
+                                onClick={() => onUpdateStatus(app.id, 'reject')}
+                                className="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-[10px] cursor-pointer border border-rose-200"
+                                title="ปฏิเสธใบสมัคร"
+                              >
+                                <span>Reject</span>
+                              </button>
+                            </>
+                          )}
+
+                          {app.status === 'approve' && (
+                            <>
+                              <button
+                                onClick={() => onUpdateStatus(app.id, 'sign contract')}
+                                className="px-2 py-1 rounded bg-purple-600 hover:bg-purple-700 text-white font-bold text-[10px] cursor-pointer border-0 shadow-xs flex items-center gap-0.5"
+                                title="เตรียมเซ็นสัญญา"
+                              >
+                                <FileSignature className="h-3 w-3" />
+                                <span>Sign Contract</span>
+                              </button>
+                              <button
+                                onClick={() => onUpdateStatus(app.id, 'reject')}
+                                className="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-[10px] cursor-pointer border border-rose-200"
+                              >
+                                <span>Reject</span>
+                              </button>
+                            </>
+                          )}
+
+                          {app.status === 'sign contract' && (
+                            <>
+                              <button
+                                onClick={() => onUpdateStatus(app.id, 'employee')}
+                                className="px-2 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] cursor-pointer border-0 shadow-xs flex items-center gap-0.5"
+                                title="บรรจุเป็นช่างเข้าสู่ระบบงานติดตั้ง"
+                              >
+                                <Briefcase className="h-3 w-3" />
+                                <span>Employee</span>
+                              </button>
+                              <button
+                                onClick={() => onUpdateStatus(app.id, 'reject')}
+                                className="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-[10px] cursor-pointer border border-rose-200"
+                              >
+                                <span>Reject</span>
+                              </button>
+                            </>
+                          )}
+
+                          {app.status === 'employee' && (
+                            <span className="text-emerald-600 font-bold text-[10px] flex items-center gap-0.5 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                              <Check className="h-3.5 w-3.5" />
+                              <span>บรรจุเป็นช่างแล้ว</span>
+                            </span>
+                          )}
+
+                          {app.status === 'reject' && (
+                            <button
+                              onClick={() => onDeleteApplication(app.id)}
+                              className="px-2 py-1 rounded bg-slate-100 hover:bg-rose-50 hover:text-rose-600 text-slate-500 font-semibold text-[10px] cursor-pointer border border-slate-200"
+                              title="ลบเอกสารใบสมัคร"
+                            >
+                              <span>ลบใบสมัคร</span>
+                            </button>
+                          )}
+
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 5. Warning Alert Panel */}
       <div className="v-panel p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex gap-3 text-xs leading-relaxed text-amber-800">
@@ -347,6 +518,14 @@ export const TechApplicationsView: React.FC<TechApplicationsViewProps> = ({
           </p>
         </div>
       </div>
+
+      {/* Tech Detail Profile Modal */}
+      <TechDetailProfileModal
+        technician={selectedTechModal}
+        isOpen={!!selectedTechModal}
+        onClose={() => setSelectedTechModal(null)}
+        onSave={() => setSelectedTechModal(null)}
+      />
 
     </div>
   );

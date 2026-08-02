@@ -1,4 +1,5 @@
 import type { Technician, InstallationTypeConfig, QueueBooking, PenaltyRecord, TimeSlot, Branch, Zone, Skill, UserAccount } from './types';
+import { generate200Technicians } from './generateTechs';
 
 export const INITIAL_BRANCHES: Branch[] = [
   { id: 'br-01', code: 'B01', name: 'สาขาพระราม 9', province: 'กรุงเทพมหานคร', status: 'Active' },
@@ -1244,11 +1245,74 @@ export const INITIAL_BRANCHES: Branch[] = [
 
 export const INITIAL_ZONES: Zone[] = [
   {
-    "id": "zone-1",
-    "code": "Z01",
-    "name": "[BKK] กรุงเทพมหานคร",
-    "description": "<< ตัวอย่างขอสิทธิ์เพิ่มเองได้ด้วย เนื่องจาก BKK ต้องเลือกเป็นเขต",
-    "coverageZipcodes": []
+    "id": "zone-bkk-c1",
+    "code": "Z01-C1",
+    "name": "[BKK] กรุงเทพฯ ชั้นใน (เมืองเก่า / พญาไท - ราชเทวี)",
+    "description": "ครอบคลุมเขตพระนคร, ดุสิต, ป้อมปราบศัตรูพ่าย, สัมพันธวงศ์, พญาไท, ราชเทวี",
+    "coverageZipcodes": ["10100", "10200", "10300", "10400"]
+  },
+  {
+    "id": "zone-bkk-c2",
+    "code": "Z01-C2",
+    "name": "[BKK] กรุงเทพฯ ชั้นใน (ศูนย์กลางธุรกิจ / สาทร - สีลม - บางรัก - พระราม 3)",
+    "description": "ครอบคลุมเขตปทุมวัน, บางรัก, สาทร, ยานนาวา, บางคอแหลม",
+    "coverageZipcodes": ["10120", "10330", "10500"]
+  },
+  {
+    "id": "zone-bkk-c3",
+    "code": "Z01-C3",
+    "name": "[BKK] กรุงเทพฯ ชั้นใน (สุขุมวิท / ดินแดง - ห้วยขวาง - คลองเตย)",
+    "description": "ครอบคลุมเขตดินแดง, ห้วยขวาง, วัฒนา, คลองเตย",
+    "coverageZipcodes": ["10110", "10310"]
+  },
+  {
+    "id": "zone-bkk-n1",
+    "code": "Z01-N1",
+    "name": "[BKK] กรุงเทพฯ เหนือตอนล่าง (จตุจักร - บางซื่อ - ลาดพร้าว)",
+    "description": "ครอบคลุมเขตจตุจักร, บางซื่อ, ลาดพร้าว",
+    "coverageZipcodes": ["10800", "10900", "10230"]
+  },
+  {
+    "id": "zone-bkk-n2",
+    "code": "Z01-N2",
+    "name": "[BKK] กรุงเทพฯ เหนือตอนบน (หลักสี่ - ดอนเมือง - สายไหม - บางเขน)",
+    "description": "ครอบคลุมเขตหลักสี่, ดอนเมือง, สายไหม, บางเขน",
+    "coverageZipcodes": ["10210", "10220"]
+  },
+  {
+    "id": "zone-bkk-e1",
+    "code": "Z01-E1",
+    "name": "[BKK] กรุงเทพฯ ตะวันออก (บางกะปิ - บึงกุ่ม - สะพานสูง - วังทองหลาง - คันนายาว)",
+    "description": "ครอบคลุมเขตบางกะปิ, บึงกุ่ม, สะพานสูง, วังทองหลาง, คันนายาว",
+    "coverageZipcodes": ["10240", "10310"]
+  },
+  {
+    "id": "zone-bkk-e2",
+    "code": "Z01-E2",
+    "name": "[BKK] กรุงเทพฯ ตะวันออกนอก (มีนบุรี - ลาดกระบัง - หนองจอก - คลองสามวา)",
+    "description": "ครอบคลุมเขตคลองสามวา, หนองจอก, มีนบุรี, ลาดกระบัง",
+    "coverageZipcodes": ["10510", "10520"]
+  },
+  {
+    "id": "zone-bkk-se",
+    "code": "Z01-SE",
+    "name": "[BKK] กรุงเทพฯ ตะวันออกใต้ (ประเวศ - สวนหลวง - บางนา)",
+    "description": "ครอบคลุมเขตประเวศ, สวนหลวง, บางนา",
+    "coverageZipcodes": ["10250", "10260"]
+  },
+  {
+    "id": "zone-bkk-w1",
+    "code": "Z01-W1",
+    "name": "[BKK] กรุงเทพฯ ฝั่งธนบุรีเหนือ (ธนบุรี - คลองสาน - บางกอกน้อย - บางพลัด - ตลิ่งชัน - ทวีวัฒนา)",
+    "description": "ครอบคลุมเขตธนบุรี, คลองสาน, บางกอกใหญ่, บางกอกน้อย, บางพลัด, ตลิ่งชัน, ทวีวัฒนา",
+    "coverageZipcodes": ["10170", "10600", "10700"]
+  },
+  {
+    "id": "zone-bkk-w2",
+    "code": "Z01-W2",
+    "name": "[BKK] กรุงเทพฯ ฝั่งธนบุรีใต้ (ภาษีเจริญ - บางแค - หนองแขม - ราษฎร์บูรณะ - ทุ่งครุ - จอมทอง - บางขุนเทียน - บางบอน)",
+    "description": "ครอบคลุมเขตภาษีเจริญ, บางแค, หนองแขม, ราษฎร์บูรณะ, ทุ่งครุ, จอมทอง, บางขุนเทียน, บางบอน",
+    "coverageZipcodes": ["10140", "10150", "10160"]
   },
   {
     "id": "zone-2",
@@ -2342,120 +2406,7 @@ export const AVAILABLE_TIME_SLOTS: TimeSlot[] = [
   { id: 'slot-fd-1', startTime: '09:00', endTime: '17:00', period: 'Full Day' },
 ];
 
-export const INITIAL_TECHNICIANS: Technician[] = [
-  {
-    id: 'tech-01',
-    code: 'T-GOLD-01',
-    name: 'ทีมช่างสมชาย & ทีม (ช่างใหญ่ Built-in)',
-    phone: '081-987-6543',
-    avatar: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=150',
-    tier: 'Gold',
-    rating: 4.95,
-    completedJobs: 142,
-    penaltyPoints: 0,
-    activePenaltiesCount: 0,
-    primaryZone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)',
-    secondaryZones: ['Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์ - สำโรง)'],
-    skills: [
-      { category: 'Built-in Furniture', level: 3, isCertified: true },
-      { category: 'Electrical & Smart Home', level: 2, isCertified: true },
-      { category: 'Flooring & Tile', level: 2, isCertified: true },
-    ],
-    dailyCapacityHours: 8,
-    bookedHoursToday: 2,
-    status: 'Available',
-    branchId: 'br-01', // Rama 9
-  },
-  {
-    id: 'tech-02',
-    code: 'T-GOLD-02',
-    name: 'ทีมช่างวิชัย อินสทอลเลอร์ (ช่างแอร์ & ไฟฟ้า)',
-    phone: '089-123-4567',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-    tier: 'Gold',
-    rating: 4.88,
-    completedJobs: 118,
-    penaltyPoints: 5,
-    activePenaltiesCount: 0,
-    primaryZone: 'Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ - บางบัวทอง)',
-    secondaryZones: ['Zone 3: ปทุมธานี (รังสิต - ลำลูกกา - คลองหลวง)'],
-    skills: [
-      { category: 'Air Condition & HVAC', level: 3, isCertified: true },
-      { category: 'Electrical & Smart Home', level: 3, isCertified: true },
-      { category: 'Plumbing & Sanitary', level: 2, isCertified: true },
-    ],
-    dailyCapacityHours: 8,
-    bookedHoursToday: 5,
-    status: 'Available',
-    branchId: 'br-03', // Ratchaphruek
-  },
-  {
-    id: 'tech-03',
-    code: 'T-SILV-03',
-    name: 'ทีมช่างประเสริฐการช่าง (ช่างปูพื้น SPC & งานไม้)',
-    phone: '086-555-4321',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150',
-    tier: 'Silver',
-    rating: 4.65,
-    completedJobs: 84,
-    penaltyPoints: 15,
-    activePenaltiesCount: 1,
-    primaryZone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)',
-    secondaryZones: ['Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ - บางบัวทอง)'],
-    skills: [
-      { category: 'Flooring & Tile', level: 3, isCertified: true },
-      { category: 'Built-in Furniture', level: 2, isCertified: false },
-    ],
-    dailyCapacityHours: 8,
-    bookedHoursToday: 4,
-    status: 'Available',
-    branchId: 'br-02', // Ekkamai-Ramintra
-  },
-  {
-    id: 'tech-04',
-    code: 'T-SILV-04',
-    name: 'ทีมช่างอนันต์ & เดอะแก๊ง (งานผ้าม่าน & วอลเปเปอร์)',
-    phone: '083-444-9988',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150',
-    tier: 'Silver',
-    rating: 4.70,
-    completedJobs: 65,
-    penaltyPoints: 10,
-    activePenaltiesCount: 0,
-    primaryZone: 'Zone 3: ปทุมธานี (รังสิต - ลำลูกกา - คลองหลวง)',
-    secondaryZones: ['Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ - บางบัวทอง)'],
-    skills: [
-      { category: 'Curtains & Wallpaper', level: 2, isCertified: true },
-      { category: 'Electrical & Smart Home', level: 1, isCertified: true },
-    ],
-    dailyCapacityHours: 8,
-    bookedHoursToday: 0,
-    status: 'Available',
-    branchId: 'br-01', // Rama 9
-  },
-  {
-    id: 'tech-05',
-    code: 'T-PEN-05',
-    name: 'ทีมช่างกิตติพงษ์ (ติด Cooldown จาก Penalty E-CN)',
-    phone: '082-888-1122',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=150',
-    tier: 'Cooldown',
-    rating: 4.20,
-    completedJobs: 45,
-    penaltyPoints: 45,
-    activePenaltiesCount: 2,
-    primaryZone: 'Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์ - สำโรง)',
-    secondaryZones: ['Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)'],
-    skills: [
-      { category: 'Built-in Furniture', level: 2, isCertified: true },
-      { category: 'Flooring & Tile', level: 1, isCertified: false },
-    ],
-    dailyCapacityHours: 8,
-    bookedHoursToday: 0,
-    status: 'In Cooldown',
-    branchId: 'br-04', // Bangna
-  },
-];
+export const INITIAL_TECHNICIANS: Technician[] = generate200Technicians();
 
 export const INITIAL_BOOKINGS: QueueBooking[] = [
   {

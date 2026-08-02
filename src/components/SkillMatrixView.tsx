@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import type { Technician, SkillCategory, Branch } from '../types';
+import { generate200Technicians } from '../generateTechs';
+import { TechDetailProfileModal } from './TechDetailProfileModal';
 import { 
   Users, 
   Star, 
@@ -11,7 +13,8 @@ import {
   Trash, 
   LayoutGrid, 
   List, 
-  Pencil 
+  Pencil,
+  UserCheck
 } from 'lucide-react';
 
 interface SkillMatrixViewProps {
@@ -85,61 +88,22 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
 
   // Quick Preset Importer
   const handleLoadSampleData = () => {
-    const sampleTechs: Technician[] = [
-      {
-        id: `tech-s1`,
-        code: 'T-SILV-06',
-        name: 'ทีมช่างชัยวัฒน์ เซอร์วิส',
-        phone: '085-333-4455',
-        avatar: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?auto=format&fit=crop&q=80&w=150',
-        tier: 'Silver',
-        rating: 4.60,
-        completedJobs: 32,
-        penaltyPoints: 0,
-        activePenaltiesCount: 0,
-        primaryZone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)',
-        secondaryZones: [],
-        skills: [{ category: 'Plumbing & Sanitary', level: 3, isCertified: true }],
-        dailyCapacityHours: 8,
-        bookedHoursToday: 0,
-        status: 'Available',
-        branchId: 'br-04',
-      },
-      {
-        id: `tech-s2`,
-        code: 'T-GOLD-07',
-        name: 'ทีมช่างขวัญใจ แอร์แอนด์คลีน',
-        phone: '086-444-5566',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-        tier: 'Gold',
-        rating: 4.90,
-        completedJobs: 110,
-        penaltyPoints: 0,
-        activePenaltiesCount: 0,
-        primaryZone: 'Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)',
-        secondaryZones: [],
-        skills: [
-          { category: 'Air Condition & HVAC', level: 3, isCertified: true },
-          { category: 'Electrical & Smart Home', level: 2, isCertified: true },
-        ],
-        dailyCapacityHours: 8,
-        bookedHoursToday: 0,
-        status: 'Available',
-        branchId: 'br-02',
-      },
-    ];
+    handleLoad200Techs();
+  };
 
-    const nonDuplicates = sampleTechs.filter(
-      (sample) => !technicians.some((t) => t.code === sample.code)
+  const handleLoad200Techs = () => {
+    const all200Techs = generate200Technicians();
+    const nonDuplicates = all200Techs.filter(
+      (sample) => !technicians.some((t) => t.id === sample.id || t.code === sample.code)
     );
 
     if (nonDuplicates.length === 0) {
-      alert('ข้อมูลทีมช่างตัวอย่างชุดนี้ได้รับการนำเข้าครบถ้วนแล้ว');
+      alert('ชุดข้อมูลช่างครบ 200 ทีม ได้รับการนำเข้าเข้าสู่ระบบทั้งหมดเรียบร้อยแล้ว');
       return;
     }
 
     onAddMultipleTechnicians(nonDuplicates);
-    alert(`นำเข้าทีมช่างตัวอย่าง ${nonDuplicates.length} ทีม สำเร็จ!`);
+    alert(`นำเข้าข้อมูลทีมช่างครอบคลุมทุกโซนและทุกทักษะสำเร็จจำนวน ${nonDuplicates.length} ทีม! (รวมช่างในระบบ: ${technicians.length + nonDuplicates.length} คน)`);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -287,10 +251,25 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
           />
 
           <button
+            onClick={handleLoad200Techs}
+            className="v-btn-secondary py-1.5 px-3 text-xs text-emerald-700 bg-emerald-50 border-emerald-300 hover:bg-emerald-100 cursor-pointer rounded-xl font-medium flex items-center gap-1.5"
+          >
+            <span>👷‍♂️ โหลดทีมช่าง 200 คน (ทุก Zone)</span>
+          </button>
+
+          <button
             onClick={handleLoadSampleData}
             className="v-btn-secondary py-1.5 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 cursor-pointer"
           >
             โหลดช่างตัวอย่างด่วน
+          </button>
+
+          <button
+            onClick={() => setEditingTech(technicians[0] || null)}
+            className="py-1.5 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs flex items-center space-x-1.5 shadow-sm cursor-pointer transition-all"
+          >
+            <UserCheck className="h-3.5 w-3.5" />
+            <span>Detail Profile ช่าง (เปิดฟอร์มตามอัปเดต)</span>
           </button>
         </div>
       </div>
@@ -704,175 +683,16 @@ export const SkillMatrixView: React.FC<SkillMatrixViewProps> = ({
         </div>
       )}
 
-      {/* Edit Technician Modal Dialog */}
-      {editingTech && (
-        <div className="fixed inset-0 z-150 flex items-center justify-center p-4 bg-slate-900/50 animate-fadeIn">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              onUpdateTechnician(editingTech);
-              setEditingTech(null);
-            }}
-            className="v-panel p-6 bg-white w-full max-w-xl border border-slate-200 space-y-4 text-xs shadow-2xl rounded-2xl max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex justify-between items-center border-b pb-3">
-              <h3 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
-                <Pencil className="h-4 w-4 text-amber-500" />
-                <span>แก้ไขข้อมูลช่าง & สิทธิ์การรับงาน ({editingTech.code})</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => setEditingTech(null)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold border-0 bg-transparent cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-slate-600 font-semibold mb-1">ชื่อทีมช่าง / บริษัท *</label>
-                <input
-                  type="text"
-                  value={editingTech.name}
-                  onChange={(e) => setEditingTech({ ...editingTech, name: e.target.value })}
-                  className="v-input w-full bg-white"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-600 font-semibold mb-1">เบอร์โทรศัพท์ *</label>
-                <input
-                  type="text"
-                  value={editingTech.phone}
-                  onChange={(e) => setEditingTech({ ...editingTech, phone: e.target.value })}
-                  className="v-input w-full bg-white"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-600 font-semibold mb-1">สังกัดสาขาดูแลงาน</label>
-                <select
-                  value={editingTech.branchId || ''}
-                  onChange={(e) => setEditingTech({ ...editingTech, branchId: e.target.value })}
-                  className="v-input w-full bg-white"
-                >
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      [{b.code}] {b.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-slate-600 font-semibold mb-1">ระดับ Tier ช่าง</label>
-                <select
-                  value={editingTech.tier}
-                  onChange={(e) => setEditingTech({ ...editingTech, tier: e.target.value as any })}
-                  className="v-input w-full bg-white font-bold"
-                >
-                  <option value="Gold">🥇 Gold Tier</option>
-                  <option value="Silver">🥈 Silver Tier</option>
-                  <option value="Bronze">🥉 Bronze Tier</option>
-                  <option value="Cooldown">🛑 Cooldown (พักงานชั่วคราว)</option>
-                  <option value="Suspended">❌ Suspended (ระงับสิทธิ์)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-slate-600 font-semibold mb-1">คะแนนโดนปรับสะสม (Penalty Points)</label>
-                <input
-                  type="number"
-                  value={editingTech.penaltyPoints}
-                  onChange={(e) => setEditingTech({ ...editingTech, penaltyPoints: Number(e.target.value) })}
-                  className="v-input w-full font-mono font-bold bg-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-600 font-semibold mb-1">สถานะความพร้อม</label>
-                <select
-                  value={editingTech.status}
-                  onChange={(e) => setEditingTech({ ...editingTech, status: e.target.value as any })}
-                  className="v-input w-full bg-white font-bold"
-                >
-                  <option value="Available">🟢 Available (พร้อมรับงาน)</option>
-                  <option value="On Job">🟡 On Job (กำลังปฏิบัติงาน)</option>
-                  <option value="In Cooldown">🔴 In Cooldown (ติดบทลงโทษ)</option>
-                  <option value="Offline">⚫ Offline (ปิดรับงาน)</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-slate-600 font-semibold mb-1">พื้นที่ให้บริการหลัก (Primary Zone)</label>
-              <input
-                type="text"
-                value={editingTech.primaryZone}
-                onChange={(e) => setEditingTech({ ...editingTech, primaryZone: e.target.value })}
-                className="v-input w-full bg-white"
-              />
-            </div>
-
-            {/* Skill Matrix Editor */}
-            <div className="space-y-2 border-t pt-3">
-              <label className="block text-slate-700 font-bold">ปรับระดับทักษะความเชี่ยวชาญ (Skill Matrix):</label>
-              <div className="space-y-2 max-h-48 overflow-y-auto p-2 bg-slate-50 border rounded-lg">
-                {editingTech.skills.map((skill, index) => (
-                  <div key={index} className="flex items-center justify-between gap-2 p-2 bg-white rounded border border-slate-200">
-                    <span className="font-semibold text-slate-800 text-xs flex-1">{skill.category}</span>
-                    <select
-                      value={skill.level}
-                      onChange={(e) => {
-                        const newSkills = [...editingTech.skills];
-                        newSkills[index].level = Number(e.target.value) as any;
-                        setEditingTech({ ...editingTech, skills: newSkills });
-                      }}
-                      className="v-input py-1 px-2 text-xs"
-                    >
-                      <option value={1}>Level 1 (Basic)</option>
-                      <option value={2}>Level 2 (Advanced)</option>
-                      <option value={3}>Level 3 (Master)</option>
-                    </select>
-
-                    <label className="flex items-center space-x-1 text-xs cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={skill.isCertified}
-                        onChange={(e) => {
-                          const newSkills = [...editingTech.skills];
-                          newSkills[index].isCertified = e.target.checked;
-                          setEditingTech({ ...editingTech, skills: newSkills });
-                        }}
-                      />
-                      <span>Certified</span>
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="pt-3 border-t flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={() => setEditingTech(null)}
-                className="v-btn-secondary text-xs py-1.5 cursor-pointer"
-              >
-                ยกเลิก
-              </button>
-              <button
-                type="submit"
-                className="v-btn-primary text-xs py-1.5 px-4 font-bold cursor-pointer"
-              >
-                บันทึกการแก้ไข
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      {/* Tech Detail Profile Modal */}
+      <TechDetailProfileModal
+        technician={editingTech}
+        isOpen={!!editingTech}
+        onClose={() => setEditingTech(null)}
+        onSave={(updatedTech) => {
+          onUpdateTechnician(updatedTech);
+          setEditingTech(null);
+        }}
+      />
     </div>
   );
 };

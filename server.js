@@ -3,7 +3,9 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import pg from 'pg';
 
+const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -14,9 +16,85 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// PostgreSQL Connection Pool Setup
+const dbConnectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+let dbPool = null;
+let isDbConnected = false;
+
+if (dbConnectionString || process.env.POSTGRES_HOST) {
+  const dbConfig = dbConnectionString
+    ? { connectionString: dbConnectionString, ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false } }
+    : {
+        host: process.env.POSTGRES_HOST || 'localhost',
+        port: Number(process.env.POSTGRES_PORT || 5432),
+        user: process.env.POSTGRES_USER || 'postgres',
+        password: process.env.POSTGRES_PASSWORD || 'postgres',
+        database: process.env.POSTGRES_DB || 'vservice_db',
+      };
+
+  dbPool = new Pool(dbConfig);
+
+  dbPool
+    .query('SELECT NOW()')
+    .then(async () => {
+      isDbConnected = true;
+      console.log('✅ Connected to PostgreSQL Database successfully');
+      await initDbTables();
+    })
+    .catch((err) => {
+      console.warn('⚠️ Could not connect to PostgreSQL Database:', err.message);
+      isDbConnected = false;
+    });
+} else {
+  console.log('ℹ️ No DATABASE_URL provided. Running server with local memory/JSON storage mode.');
+}
+
+async function initDbTables() {
+  if (!dbPool) return;
+  try {
+    // Create zones table
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS zones (
+        id VARCHAR(255) PRIMARY KEY,
+        code VARCHAR(100) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        coverage_zipcodes JSONB DEFAULT '[]'::jsonb,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create technicians table
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS technicians (
+        id VARCHAR(255) PRIMARY KEY,
+        code VARCHAR(100) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        phone VARCHAR(100),
+        avatar TEXT,
+        tier VARCHAR(50),
+        rating NUMERIC(3,2),
+        status VARCHAR(50),
+        primary_zone TEXT,
+        secondary_zones JSONB DEFAULT '[]'::jsonb,
+        skills JSONB DEFAULT '[]'::jsonb,
+        extra_data JSONB DEFAULT '{}'::jsonb,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✅ PostgreSQL database tables (zones, technicians) verified/created');
+  } catch (err) {
+    console.error('❌ Error initializing database tables:', err.message);
+  }
+}
+
 // Storage Paths
 const DATA_DIR = path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'line_conversations.json');
+const ZONES_FILE = path.join(DATA_DIR, 'zones.json');
+const TECHS_FILE = path.join(DATA_DIR, 'technicians.json');
 const CONFIG_FILE = path.join(DATA_DIR, 'line_config.json');
 
 if (!fs.existsSync(DATA_DIR)) {
@@ -267,13 +345,196 @@ app.post('/api/line/clear', (req, res) => {
   res.json({ status: 'cleared' });
 });
 
-// Health check
+// Health check & DB Status
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
+    dbConnected: isDbConnected,
     conversationsCount: conversationsStore.length,
     timestamp: new Date().toISOString()
   });
+});
+
+app.get('/api/db/status', async (req, res) => {
+  if (!isDbConnected || !dbPool) {
+    return res.json({ status: 'offline', mode: 'json_file_fallback' });
+  }
+  try {
+    const result = await dbPool.query('SELECT NOW()');
+    return res.json({ status: 'connected', dbTime: result.rows[0].now });
+  } catch (err) {
+    return res.status(500).json({ status: 'error', error: err.message });
+  }
+});
+
+// ----------------------------------------------------
+// ZONE API ENDPOINTS (PostgreSQL + Local File Fallback)
+// ----------------------------------------------------
+app.get('/api/zones', async (req, res) => {
+  if (isDbConnected && dbPool) {
+    try {
+      const result = await dbPool.query('SELECT id, code, name, description, coverage_zipcodes as "coverageZipcodes" FROM zones ORDER BY code ASC');
+      return res.json({ status: 'success', source: 'postgresql', zones: result.rows });
+    } catch (err) {
+      console.error('Error querying zones from PostgreSQL:', err);
+    }
+  }
+  const fallbackZones = loadJson(ZONES_FILE, []);
+  return res.json({ status: 'success', source: 'json_file', zones: fallbackZones });
+});
+
+app.post('/api/zones/bulk', async (req, res) => {
+  const { zones } = req.body;
+  if (!Array.isArray(zones)) {
+    return res.status(400).json({ error: 'zones must be an array' });
+  }
+
+  let dbSavedCount = 0;
+  if (isDbConnected && dbPool) {
+    try {
+      for (const zone of zones) {
+        await dbPool.query(
+          `INSERT INTO zones (id, code, name, description, coverage_zipcodes, updated_at)
+           VALUES ($1, $2, $3, $4, $5, NOW())
+           ON CONFLICT (id) DO UPDATE 
+           SET code = EXCLUDED.code, name = EXCLUDED.name, description = EXCLUDED.description, coverage_zipcodes = EXCLUDED.coverage_zipcodes, updated_at = NOW()`,
+          [
+            zone.id || `zone-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            zone.code,
+            zone.name,
+            zone.description || '',
+            JSON.stringify(zone.coverageZipcodes || [])
+          ]
+        );
+        dbSavedCount++;
+      }
+    } catch (err) {
+      console.error('Error saving zones to PostgreSQL:', err);
+    }
+  }
+
+  // Backup to JSON file as fallback
+  saveJson(ZONES_FILE, zones);
+
+  return res.json({
+    status: 'success',
+    savedCount: zones.length,
+    dbSavedCount,
+    source: isDbConnected ? 'postgresql' : 'json_file'
+  });
+});
+
+app.delete('/api/zones/:id', async (req, res) => {
+  const { id } = req.params;
+  if (isDbConnected && dbPool) {
+    try {
+      await dbPool.query('DELETE FROM zones WHERE id = $1', [id]);
+    } catch (err) {
+      console.error('Error deleting zone from PostgreSQL:', err);
+    }
+  }
+  const currentZones = loadJson(ZONES_FILE, []);
+  const filtered = currentZones.filter(z => z.id !== id);
+  saveJson(ZONES_FILE, filtered);
+
+  return res.json({ status: 'success', deletedId: id });
+});
+
+// ----------------------------------------------------
+// TECHNICIAN API ENDPOINTS (PostgreSQL + Local File Fallback)
+// ----------------------------------------------------
+app.get('/api/technicians', async (req, res) => {
+  if (isDbConnected && dbPool) {
+    try {
+      const result = await dbPool.query('SELECT id, code, name, phone, avatar, tier, rating, status, primary_zone as "primaryZone", secondary_zones as "secondaryZones", skills, extra_data FROM technicians ORDER BY code ASC');
+      const techs = result.rows.map(row => ({
+        id: row.id,
+        code: row.code,
+        name: row.name,
+        phone: row.phone,
+        avatar: row.avatar,
+        tier: row.tier,
+        rating: Number(row.rating || 4.5),
+        status: row.status,
+        primaryZone: row.primaryZone,
+        secondaryZones: row.secondaryZones || [],
+        skills: row.skills || [],
+        ...(row.extra_data || {})
+      }));
+      return res.json({ status: 'success', source: 'postgresql', technicians: techs });
+    } catch (err) {
+      console.error('Error querying technicians from PostgreSQL:', err);
+    }
+  }
+  const fallbackTechs = loadJson(TECHS_FILE, []);
+  return res.json({ status: 'success', source: 'json_file', technicians: fallbackTechs });
+});
+
+app.post('/api/technicians/bulk', async (req, res) => {
+  const { technicians } = req.body;
+  if (!Array.isArray(technicians)) {
+    return res.status(400).json({ error: 'technicians must be an array' });
+  }
+
+  let dbSavedCount = 0;
+  if (isDbConnected && dbPool) {
+    try {
+      for (const tech of technicians) {
+        const { id, code, name, phone, avatar, tier, rating, status, primaryZone, secondaryZones, skills, ...extraData } = tech;
+        await dbPool.query(
+          `INSERT INTO technicians (id, code, name, phone, avatar, tier, rating, status, primary_zone, secondary_zones, skills, extra_data, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+           ON CONFLICT (id) DO UPDATE 
+           SET code = EXCLUDED.code, name = EXCLUDED.name, phone = EXCLUDED.phone, avatar = EXCLUDED.avatar,
+               tier = EXCLUDED.tier, rating = EXCLUDED.rating, status = EXCLUDED.status, primary_zone = EXCLUDED.primary_zone,
+               secondary_zones = EXCLUDED.secondary_zones, skills = EXCLUDED.skills, extra_data = EXCLUDED.extra_data, updated_at = NOW()`,
+          [
+            id || `tech-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            code || 'T-999',
+            name || 'Unassigned Tech',
+            phone || '',
+            avatar || '',
+            tier || 'Silver',
+            rating || 4.5,
+            status || 'Available',
+            primaryZone || '',
+            JSON.stringify(secondaryZones || []),
+            JSON.stringify(skills || []),
+            JSON.stringify(extraData || {})
+          ]
+        );
+        dbSavedCount++;
+      }
+    } catch (err) {
+      console.error('Error saving technicians to PostgreSQL:', err);
+    }
+  }
+
+  // Backup to JSON file as fallback
+  saveJson(TECHS_FILE, technicians);
+
+  return res.json({
+    status: 'success',
+    savedCount: technicians.length,
+    dbSavedCount,
+    source: isDbConnected ? 'postgresql' : 'json_file'
+  });
+});
+
+app.delete('/api/technicians/:id', async (req, res) => {
+  const { id } = req.params;
+  if (isDbConnected && dbPool) {
+    try {
+      await dbPool.query('DELETE FROM technicians WHERE id = $1', [id]);
+    } catch (err) {
+      console.error('Error deleting technician from PostgreSQL:', err);
+    }
+  }
+  const currentTechs = loadJson(TECHS_FILE, []);
+  const filtered = currentTechs.filter(t => t.id !== id);
+  saveJson(TECHS_FILE, filtered);
+
+  return res.json({ status: 'success', deletedId: id });
 });
 
 // Serve static built frontend files for production

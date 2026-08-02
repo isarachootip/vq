@@ -251,16 +251,20 @@ export function App() {
   
   // Data States
   const [branches, setBranches] = useState<Branch[]>(INITIAL_BRANCHES);
-  const [zones, setZones] = useState<Zone[]>(() => 
-    loadState<Zone[]>('vfixq_zones', INITIAL_ZONES)
-  );
+  const [zones, setZones] = useState<Zone[]>(() => {
+    const loaded = loadState<Zone[]>('vfixq_zones', INITIAL_ZONES);
+    if (!loaded || loaded.some((z) => z.id === 'zone-1' || z.code === 'Z01')) return INITIAL_ZONES;
+    return loaded;
+  });
   const [skills, setSkills] = useState<Skill[]>(() => 
     loadState<Skill[]>('vfixq_skills', INITIAL_SKILLS)
   );
 
-  const [technicians, setTechnicians] = useState<Technician[]>(() => 
-    loadState<Technician[]>('vfixq_technicians', INITIAL_TECHNICIANS)
-  );
+  const [technicians, setTechnicians] = useState<Technician[]>(() => {
+    const loaded = loadState<Technician[]>('vfixq_technicians', INITIAL_TECHNICIANS);
+    if (!loaded || loaded.length < 150 || loaded.some((t) => t.id === 'tech-01')) return INITIAL_TECHNICIANS;
+    return loaded;
+  });
 
   const [bookings, setBookings] = useState<QueueBooking[]>(() => 
     loadState<QueueBooking[]>('vfixq_bookings', INITIAL_BOOKINGS)
@@ -330,7 +334,51 @@ export function App() {
     }
   };
 
-  // Watchers to persist state updates in localStorage
+  // Auto-sync initial data & Fetch from Backend API (PostgreSQL / Express)
+  useEffect(() => {
+    async function syncWithBackendApi() {
+      try {
+        // Fetch Zones from API
+        const zonesRes = await fetch('/api/zones');
+        if (zonesRes.ok) {
+          const data = await zonesRes.json();
+          if (data.zones && data.zones.length > 0) {
+            setZones(data.zones);
+            safeLocalSet('vfixq_zones', data.zones);
+          }
+        }
+      } catch {
+        // Fallback to localStorage / INITIAL_ZONES if API unreachable
+        const storedZones = loadState<Zone[]>('vfixq_zones', []);
+        if (!storedZones || storedZones.length < 10 || storedZones.some((z) => z.id === 'zone-1' || z.code === 'Z01')) {
+          setZones(INITIAL_ZONES);
+          safeLocalSet('vfixq_zones', INITIAL_ZONES);
+        }
+      }
+
+      try {
+        // Fetch Technicians from API
+        const techsRes = await fetch('/api/technicians');
+        if (techsRes.ok) {
+          const data = await techsRes.json();
+          if (data.technicians && data.technicians.length > 0) {
+            setTechnicians(data.technicians);
+            safeLocalSet('vfixq_technicians', data.technicians);
+          }
+        }
+      } catch {
+        // Fallback to localStorage / INITIAL_TECHNICIANS if API unreachable
+        const storedTechs = loadState<Technician[]>('vfixq_technicians', []);
+        if (!storedTechs || storedTechs.length < 150 || storedTechs.some((t) => t.id === 'tech-01')) {
+          setTechnicians(INITIAL_TECHNICIANS);
+          safeLocalSet('vfixq_technicians', INITIAL_TECHNICIANS);
+        }
+      }
+    }
+
+    syncWithBackendApi();
+  }, []);
+
   useEffect(() => {
     safeLocalSet('vfixq_active_tab', activeTab);
   }, [activeTab]);
@@ -592,22 +640,47 @@ export function App() {
 
   // Handlers for Zone
   const handleAddZone = (zone: Zone) => {
-    setZones((prev) => [...prev, zone]);
+    setZones((prev) => {
+      const updated = [...prev, zone];
+      fetch('/api/zones/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zones: [zone] })
+      }).catch(err => console.warn('Sync zone API error:', err));
+      return updated;
+    });
     showToast(`เพิ่มโซน ${zone.name} เรียบร้อยแล้ว`);
   };
 
   const handleAddMultipleZones = (newZones: Zone[]) => {
-    setZones((prev) => [...prev, ...newZones]);
+    setZones((prev) => {
+      const updated = [...prev, ...newZones];
+      fetch('/api/zones/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zones: newZones })
+      }).catch(err => console.warn('Bulk sync zones API error:', err));
+      return updated;
+    });
     showToast(`นำเข้าข้อมูลโซนสำเร็จ ${newZones.length} รายการ`);
   };
 
   const handleUpdateZone = (updatedZone: Zone) => {
-    setZones((prev) => prev.map((z) => (z.id === updatedZone.id ? updatedZone : z)));
+    setZones((prev) => {
+      const updated = prev.map((z) => (z.id === updatedZone.id ? updatedZone : z));
+      fetch('/api/zones/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ zones: [updatedZone] })
+      }).catch(err => console.warn('Update zone API error:', err));
+      return updated;
+    });
     showToast(`อัปเดตข้อมูลโซน ${updatedZone.name} เรียบร้อยแล้ว`);
   };
 
   const handleDeleteZone = (id: string) => {
     setZones((prev) => prev.filter((z) => z.id !== id));
+    fetch(`/api/zones/${id}`, { method: 'DELETE' }).catch(err => console.warn('Delete zone API error:', err));
     showToast('ลบข้อมูลโซนสำเร็จ');
   };
 
@@ -650,12 +723,21 @@ export function App() {
 
   // Handlers for Technician
   const handleAddMultipleTechnicians = (newTechs: Technician[]) => {
-    setTechnicians((prev) => [...prev, ...newTechs]);
+    setTechnicians((prev) => {
+      const updated = [...prev, ...newTechs];
+      fetch('/api/technicians/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ technicians: newTechs })
+      }).catch(err => console.warn('Bulk sync technicians API error:', err));
+      return updated;
+    });
     showToast(`นำเข้าข้อมูลทีมช่างสำเร็จ ${newTechs.length} ทีม`);
   };
 
   const handleDeleteTechnician = (id: string) => {
     setTechnicians((prev) => prev.filter((t) => t.id !== id));
+    fetch(`/api/technicians/${id}`, { method: 'DELETE' }).catch(err => console.warn('Delete technician API error:', err));
     showToast('ลบข้อมูลทีมช่างสำเร็จ');
   };
 
