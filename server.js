@@ -105,31 +105,32 @@ async function initDbTables() {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
       ALTER TABLE technicians ADD COLUMN IF NOT EXISTS user_id VARCHAR(255);
+    `);
 
-      // Create standard_costs table
-      await dbPool.query(`
-        CREATE TABLE IF NOT EXISTS standard_costs (
-          id VARCHAR(255) PRIMARY KEY,
-          sku VARCHAR(100) NOT NULL,
-          group_name VARCHAR(255),
-          product_category VARCHAR(255),
-          service_type VARCHAR(255),
-          product_detail TEXT,
-          description TEXT NOT NULL,
-          unit VARCHAR(50) DEFAULT 'EACH',
-          gp_percent NUMERIC(5,2) DEFAULT 0,
-          cost_standard NUMERIC(12,2) DEFAULT 0,
-          cost_premium NUMERIC(12,2) DEFAULT 0,
-          price_standard NUMERIC(12,2) DEFAULT 0,
-          price_premium NUMERIC(12,2) DEFAULT 0,
-          cost_center VARCHAR(100),
-          retention VARCHAR(100),
-          remark TEXT,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
-      console.log('✅ PostgreSQL database tables (users, zones, technicians, standard_costs) verified/created');
+    // Create standard_costs table
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS standard_costs (
+        id VARCHAR(255) PRIMARY KEY,
+        sku VARCHAR(100) NOT NULL,
+        group_name VARCHAR(255),
+        product_category VARCHAR(255),
+        service_type VARCHAR(255),
+        product_detail TEXT,
+        description TEXT NOT NULL,
+        unit VARCHAR(50) DEFAULT 'EACH',
+        gp_percent NUMERIC(5,2) DEFAULT 0,
+        cost_standard NUMERIC(12,2) DEFAULT 0,
+        cost_premium NUMERIC(12,2) DEFAULT 0,
+        price_standard NUMERIC(12,2) DEFAULT 0,
+        price_premium NUMERIC(12,2) DEFAULT 0,
+        cost_center VARCHAR(100),
+        retention VARCHAR(100),
+        remark TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('✅ PostgreSQL database tables (users, zones, technicians, standard_costs) verified/created');
     } catch (err) {
       console.error('❌ Error initializing database tables:', err.message);
     }
