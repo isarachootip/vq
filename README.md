@@ -1,15 +1,15 @@
 # Installer Management System (คิวช่าง · Skill · Penalty)
 
-ระบบบริหารจัดการคิวช่าง, Skill Matrix และระบบประเมิน/ลงโทษ (Penalty & E-CN Feedback Loop) ตามสถาปัตยกรรมระบบองค์กร (E-ordering ↔ KANNA ↔ STS ↔ QC ↔ E-CN)
+ระบบบริหารจัดการคิวช่าง, Skill Matrix และระบบประเมิน/ลงโทษ (Penalty & E-CN Feedback Loop) ตามสถาปัตยกรรมระบบองค์กร (E-ordering ↔ BuildFlow ↔ STS ↔ QC ↔ E-CN)
 
 ---
 
 ## 🚀 ฟังก์ชันการใช้งานหลักใน Prototype
 
-1. **Dashboard & Live Queue**: หน้าจอแสดงคิวงานติดตั้งแบบเรียลไทม์ และจำลองการเชื่อมต่อเพื่อกดจ่ายงานไปยังระบบ KANNA
+1. **Dashboard & Live Queue**: หน้าจอแสดงคิวงานติดตั้งแบบเรียลไทม์ และจำลองการเชื่อมต่อเพื่อกดจ่ายงานไปยังระบบ BuildFlow
 2. **Smart Booking Engine**: ค้นหาและแนะนำทีมช่างพร้อมคำนวณ Match Score (%) โดยอิงจากหมวดหมู่ทักษะ (Skill Matrix Level 1-3), โซนที่ให้บริการ และประวัติการติด Penalty
 3. **Technician & Skill Matrix**: ระบบบริหารประวัติและระดับทักษะของช่างแต่ละทีม พร้อมทั้งประวัติคะแนน Penalty สะสม
-4. **End-to-End Integration Flow Simulator**: เครื่องมือจำลองวงจรการรับส่งข้อมูลทั้งระบบ ตั้งแต่การจอง (Selling Tools) -> งานระบบติดตั้ง (KANNA & STS) -> ตรวจสอบคุณภาพ (QC) และระบบออกใบเตือนค่าปรับ (Penalty E-CN) เพื่อจำลองผลตอบกลับ (Feedback Loop) เพื่อพักงานช่าง/ปรับลดสิทธิ์ในการรับงาน
+4. **End-to-End Integration Flow Simulator**: เครื่องมือจำลองวงจรการรับส่งข้อมูลทั้งระบบ ตั้งแต่การจอง (Selling Tools) -> งานระบบติดตั้ง (BuildFlow & STS) -> ตรวจสอบคุณภาพ (QC) และระบบออกใบเตือนค่าปรับ (Penalty E-CN) เพื่อจำลองผลตอบกลับ (Feedback Loop) เพื่อพักงานช่าง/ปรับลดสิทธิ์ในการรับงาน
 5. **Penalty & E-CN Audit Logs**: หน้าตารางแสดงรายละเอียดใบ E-CN, ค่าปรับ และผลกระทบต่อระดับคิวช่าง
 
 ---

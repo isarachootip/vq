@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { QueueBooking, Technician, IntegrationEvent } from '../types';
-import { Play, CheckCircle2, ShieldAlert, AlertTriangle, Cpu, RefreshCw } from 'lucide-react';
+import { BuildFlowIcon } from './BuildFlowIcon';
+import { Play, CheckCircle2, ShieldAlert, AlertTriangle, Cpu, RefreshCw, Database, Eye, X, Trash2 } from 'lucide-react';
 
 interface IntegrationFlowViewProps {
   bookings: QueueBooking[];
@@ -18,6 +19,41 @@ export const IntegrationFlowView: React.FC<IntegrationFlowViewProps> = ({
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [selectedBooking, setSelectedBooking] = useState<QueueBooking>(bookings[0]);
   const [qcResult, setQcResult] = useState<'PASS' | 'FAIL_QC' | 'LATE_ARRIVE'>('PASS');
+  const [activeLogTab, setActiveLogTab] = useState<'sim' | 'db'>('sim');
+  const [dbLogs, setDbLogs] = useState<any[]>([]);
+  const [dbSource, setDbSource] = useState<string>('');
+  const [isLoadingDbLogs, setIsLoadingDbLogs] = useState<boolean>(false);
+  const [selectedPayloadLog, setSelectedPayloadLog] = useState<any | null>(null);
+
+  const fetchDbLogs = async () => {
+    setIsLoadingDbLogs(true);
+    try {
+      const res = await fetch('/api/integration-logs');
+      if (res.ok) {
+        const data = await res.json();
+        setDbLogs(data.logs || []);
+        setDbSource(data.source || 'postgresql');
+      }
+    } catch (err) {
+      console.warn('Could not fetch DB integration logs:', err);
+    } finally {
+      setIsLoadingDbLogs(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDbLogs();
+  }, []);
+
+  const handleClearDbLogs = async () => {
+    if (!window.confirm('คุณต้องการล้างประวัติ integration_logs ในฐานข้อมูลหรือไม่?')) return;
+    try {
+      await fetch('/api/integration-logs', { method: 'DELETE' });
+      fetchDbLogs();
+    } catch (err) {
+      console.error('Error clearing DB logs:', err);
+    }
+  };
   const [logs, setLogs] = useState<IntegrationEvent[]>([
     {
       id: 'log-01',
@@ -74,15 +110,15 @@ export const IntegrationFlowView: React.FC<IntegrationFlowViewProps> = ({
       setCurrentStep(3);
       addLog(
         'Installer Management',
-        'KANNA',
-        'POST /api/v1/kanna/project/create',
-        `สร้าง Order ID ใน KANNA มอบหมายทีม ${selectedBooking.assignedTechTeamName} พร้อม Checklist งานติดตั้ง`,
+        'BuildFlow',
+        'POST /api/v1/buildflow/project/create',
+        `สร้าง Order ID ใน BuildFlow มอบหมายทีม ${selectedBooking.assignedTechTeamName} พร้อม Checklist งานติดตั้ง`,
         'info'
       );
     } else if (currentStep === 3) {
       setCurrentStep(4);
       addLog(
-        'KANNA',
+        'BuildFlow',
         'STS',
         'Check-In & Progress Sync',
         `ช่างเข้าหน้างาน และ Check-in ผ่านแอป STS อัปโหลดรูปภาพเตรียมงานติดตั้ง`,
@@ -190,7 +226,7 @@ export const IntegrationFlowView: React.FC<IntegrationFlowViewProps> = ({
             <h2 className="text-xl font-bold text-slate-800 font-sans">จำลองวงจรการทำงานและการเชื่อมโยงข้อมูล (Integration Simulator)</h2>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            จำลองเวิร์กโฟลว์ตั้งแต่ Selling tools ➔ Installer Management ➔ KANNA ➔ STS ➔ QC ➔ Penalty E-CN Feedback Loop
+            จำลองเวิร์กโฟลว์ตั้งแต่ Selling tools ➔ Installer Management ➔ BuildFlow ➔ STS ➔ QC ➔ Penalty E-CN Feedback Loop
           </p>
         </div>
 
@@ -288,8 +324,9 @@ export const IntegrationFlowView: React.FC<IntegrationFlowViewProps> = ({
               <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold">Field Execution</span>
             </div>
             <div className="space-y-2 text-xs">
-              <div className={`p-2.5 rounded-lg border transition-colors ${currentStep >= 3 ? 'bg-white border-emerald-500 text-emerald-700 font-bold shadow-xs' : 'bg-white border-slate-200 text-slate-500'}`}>
-                KANNA (Project Flow · Order)
+              <div className={`p-2.5 rounded-lg border transition-colors flex items-center gap-1.5 ${currentStep >= 3 ? 'bg-white border-purple-500 text-purple-700 font-bold shadow-xs' : 'bg-white border-slate-200 text-slate-500'}`}>
+                <BuildFlowIcon className="h-4 w-4" />
+                <span>BuildFlow (Project Flow · Order)</span>
               </div>
               <div className={`p-2.5 rounded-lg border transition-colors ${currentStep >= 4 ? 'bg-white border-cyan-500 text-cyan-700 font-bold shadow-xs' : 'bg-white border-slate-200 text-slate-500'}`}>
                 STS (Work Tracking)
@@ -351,43 +388,211 @@ export const IntegrationFlowView: React.FC<IntegrationFlowViewProps> = ({
         )}
       </div>
 
-      {/* Live Logs */}
+      {/* Live Logs & Database Logs Section */}
       <div className="v-panel p-5 bg-white space-y-4">
-        <div className="flex items-center justify-between border-b pb-2">
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-            ประวัติการรับส่งข้อมูลระบบ (System Integration Payload Audit Logs)
-          </h3>
-          <span className="text-[10px] text-slate-400 font-mono font-semibold">Active Stream</span>
-        </div>
-
-        <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-          {logs.map((log) => (
-            <div
-              key={log.id}
-              className={`p-3 rounded-lg border text-xs font-mono flex items-start space-x-3 transition-all ${
-                log.type === 'error'
-                  ? 'bg-rose-50 border-rose-200 text-rose-800'
-                  : log.type === 'warning'
-                  ? 'bg-amber-50 border-amber-200 text-amber-800'
-                  : log.type === 'success'
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                  : 'bg-slate-50 border-slate-200 text-slate-700'
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-3 gap-3">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setActiveLogTab('sim')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                activeLogTab === 'sim'
+                  ? 'bg-purple-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              <span className="text-[10px] text-slate-400 font-bold shrink-0 pt-0.5">{log.timestamp}</span>
-              <div className="flex-1 space-y-1">
-                <div className="flex items-center space-x-2">
-                  <span className="px-2 py-0.2 rounded bg-white border border-slate-200 text-[10px] text-slate-600 font-bold">
-                    {log.sourceSystem} ➔ {log.targetSystem}
-                  </span>
-                  <span className="font-bold text-slate-800">{log.action}</span>
+              <Cpu className="h-3.5 w-3.5" />
+              <span>Simulator Stream Logs ({logs.length})</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveLogTab('db');
+                fetchDbLogs();
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                activeLogTab === 'db'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <Database className="h-3.5 w-3.5" />
+              <span>PostgreSQL Logs (`integration_logs`) ({dbLogs.length})</span>
+            </button>
+          </div>
+
+          <div className="flex items-center space-x-2 text-xs">
+            {activeLogTab === 'db' && (
+              <>
+                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-mono text-[10px] font-bold">
+                  DB Source: {dbSource === 'postgresql' ? '🟢 PostgreSQL Live DB' : '🟡 Local Storage JSON'}
+                </span>
+
+                <button
+                  onClick={fetchDbLogs}
+                  disabled={isLoadingDbLogs}
+                  className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold flex items-center space-x-1 transition cursor-pointer"
+                >
+                  <RefreshCw className={`h-3 w-3 ${isLoadingDbLogs ? 'animate-spin' : ''}`} />
+                  <span>รีเฟรช</span>
+                </button>
+
+                <button
+                  onClick={handleClearDbLogs}
+                  className="px-2 py-1 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-[11px] font-semibold flex items-center space-x-1 transition cursor-pointer"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  <span>ล้าง Logs</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Tab 1: Simulator Activity Stream */}
+        {activeLogTab === 'sim' && (
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            {logs.map((log) => (
+              <div
+                key={log.id}
+                className={`p-3 rounded-lg border text-xs font-mono flex items-start space-x-3 transition-all ${
+                  log.type === 'error'
+                    ? 'bg-rose-50 border-rose-200 text-rose-800'
+                    : log.type === 'warning'
+                    ? 'bg-amber-50 border-amber-200 text-amber-800'
+                    : log.type === 'success'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-slate-50 border-slate-200 text-slate-700'
+                }`}
+              >
+                <span className="text-[10px] text-slate-400 font-bold shrink-0 pt-0.5">{log.timestamp}</span>
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2 py-0.2 rounded bg-white border border-slate-200 text-[10px] text-slate-600 font-bold">
+                      {log.sourceSystem} ➔ {log.targetSystem}
+                    </span>
+                    <span className="font-bold text-slate-800">{log.action}</span>
+                  </div>
+                  <div className="text-[11px] opacity-90 font-sans">{log.payloadSummary}</div>
                 </div>
-                <div className="text-[11px] opacity-90 font-sans">{log.payloadSummary}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Tab 2: PostgreSQL integration_logs Table View */}
+        {activeLogTab === 'db' && (
+          <div className="overflow-x-auto">
+            {dbLogs.length === 0 ? (
+              <div className="p-8 text-center text-slate-400 text-xs font-semibold">
+                ยังไม่มีข้อมูลในตาราง `integration_logs` (ทดสอบกดปุ่ม "ส่ง BuildFlow" เพื่อให้ระบบเขียน Log ลง DB)
+              </div>
+            ) : (
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-600 border-b border-slate-200 text-[11px]">
+                    <th className="p-2.5 font-bold">ID</th>
+                    <th className="p-2.5 font-bold">Timestamp</th>
+                    <th className="p-2.5 font-bold">Source ➔ Target</th>
+                    <th className="p-2.5 font-bold">Action</th>
+                    <th className="p-2.5 font-bold">Booking Ref</th>
+                    <th className="p-2.5 font-bold text-center">Payload JSON</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+                  {dbLogs.map((logItem) => {
+                    const payloadObj = typeof logItem.payload === 'string' ? JSON.parse(logItem.payload || '{}') : (logItem.payload || {});
+                    return (
+                      <tr key={logItem.id} className="hover:bg-slate-50 transition">
+                        <td className="p-2.5 font-bold text-slate-500">#{logItem.id}</td>
+                        <td className="p-2.5 text-slate-500 whitespace-nowrap">
+                          {new Date(logItem.created_at || logItem.timestamp).toLocaleString('th-TH')}
+                        </td>
+                        <td className="p-2.5">
+                          <span className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 font-bold border border-purple-200 text-[10px]">
+                            {logItem.source_system || logItem.sourceSystem} ➔ {logItem.target_system || logItem.targetSystem}
+                          </span>
+                        </td>
+                        <td className="p-2.5 font-bold text-slate-800">{logItem.action}</td>
+                        <td className="p-2.5 text-blue-600 font-bold">{payloadObj.bookingRef || '-'}</td>
+                        <td className="p-2.5 text-center">
+                          <button
+                            onClick={() => setSelectedPayloadLog(logItem)}
+                            className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 text-[10px] font-bold flex items-center justify-center space-x-1 mx-auto transition cursor-pointer"
+                          >
+                            <Eye className="h-3 w-3" />
+                            <span>ดู JSON</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Payload JSON Inspector Modal */}
+      {selectedPayloadLog && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-200 animate-fadeIn">
+            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Database className="h-5 w-5 text-emerald-400" />
+                <h3 className="text-sm font-bold font-mono">
+                  PostgreSQL Record #{selectedPayloadLog.id} (integration_logs)
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedPayloadLog(null)}
+                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-2 gap-4 text-xs font-mono bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <div>
+                  <span className="text-slate-400 block text-[10px]">CREATED AT:</span>
+                  <span className="font-bold text-slate-700">
+                    {new Date(selectedPayloadLog.created_at).toLocaleString('th-TH')}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-slate-400 block text-[10px]">ACTION / EVENT:</span>
+                  <span className="font-bold text-purple-700">{selectedPayloadLog.action}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Full Payload JSON stored in PostgreSQL:
+                </label>
+                <pre className="p-4 rounded-xl bg-slate-900 text-emerald-400 font-mono text-xs overflow-x-auto leading-relaxed border border-slate-800 shadow-inner">
+                  {JSON.stringify(
+                    typeof selectedPayloadLog.payload === 'string'
+                      ? JSON.parse(selectedPayloadLog.payload)
+                      : selectedPayloadLog.payload,
+                    null,
+                    2
+                  )}
+                </pre>
               </div>
             </div>
-          ))}
+
+            <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end">
+              <button
+                onClick={() => setSelectedPayloadLog(null)}
+                className="v-btn-secondary text-xs py-1.5 px-4"
+              >
+                ปิดหน้าต่าง
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

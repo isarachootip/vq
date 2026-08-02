@@ -2417,7 +2417,7 @@ export const INITIAL_BOOKINGS: QueueBooking[] = [
     assignedTechTeamName: 'ทีมช่างสมชาย & ทีม (ช่างใหญ่ Built-in)',
     bookingDate: '2026-07-24',
     timeSlot: '09:00 - 17:00 (Full Day)',
-    status: 'Dispatched to KANNA',
+    status: 'Dispatched to BuildFlow',
     createdFrom: 'Selling Tools (E-ordering)',
     createdAt: '2026-07-23 08:30',
     branchId: 'br-01',

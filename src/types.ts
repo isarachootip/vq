@@ -147,7 +147,7 @@ export interface QueueBooking {
   assignedTechTeamName?: string;
   bookingDate: string;
   timeSlot: string;
-  status: 'Pending Dispatch' | 'Scheduled' | 'Dispatched to KANNA' | 'STS In-Progress' | 'QC Inspection' | 'Passed (Closed)' | 'Penalty E-CN Issued';
+  status: 'Pending Dispatch' | 'Scheduled' | 'Dispatched to BuildFlow' | 'Dispatched to KANNA' | 'STS In-Progress' | 'QC Inspection' | 'Passed (Closed)' | 'Penalty E-CN Issued';
   createdFrom: 'Selling Tools (E-ordering)' | 'Manual POS' | 'COOHOM Direct' | 'Vfixq Portal' | 'Line OA' | 'Call Center 1308' | 'Walk-in';
   createdAt: string;
   penaltyRef?: string;
@@ -172,8 +172,8 @@ export interface PenaltyRecord {
 export interface IntegrationEvent {
   id: string;
   timestamp: string;
-  sourceSystem: 'Selling Tools' | 'Installer Management' | 'KANNA' | 'STS' | 'QC' | '1308 Cust. Sat' | 'Penalty System (E-CN)' | 'E-billing';
-  targetSystem: 'Selling Tools' | 'Installer Management' | 'KANNA' | 'STS' | 'QC' | '1308 Cust. Sat' | 'Penalty System (E-CN)' | 'E-billing';
+  sourceSystem: 'Selling Tools' | 'Installer Management' | 'BuildFlow' | 'KANNA' | 'STS' | 'QC' | '1308 Cust. Sat' | 'Penalty System (E-CN)' | 'E-billing';
+  targetSystem: 'Selling Tools' | 'Installer Management' | 'BuildFlow' | 'KANNA' | 'STS' | 'QC' | '1308 Cust. Sat' | 'Penalty System (E-CN)' | 'E-billing';
   action: string;
   payloadSummary: string;
   type: 'info' | 'success' | 'warning' | 'error';
@@ -194,6 +194,7 @@ export interface MatchWeights {
 export interface SystemConfig {
   cooldownThreshold: number;
   suspensionThreshold: number;
+  buildflowApiUrl?: string;
   kannaApiUrl: string;
   stsWebhookUrl: string;
   qcInspectorUrl: string;

@@ -28,7 +28,7 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
 
   // Stats calculation
   const pendingCount = bookings.filter(b => b.status === 'Pending Dispatch' || b.status === 'Scheduled').length;
-  const inProgressCount = bookings.filter(b => b.status === 'Dispatched to KANNA' || b.status === 'STS In-Progress').length;
+  const inProgressCount = bookings.filter(b => b.status === 'Dispatched to BuildFlow' || b.status === 'Dispatched to KANNA' || b.status === 'STS In-Progress').length;
   const resolvedCount = bookings.filter(b => b.status === 'Passed (Closed)').length;
   const escalatedCount = bookings.filter(b => b.status === 'Penalty E-CN Issued' || b.status === 'QC Inspection').length + penalties.length;
 
@@ -187,7 +187,7 @@ export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps>
           </div>
           <div>
             <div className="text-3xl font-black text-slate-800 tracking-tight">{inProgressCount}</div>
-            <div className="text-xs font-bold text-slate-700 mt-0.5">กำลังติดตั้ง (KANNA/STS)</div>
+            <div className="text-xs font-bold text-slate-700 mt-0.5">กำลังติดตั้ง (BuildFlow/STS)</div>
             <div className="text-[10px] text-slate-400 font-medium">ช่างอยู่ระหว่างปฏิบัติงานหน้างาน</div>
           </div>
         </div>

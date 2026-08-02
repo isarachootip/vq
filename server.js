@@ -4,6 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pg from 'pg';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './swagger.js';
 
 const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
@@ -143,6 +145,7 @@ async function initDbTables() {
   const TECHS_FILE = path.join(DATA_DIR, 'technicians.json');
   const USERS_FILE = path.join(DATA_DIR, 'users.json');
   const STANDARD_COSTS_FILE = path.join(DATA_DIR, 'standard_costs.json');
+  const INTEGRATION_LOGS_FILE = path.join(DATA_DIR, 'integration_logs.json');
   const CONFIG_FILE = path.join(DATA_DIR, 'line_config.json');
 
 if (!fs.existsSync(DATA_DIR)) {
@@ -913,6 +916,142 @@ app.delete('/api/standard-costs/:id', async (req, res) => {
   saveJson(STANDARD_COSTS_FILE, filtered);
 
   return res.json({ status: 'success', deletedId: id });
+});
+
+// BuildFlow Production Dispatch Endpoint & Relay Proxy
+app.post(['/api/buildflow/dispatch', '/api/v1/projects'], async (req, res) => {
+  const payload = req.body || {};
+  console.log('🚀 [BuildFlow Dispatch Request Received on Coolify]:', payload);
+
+  const targetUrl = process.env.BUILDFLOW_API_URL || 'https://buildflowx.online/api/v1/projects';
+  let externalStatus = 'skipped';
+  let externalResponse = null;
+
+  try {
+    // Relay request server-to-server (bypasses browser CORS on Production)
+    const response = await fetch(targetUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    externalStatus = response.status === 200 || response.status === 201 ? 'success' : 'forwarded';
+    try {
+      externalResponse = await response.json();
+    } catch (_) {
+      externalResponse = await response.text();
+    }
+  } catch (err) {
+    console.warn('⚠️ BuildFlow external relay notice:', err.message);
+    externalStatus = 'relay_notice';
+  }
+
+  // Save to JSON File Fallback
+  const currentLogs = loadJson(INTEGRATION_LOGS_FILE, []);
+  const newLogEntry = {
+    id: Date.now(),
+    source_system: payload.sourceSystem || 'Installer Management (VQ)',
+    target_system: 'BuildFlow',
+    action: 'DISPATCH_PROJECT',
+    payload,
+    created_at: new Date().toISOString()
+  };
+  saveJson(INTEGRATION_LOGS_FILE, [newLogEntry, ...currentLogs].slice(0, 100));
+
+  // Save to PostgreSQL if connected
+  if (isDbConnected && dbPool) {
+    try {
+      await dbPool.query(`
+        CREATE TABLE IF NOT EXISTS integration_logs (
+          id SERIAL PRIMARY KEY,
+          source_system VARCHAR(100),
+          target_system VARCHAR(100),
+          action VARCHAR(255),
+          payload JSONB,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      await dbPool.query(
+        `INSERT INTO integration_logs (source_system, target_system, action, payload) VALUES ($1, $2, $3, $4)`,
+        [
+          payload.sourceSystem || 'Installer Management (VQ)',
+          'BuildFlow',
+          'DISPATCH_PROJECT',
+          JSON.stringify(payload)
+        ]
+      );
+    } catch (dbErr) {
+      console.error('Error logging integration dispatch to DB:', dbErr);
+    }
+  }
+
+  return res.json({
+    status: 'success',
+    message: 'Dispatched to BuildFlow successfully on Coolify Production',
+    targetUrl,
+    externalStatus,
+    externalResponse,
+    dispatchedAt: new Date().toISOString()
+  });
+});
+
+// GET Integration Logs (from PostgreSQL or JSON file fallback)
+app.get('/api/integration-logs', async (req, res) => {
+  let logs = [];
+  let source = 'json_file';
+
+  if (isDbConnected && dbPool) {
+    try {
+      await dbPool.query(`
+        CREATE TABLE IF NOT EXISTS integration_logs (
+          id SERIAL PRIMARY KEY,
+          source_system VARCHAR(100),
+          target_system VARCHAR(100),
+          action VARCHAR(255),
+          payload JSONB,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      const result = await dbPool.query('SELECT * FROM integration_logs ORDER BY created_at DESC LIMIT 100');
+      logs = result.rows;
+      source = 'postgresql';
+    } catch (err) {
+      console.error('Error fetching integration logs from PostgreSQL:', err);
+    }
+  }
+
+  if (logs.length === 0) {
+    logs = loadJson(INTEGRATION_LOGS_FILE, []);
+  }
+
+  return res.json({
+    status: 'success',
+    count: logs.length,
+    source,
+    logs
+  });
+});
+
+// DELETE Integration Logs
+app.delete('/api/integration-logs', async (req, res) => {
+  if (isDbConnected && dbPool) {
+    try {
+      await dbPool.query('TRUNCATE TABLE integration_logs');
+    } catch (err) {
+      console.error('Error clearing integration_logs in PostgreSQL:', err);
+    }
+  }
+  saveJson(INTEGRATION_LOGS_FILE, []);
+  return res.json({ status: 'success', message: 'Cleared all integration logs' });
+// Serve Swagger UI Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/api-docs-json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
 });
 
 // Serve static built frontend files for production

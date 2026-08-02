@@ -515,7 +515,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   { feature: 'จัดการข้อมูลสาขา & โซนพื้นที่', sys_admin: true, admin: true, supervisor: true, technician: false, storecs: false, customer: false },
                   { feature: 'อนุมัติใบสมัครช่างใหม่ (Recruitment)', sys_admin: true, admin: true, supervisor: true, technician: false, storecs: false, customer: false },
                   { feature: 'ออกคำสั่งปรับ E-CN & Penalties', sys_admin: true, admin: true, supervisor: true, technician: false, storecs: false, customer: false },
-                  { feature: 'จัดสรรคิวช่าง & สั่งงาน KANNA/STS', sys_admin: true, admin: true, supervisor: true, technician: false, storecs: true, customer: false },
+                  { feature: 'จัดสรรคิวช่าง & สั่งงาน BuildFlow/STS', sys_admin: true, admin: true, supervisor: true, technician: false, storecs: true, customer: false },
                   { feature: 'บันทึกจองคิวหน้าร้าน (Store CS Booking)', sys_admin: true, admin: true, supervisor: true, technician: false, storecs: true, customer: false },
                   { feature: 'ดู Skill Matrix & ผลงานช่างทั้งหมด', sys_admin: true, admin: true, supervisor: true, technician: true, storecs: true, customer: false },
                   { feature: 'จองบริการติดตั้งผ่าน Vfixq Portal', sys_admin: true, admin: true, supervisor: true, technician: false, storecs: true, customer: true },

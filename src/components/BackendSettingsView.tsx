@@ -1,5 +1,6 @@
 import React from 'react';
 import type { MatchWeights, SystemConfig } from '../types';
+import { BuildFlowIcon } from './BuildFlowIcon';
 import { 
   Sliders, 
   Settings, 
@@ -406,11 +407,17 @@ export const BackendSettingsView: React.FC<BackendSettingsViewProps> = ({
 
             <div className="space-y-3.5 text-xs">
               <div>
-                <label className="block font-bold text-slate-600 mb-1">KANNA API Endpoint:</label>
+                <label className="block font-bold text-slate-600 mb-1 flex items-center gap-1.5">
+                  <BuildFlowIcon className="h-3.5 w-3.5" />
+                  <span>BuildFlow API Endpoint:</span>
+                </label>
                 <input
                   type="text"
-                  value={systemConfig.kannaApiUrl}
-                  onChange={(e) => handleConfigChange('kannaApiUrl', e.target.value)}
+                  value={systemConfig.buildflowApiUrl || systemConfig.kannaApiUrl || 'https://buildflowx.online/api/v1/projects'}
+                  onChange={(e) => {
+                    handleConfigChange('buildflowApiUrl', e.target.value);
+                    handleConfigChange('kannaApiUrl', e.target.value);
+                  }}
                   className="v-input w-full py-1 text-[11px] font-mono"
                 />
               </div>

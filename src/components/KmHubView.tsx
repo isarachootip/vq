@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { BuildFlowIcon } from './BuildFlowIcon';
 import { 
   BookOpen, 
   Search, 
@@ -6,7 +7,6 @@ import {
   ChevronUp, 
   Layers, 
   Cpu, 
-  MessageSquare, 
   Smartphone, 
   ClipboardCheck, 
   ShieldAlert,
@@ -67,11 +67,11 @@ export const KmHubView: React.FC = () => {
               '• ❌ **90 คะแนนขึ้นไป (ระงับสิทธิ์ / Suspended)**: ระงับสิทธิ์ในการรับงานติดตั้งถาวร หรือจนกว่าจะผ่านการพิจารณาอุทธรณ์และอบรมพัฒนาใหม่'
     },
     {
-      id: 'faq-kanna-vs-sts',
-      question: 'ระบบ KANNA และระบบ STS ต่างกันอย่างไรในการเชื่อมต่อเพื่อคุมงานช่าง?',
+      id: 'faq-buildflow-vs-sts',
+      question: 'ระบบ BuildFlow และระบบ STS ต่างกันอย่างไรในการเชื่อมต่อเพื่อคุมงานช่าง?',
       category: 'integration',
       answer: 'ทั้งสองระบบทำงานร่วมกันในการติดตามงานสนาม แต่มีบทบาทที่ต่างกันเด่นชัด:\n\n' +
-              '1. **KANNA (Project Management & Chat)**: เป็นศูนย์กลางการสื่อสารและโครงร่างงาน ใช้เก็บประวัติการจ่ายงาน สถานะการรับงานของช่าง และเป็นห้องแชทระหว่างแอดมิน vService กับช่างที่รับงาน เพื่อคุยรายละเอียดและแก้ไขปัญหาหน้างานจริง\n' +
+              '1. **BuildFlow (Project Management & Chat)**: เป็นศูนย์กลางการสื่อสารและโครงร่างงาน ใช้เก็บประวัติการจ่ายงาน สถานะการรับงานของช่าง และเป็นห้องแชทระหว่างแอดมิน vService กับช่างที่รับงาน เพื่อคุยรายละเอียดและแก้ไขปัญหาหน้างานจริง\n' +
               '2. **STS (Service Tracking System - Mobile Web App)**: เป็นระบบที่ช่างใช้สแกนและบันทึกเวลาจริงเชิงกายภาพและผลงาน ได้แก่ การกด GPS Check-in เพื่อยืนยันว่าเข้าพื้นที่บ้านลูกค้าตรงเวลา, การอัปโหลดรูปภาพสถานะหน้างานก่อน-หลังติดตั้ง และการกด Check-out เพื่อปิดงานเข้าขั้นตอนตรวจรับเงิน'
     },
     {
@@ -209,7 +209,7 @@ export const KmHubView: React.FC = () => {
               '  - **แต้มระงับสิทธิ์สะสม (Suspension Threshold)**: ตั้งแต้มเพดาน (เช่น 90 แต้ม) ที่ช่างจะถูกระงับสิทธิ์ถาวร\n' +
               '  - **ระยะเวลาการสไลด์แบนเนอร์หน้าร้าน (Banner Slide Delay)**: ตั้งเวลาสไลด์ภาพโปรโมชันหน้าร้าน (เช่น 3 วินาที)\n\n' +
               '• 🔌 **4. ที่อยู่เชื่อมต่อ API ระบบองค์กร (API Gateways)**:\n' +
-              '  - สำหรับระบุ URL Endpoint ของระบบ KANNA, STS Check-in, QC Audit Inspector, E-CN ERP Billing, และ Google Maps API Key'
+              '  - สำหรับระบุ URL Endpoint ของระบบ BuildFlow, STS Check-in, QC Audit Inspector, E-CN ERP Billing, และ Google Maps API Key'
     }
   ];
 
@@ -245,11 +245,11 @@ export const KmHubView: React.FC = () => {
       ]
     },
     {
-      id: 'kanna',
-      title: 'KANNA System',
+      id: 'buildflow',
+      title: 'BuildFlow System',
       subtitle: 'Project & Communication',
       shortDesc: 'เครื่องมือติดตามงานและแชทกับช่าง',
-      icon: MessageSquare,
+      icon: BuildFlowIcon,
       colorClass: 'bg-indigo-50 text-indigo-700',
       borderColorClass: 'border-indigo-200 focus:border-indigo-500',
       textColorClass: 'text-indigo-800',
@@ -441,7 +441,7 @@ export const KmHubView: React.FC = () => {
           {/* Interactive Flow Chart Container */}
           <div className="v-panel p-6 bg-white overflow-x-auto">
             <h3 className="text-sm font-bold text-slate-700 mb-6 uppercase tracking-wider text-center">
-              วงจรการเชื่อมต่อข้อมูลหน้างานและการลงโทษ (E-ordering ↔ KANNA ↔ STS ↔ QC ↔ E-CN Feedback Loop)
+              วงจรการเชื่อมต่อข้อมูลหน้างานและการลงโทษ (E-ordering ↔ BuildFlow ↔ STS ↔ QC ↔ E-CN Feedback Loop)
             </h3>
             
             <div className="flex items-center justify-between min-w-[900px] pb-4 px-2">
@@ -574,7 +574,7 @@ export const KmHubView: React.FC = () => {
               <div className="p-4 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/30 transition-all space-y-2">
                 <h4 className="font-bold text-slate-800 text-xs md:text-sm">2. การส่งงานและอัปเดต (Integration Simulator)</h4>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  ไปที่เมนู **ตารางคิวงานติดตั้ง** ➔ สังเกตสถานะคิวงาน ➔ กดปุ่ม "ส่งไป KANNA" เพื่อส่งงาน ➔ หน้าต่างจะโชว์ Logs การเชื่อมต่อ ➔ ไปที่แท็บ **Integration Simulator** เพื่อกดอัปเดตสเตตัสงานจาก KANNA ➔ STS (Check-in) ➔ ปิดงาน ➔ และตรวจ QC
+                  ไปที่เมนู **ตารางคิวงานติดตั้ง** ➔ สังเกตสถานะคิวงาน ➔ กดปุ่ม "ส่ง BuildFlow" เพื่อส่งงาน ➔ หน้าต่างจะโชว์ Logs การเชื่อมต่อ ➔ ไปที่แท็บ **Integration Simulator** เพื่อกดอัปเดตสเตตัสงานจาก BuildFlow ➔ STS (Check-in) ➔ ปิดงาน ➔ และตรวจ QC
                 </p>
               </div>
 

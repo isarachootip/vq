@@ -3,6 +3,7 @@ import type { QueueBooking, Technician, ServiceItem, Zone } from '../types';
 import { INITIAL_ZONES } from '../mockData';
 import { CustomDateInput } from './CustomDateInput';
 import { InteractiveMapPickerModal } from './InteractiveMapPickerModal';
+import { BuildFlowIcon } from './BuildFlowIcon';
 import { 
   Clock, 
   CheckCircle2, 
@@ -18,8 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCheck,
-  Sparkles,
-  Workflow
+  Sparkles
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -266,6 +266,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         return 'bg-amber-50 text-amber-800 border-amber-200';
       case 'Scheduled':
         return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'Dispatched to BuildFlow':
       case 'Dispatched to KANNA':
         return 'bg-indigo-50 text-indigo-700 border-indigo-200';
       case 'STS In-Progress':
@@ -327,7 +328,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const getBookingsStatusSummary = (dateStr: string) => {
     const list = bookings.filter((b) => b.bookingDate === dateStr);
     const pending = list.filter(b => b.status === 'Pending Dispatch' || b.status === 'Scheduled').length;
-    const active = list.filter(b => b.status === 'Dispatched to KANNA' || b.status === 'STS In-Progress').length;
+    const active = list.filter(b => b.status === 'Dispatched to BuildFlow' || b.status === 'Dispatched to KANNA' || b.status === 'STS In-Progress').length;
     const closed = list.filter(b => b.status === 'Passed (Closed)').length;
     return { pending, active, closed };
   };
@@ -410,12 +411,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
 
         <div className="v-panel p-4 flex items-center space-x-4 bg-white border border-slate-200">
-          <div className="p-3 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
-            <Workflow className="h-6 w-6" />
+          <div className="p-3 rounded-lg bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center">
+            <BuildFlowIcon className="h-6 w-6" />
           </div>
           <div>
             <div className="text-2xl font-bold text-slate-800">
-              {bookings.filter((b) => b.status === 'Dispatched to KANNA' || b.status === 'STS In-Progress').length}
+              {bookings.filter((b) => b.status === 'Dispatched to BuildFlow' || b.status === 'Dispatched to KANNA' || b.status === 'STS In-Progress').length}
             </div>
             <div className="text-xs text-slate-500 font-medium">งานใน BuildFlow / STS</div>
           </div>
@@ -676,7 +677,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <option value="ALL">ทุกสถานะงาน</option>
             <option value="Pending Dispatch">Pending Dispatch</option>
             <option value="Scheduled">Scheduled</option>
-            <option value="Dispatched to KANNA">Dispatched to KANNA</option>
+            <option value="Dispatched to BuildFlow">Dispatched to BuildFlow</option>
             <option value="STS In-Progress">STS In-Progress</option>
             <option value="QC Inspection">QC Inspection</option>
             <option value="Passed (Closed)">Passed (Closed)</option>
@@ -816,8 +817,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       </td>
 
                       <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${getStatusBadge(b.status)}`}>
-                          {b.status}
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border flex items-center gap-1 w-fit ${getStatusBadge(b.status)}`}>
+                          {(b.status === 'Dispatched to BuildFlow' || b.status === 'Dispatched to KANNA') && (
+                            <BuildFlowIcon className="h-3 w-3" />
+                          )}
+                          <span>{b.status === 'Dispatched to KANNA' ? 'Dispatched to BuildFlow' : b.status}</span>
                         </span>
                         {b.penaltyRef && (
                           <div className="text-[9px] text-rose-600 font-mono mt-1 flex items-center space-x-0.5">
@@ -842,9 +846,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           {b.status === 'Scheduled' && (
                             <button
                               onClick={() => onDispatchToKanna(b.id)}
-                              className="px-2 py-1 rounded bg-amber-500 hover:bg-amber-600 text-slate-900 font-extrabold text-[10px] transition flex items-center space-x-1 shadow-sm border-0 cursor-pointer"
+                              className="px-2 py-1 rounded bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[10px] transition flex items-center space-x-1 shadow-sm border-0 cursor-pointer"
                             >
-                              <Workflow className="h-3 w-3" />
+                              <BuildFlowIcon className="h-3.5 w-3.5" />
                               <span>ส่ง BuildFlow</span>
                             </button>
                           )}

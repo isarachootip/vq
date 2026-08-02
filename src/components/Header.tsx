@@ -1,5 +1,5 @@
-import React from 'react';
-import { Calendar, ShieldAlert, Award, RefreshCw, LayoutDashboard, Cpu, Users, Layers, AlertCircle } from 'lucide-react';
+import { BuildFlowIcon } from './BuildFlowIcon';
+import { Calendar, ShieldAlert, Award, RefreshCw, LayoutDashboard, Cpu, Users, AlertCircle } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
@@ -35,20 +35,21 @@ export const Header: React.FC<HeaderProps> = ({
           
           {/* Logo & Title */}
           <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <Layers className="h-6 w-6 text-white" />
+            <div className="h-10 w-10 rounded-xl bg-purple-900/40 border border-purple-500/30 flex items-center justify-center shadow-lg shadow-purple-500/20 p-2">
+              <BuildFlowIcon className="h-6 w-6" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold bg-gradient-to-r from-white via-purple-100 to-purple-300 bg-clip-text text-transparent">
                   Installer Management System
                 </h1>
-                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                  คิวช่าง · Skill · Penalty
+                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
+                  <BuildFlowIcon className="h-3 w-3" />
+                  <span>BuildFlow Integrated</span>
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                ระบบจอง จัดคิว ประเมินทักษะ และลงโทษช่างตามสถาปัตยกรรม (E-ordering ↔ KANNA ↔ STS ↔ QC ↔ E-CN)
+                ระบบจอง จัดคิว ประเมินทักษะ และลงโทษช่างตามสถาปัตยกรรม (E-ordering ↔ BuildFlow ↔ STS ↔ QC ↔ E-CN)
               </p>
             </div>
           </div>

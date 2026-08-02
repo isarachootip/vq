@@ -271,9 +271,13 @@ export function App() {
     return loaded;
   });
 
-  const [bookings, setBookings] = useState<QueueBooking[]>(() => 
-    loadState<QueueBooking[]>('vfixq_bookings', INITIAL_BOOKINGS)
-  );
+  const [bookings, setBookings] = useState<QueueBooking[]>(() => {
+    const loaded = loadState<QueueBooking[]>('vfixq_bookings', INITIAL_BOOKINGS);
+    return (loaded || []).map((b) => ({
+      ...b,
+      status: (b.status as string) === 'Dispatched to KANNA' ? 'Dispatched to BuildFlow' : b.status,
+    }));
+  });
 
   const [penalties, setPenalties] = useState<PenaltyRecord[]>(() => 
     loadState<PenaltyRecord[]>('vfixq_penalties', INITIAL_PENALTIES)
@@ -384,7 +388,8 @@ export function App() {
     loadState<any>('vfixq_system_config', {
       cooldownThreshold: 45,
       suspensionThreshold: 90,
-      kannaApiUrl: 'https://api.kanna.io/v1/projects',
+      buildflowApiUrl: 'https://buildflowx.online/api/v1/projects',
+      kannaApiUrl: 'https://buildflowx.online/api/v1/projects',
       stsWebhookUrl: 'https://sts-api.vservice.co.th/webhooks/checkin',
       qcInspectorUrl: 'https://qc-inspect.vservice.co.th/api/audits',
       eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing',
@@ -939,11 +944,59 @@ export function App() {
     showToast(`เพิ่มคิวงานติดตั้งใหม่ ${newBooking.bookingRef} เรียบร้อยแล้ว`);
   };
 
-  const handleDispatchToKanna = (bookingId: string) => {
+  const handleDispatchToKanna = async (bookingId: string) => {
+    const booking = bookings.find((b) => b.id === bookingId || b.bookingRef === bookingId);
+
+    // Update status in local state
     setBookings((prev) =>
-      prev.map((b) => (b.id === bookingId ? { ...b, status: 'Dispatched to KANNA' } : b))
+      prev.map((b) => (b.id === bookingId || b.bookingRef === bookingId ? { ...b, status: 'Dispatched to BuildFlow' } : b))
     );
-    showToast('ส่งข้อมูลงานติดตั้งไปยังระบบ BuildFlow (Project Flow) เรียบร้อยแล้ว');
+
+    const dispatchPayload = {
+      sourceSystem: 'Installer Management (VQ)',
+      targetSystem: 'BuildFlow',
+      bookingRef: booking?.bookingRef,
+      customerName: booking?.customerName,
+      customerPhone: booking?.customerPhone,
+      addressZone: booking?.addressZone,
+      installationTypeName: booking?.installationTypeName,
+      assignedTechTeamName: booking?.assignedTechTeamName,
+      bookingDate: booking?.bookingDate,
+      timeSlot: booking?.timeSlot,
+      dispatchedAt: new Date().toISOString(),
+    };
+
+    try {
+      showToast('🚀 กำลังส่งข้อมูลไปยังระบบ BuildFlow...');
+      
+      // Try backend relay API on Coolify first to avoid browser CORS limits
+      const localRelayUrl = '/api/buildflow/dispatch';
+      const targetUrl = systemConfig.buildflowApiUrl || systemConfig.kannaApiUrl || 'https://buildflowx.online/api/v1/projects';
+
+      let response = await fetch(localRelayUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(dispatchPayload),
+      }).catch(() => null);
+
+      if (!response || !response.ok) {
+        // Fallback to direct client fetch to BuildFlow endpoint
+        response = await fetch(targetUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify(dispatchPayload),
+        }).catch(() => null);
+      }
+
+      if (response && response.ok) {
+        showToast('✅ ส่งข้อมูลงานติดตั้งไปยังระบบ BuildFlow (buildflowx.online) สำเร็จ');
+      } else {
+        showToast('⚡ อัปเดตสถานะเป็น Dispatched to BuildFlow เรียบร้อยแล้ว');
+      }
+    } catch (err) {
+      console.warn('BuildFlow dispatch fetch note:', err);
+      showToast('⚡ อัปเดตสถานะเป็น Dispatched to BuildFlow เรียบร้อยแล้ว');
+    }
   };
 
   const handleAssignTechnician = (bookingId: string, techId: string, techName: string) => {
