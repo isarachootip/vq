@@ -2515,7 +2515,7 @@ export const INITIAL_PENALTIES: PenaltyRecord[] = [
   },
 ];
 
-export const INITIAL_USERS: UserAccount[] = [
+const CORE_USERS: UserAccount[] = [
   {
     id: 'usr-001',
     username: 'sysadmin',
@@ -2555,20 +2555,6 @@ export const INITIAL_USERS: UserAccount[] = [
     createdAt: '2026-02-01'
   },
   {
-    id: 'usr-004',
-    username: 'tech_somchai',
-    name: 'ช่างสมชาย & ทีม (ช่างใหญ่)',
-    email: 'somchai.tech@vservice.co.th',
-    phone: '089-111-2233',
-    password: 'p123',
-    lineId: '@tech_somchai',
-    role: 'technician',
-    status: 'Active',
-    branchId: 'br-01',
-    branchName: 'สาขาพระราม 9',
-    createdAt: '2026-02-10'
-  },
-  {
     id: 'usr-005',
     username: 'cs_rama9',
     name: 'คุณกนกวรรณ ใจดี (CS พระราม 9)',
@@ -2594,4 +2580,26 @@ export const INITIAL_USERS: UserAccount[] = [
     status: 'Active',
     createdAt: '2026-07-20'
   }
+];
+
+const techUserAccounts: UserAccount[] = generate200Technicians().map((tech) => {
+  const techUsername = `tech_${tech.code.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+  const techLineId = `@tech_${tech.code.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+  return {
+    id: `usr-tech-${tech.id}`,
+    username: techUsername,
+    name: tech.name,
+    email: `${techUsername}@vservice-tech.co.th`,
+    phone: tech.phone || '081-000-0000',
+    password: 'p123',
+    lineId: techLineId,
+    role: 'technician',
+    status: 'Active',
+    createdAt: '2026-02-10'
+  };
+});
+
+export const INITIAL_USERS: UserAccount[] = [
+  ...CORE_USERS,
+  ...techUserAccounts
 ];

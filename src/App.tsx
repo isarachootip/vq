@@ -290,9 +290,11 @@ export function App() {
     loadState<ServiceItem[]>('vfixq_services', INITIAL_SERVICES)
   );
 
-  const [users, setUsers] = useState<UserAccount[]>(() => 
-    loadState<UserAccount[]>('vfixq_users', INITIAL_USERS)
-  );
+  const [users, setUsers] = useState<UserAccount[]>(() => {
+    const loaded = loadState<UserAccount[]>('vfixq_users', INITIAL_USERS);
+    if (!loaded || loaded.length < 200) return INITIAL_USERS;
+    return loaded;
+  });
 
   // Configuration States
   const [matchWeights, setMatchWeights] = useState<any>(() => 
@@ -390,6 +392,34 @@ export function App() {
         if (!storedTechs || storedTechs.length < 200 || storedTechs.some((t) => t.id === 'tech-01')) {
           setTechnicians(INITIAL_TECHNICIANS);
           safeLocalSet('vfixq_technicians', INITIAL_TECHNICIANS);
+        }
+      }
+
+      try {
+        // Fetch Users from API
+        const usersRes = await fetch('/api/users');
+        if (usersRes.ok) {
+          const data = await usersRes.json();
+          if (data.users && data.users.length >= 200) {
+            setUsers(data.users);
+            safeLocalSet('vfixq_users', data.users);
+          } else {
+            // Seed backend if response is empty or incomplete
+            setUsers(INITIAL_USERS);
+            safeLocalSet('vfixq_users', INITIAL_USERS);
+            fetch('/api/users/bulk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ users: INITIAL_USERS })
+            }).catch(err => console.warn('Users bulk sync err:', err));
+          }
+        }
+      } catch {
+        // Fallback to localStorage / INITIAL_USERS if API unreachable
+        const storedUsers = loadState<UserAccount[]>('vfixq_users', []);
+        if (!storedUsers || storedUsers.length < 200) {
+          setUsers(INITIAL_USERS);
+          safeLocalSet('vfixq_users', INITIAL_USERS);
         }
       }
     }
