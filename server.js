@@ -611,7 +611,7 @@ app.get('/api/users', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
   const u = req.body;
-  if (!u || !u.username) {
+  if (!u || (!u.username && !u.id)) {
     return res.status(400).json({ error: 'user payload invalid' });
   }
 
@@ -620,35 +620,123 @@ app.post('/api/users', async (req, res) => {
 
   if (isDbConnected && dbPool) {
     try {
-      await dbPool.query(
-        `INSERT INTO users (id, username, name, email, phone, password, line_id, role, status, branch_id, branch_name, avatar_url, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
-         ON CONFLICT (id) DO UPDATE 
-         SET username = EXCLUDED.username, name = EXCLUDED.name, email = EXCLUDED.email, phone = EXCLUDED.phone,
-             password = EXCLUDED.password, line_id = EXCLUDED.line_id, role = EXCLUDED.role, status = EXCLUDED.status,
-             branch_id = EXCLUDED.branch_id, branch_name = EXCLUDED.branch_name, avatar_url = EXCLUDED.avatar_url, updated_at = NOW()`,
-        [
-          userId,
-          userObj.username,
-          userObj.name,
-          userObj.email || '',
-          userObj.phone || '',
-          userObj.password || 'Pass1234',
-          userObj.lineId || '',
-          userObj.role || 'technician',
-          userObj.status || 'Active',
-          userObj.branchId || null,
-          userObj.branchName || null,
-          userObj.avatarUrl || null
-        ]
-      );
+      const existing = await dbPool.query('SELECT id FROM users WHERE id = $1 OR username = $2', [userId, u.username]);
+      if (existing.rows.length > 0) {
+        const targetId = existing.rows[0].id;
+        await dbPool.query(
+          `UPDATE users 
+           SET username = $1, name = $2, email = $3, phone = $4, password = $5, line_id = $6,
+               role = $7, status = $8, branch_id = $9, branch_name = $10, avatar_url = $11, updated_at = NOW()
+           WHERE id = $12`,
+          [
+            userObj.username,
+            userObj.name,
+            userObj.email || '',
+            userObj.phone || '',
+            userObj.password || 'Pass1234',
+            userObj.lineId || '',
+            userObj.role || 'technician',
+            userObj.status || 'Active',
+            userObj.branchId || null,
+            userObj.branchName || null,
+            userObj.avatarUrl || null,
+            targetId
+          ]
+        );
+      } else {
+        await dbPool.query(
+          `INSERT INTO users (id, username, name, email, phone, password, line_id, role, status, branch_id, branch_name, avatar_url, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())`,
+          [
+            userId,
+            userObj.username,
+            userObj.name,
+            userObj.email || '',
+            userObj.phone || '',
+            userObj.password || 'Pass1234',
+            userObj.lineId || '',
+            userObj.role || 'technician',
+            userObj.status || 'Active',
+            userObj.branchId || null,
+            userObj.branchName || null,
+            userObj.avatarUrl || null
+          ]
+        );
+      }
     } catch (err) {
       console.error('Error saving single user to PostgreSQL:', err);
     }
   }
 
   const currentUsers = loadJson(USERS_FILE, []);
-  const idx = currentUsers.findIndex(item => item.id === userId);
+  const idx = currentUsers.findIndex(item => item.id === userId || item.username === userObj.username);
+  if (idx >= 0) {
+    currentUsers[idx] = userObj;
+  } else {
+    currentUsers.unshift(userObj);
+  }
+  saveJson(USERS_FILE, currentUsers);
+
+  return res.json({ status: 'success', user: userObj });
+});
+
+app.put('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const u = req.body;
+  const userObj = { ...u, id };
+
+  if (isDbConnected && dbPool) {
+    try {
+      const existing = await dbPool.query('SELECT id FROM users WHERE id = $1 OR username = $2', [id, u.username]);
+      if (existing.rows.length > 0) {
+        const targetId = existing.rows[0].id;
+        await dbPool.query(
+          `UPDATE users 
+           SET username = $1, name = $2, email = $3, phone = $4, password = $5, line_id = $6,
+               role = $7, status = $8, branch_id = $9, branch_name = $10, avatar_url = $11, updated_at = NOW()
+           WHERE id = $12`,
+          [
+            userObj.username,
+            userObj.name,
+            userObj.email || '',
+            userObj.phone || '',
+            userObj.password || 'Pass1234',
+            userObj.lineId || '',
+            userObj.role || 'technician',
+            userObj.status || 'Active',
+            userObj.branchId || null,
+            userObj.branchName || null,
+            userObj.avatarUrl || null,
+            targetId
+          ]
+        );
+      } else {
+        await dbPool.query(
+          `INSERT INTO users (id, username, name, email, phone, password, line_id, role, status, branch_id, branch_name, avatar_url, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())`,
+          [
+            id,
+            userObj.username,
+            userObj.name,
+            userObj.email || '',
+            userObj.phone || '',
+            userObj.password || 'Pass1234',
+            userObj.lineId || '',
+            userObj.role || 'technician',
+            userObj.status || 'Active',
+            userObj.branchId || null,
+            userObj.branchName || null,
+            userObj.avatarUrl || null
+          ]
+        );
+      }
+    } catch (err) {
+      console.error('Error updating user in PostgreSQL:', err);
+    }
+  }
+
+  const currentUsers = loadJson(USERS_FILE, []);
+  const idx = currentUsers.findIndex(item => item.id === id || item.username === userObj.username);
   if (idx >= 0) {
     currentUsers[idx] = userObj;
   } else {
