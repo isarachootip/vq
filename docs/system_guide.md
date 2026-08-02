@@ -70,3 +70,31 @@ npm run db:seed
    * กำหนด Environment Variables (`DATABASE_URL`, `MINIO_ENDPOINT`, `LINE_CHANNEL_ACCESS_TOKEN` ฯลฯ)
 4. **รัน Seeding Data**:
    * รันคำสั่ง `npm run db:seed` บน Server หรือ Container เพื่อนำข้อมูลขึ้น PostgreSQL
+
+---
+
+## ⚠️ 5. ข้อควรจำและข้อพึงระวังในการดีพลอยและซิงค์ข้อมูล (Key Lessons & Precautions)
+
+### 5.1 การคัดลอกโฟลเดอร์ข้อมูลใน Multi-stage Docker Build (`Dockerfile`)
+* **ข้อพึงระวัง:** ในโครงสร้าง `Dockerfile` แบบ Multi-stage Build (Stage 1 `builder` -> Stage 2 `runner`) ต้องระวังอย่าลืมคัดลอกโฟลเดอร์ไฟล์ข้อมูล เช่น `COPY --from=builder /app/data ./data` และ `COPY --from=builder /app/scripts ./scripts` เข้าไปยัง Stage 2
+* **ผลกระทบ:** หากลืมใส่คำสั่ง COPY โฟลเดอร์ `data/` แม้บนเครื่อง Local จะมีไฟล์ข้อมูลครบถ้วน แต่ตัว Container บน Coolify จะหาไฟล์ข้อมูลสำรองไม่พบ ส่งผลให้ API เช่น `/api/technicians` หรือ `/api/zones` ตอบกลับเป็นอาร์เรย์ว่าง `[]`
+
+### 5.2 การจัดการแคชในเบราว์เซอร์ของผู้ใช้งาน (`localStorage` Cache Guard)
+* **ข้อพึงระวัง:** แอปพลิเคชัน Frontend มีระบบบันทึกสถานะชั่วคราวลงใน `localStorage` ของผู้ใช้ (`vfixq_technicians`, `vfixq_zones`) เพื่อความรวดเร็วในการเปิดหน้าเว็บ
+* **แนวทางป้องกัน:** เมื่อมีการอัปเดตขนาดชุดข้อมูลตั้งต้น (เช่น เพิ่มช่างเป็น 200 ทีม หรือเพิ่มโซนเป็น 87 โซน) โค้ดใน `App.tsx` ต้องมีการตั้งค่า **Dataset Threshold Validation** เช่น:
+  * ตรวจสอบว่า `loaded.length < 200` สำหรับช่าง หรือ `loaded.length < 87` สำหรับโซน
+  * หากพบว่าข้อมูลในแคชผู้ใช้เป็นเวอร์ชันเก่า ต้องสั่งรีเซ็ตและ Auto-Sync ชุดข้อมูลใหม่ทดแทนทันที เพื่อป้องกันปัญหาผู้ใช้งานเห็นข้อมูลไม่ครบถ้วน
+
+### 5.3 วงจรการอัปเดตโค้ดขึ้น Production (Coolify Deployment Lifecycle)
+* **ข้อพึงระวัง:** การอัปเดตไฟล์ข้อมูล หรือสคริปต์บนเครื่อง Local จะยัง **ไม่มีผลบน Production ทันที** จนกว่าจะมีการ Push Commit ขึ้น GitHub Repository (`origin/main`)
+* **ขั้นตอนที่ถูกต้อง:**
+  1. ตรวจสอบสถานะการแก้ไขบน Local: `git status`
+  2. Commit และ Push ขึ้น GitHub:
+     ```bash
+     git add .
+     git commit -m "feat/fix: description of changes"
+     git push origin main
+     ```
+  3. ตรวจสอบสถานะ Build บน Coolify Dashboard
+  4. ทำการ **Hard Refresh (`Ctrl + F5` หรือ `Cmd + Shift + R`)** บนหน้าเว็บเบราว์เซอร์เพื่อดึงไฟล์ Build ล่าสุดเสมอ
+
