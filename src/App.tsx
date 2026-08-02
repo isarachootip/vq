@@ -302,17 +302,26 @@ export function App() {
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => 
     loadState<UserAccount | null>('vfixq_current_user', null)
   );
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const handleLoginSuccess = (user: UserAccount) => {
     setCurrentUser(user);
     safeLocalSet('vfixq_current_user', user);
-    showToast(`ยินดีต้อนรับคุณ ${user.name} (${user.role}) เข้าสู่ระบบ!`);
+    setIsLoginModalOpen(false);
+    window.history.pushState({}, '', '/backend');
+    setIsBackend(true);
+    safeLocalSet('vfixq_is_backend', true);
+    showToast(`ยินดีต้อนรับคุณ ${user.name} (${user.role}) เข้าสู่ระบบหลังบ้าน!`);
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
     safeLocalSet('vfixq_current_user', null);
-    showToast('ออกจากระบบหลังบ้านเรียบร้อยแล้ว');
+    setIsLoginModalOpen(false);
+    window.history.pushState({}, '', '/');
+    setIsBackend(false);
+    safeLocalSet('vfixq_is_backend', false);
+    showToast('ออกจากระบบเรียบร้อยแล้ว กลับสู่หน้าร้าน E-commerce');
   };
 
   // Configuration States
@@ -516,10 +525,20 @@ export function App() {
   }, []);
 
   const navigateToBackend = (route: boolean) => {
-    const path = route ? '/backend' : '/';
-    window.history.pushState({}, '', path);
-    setIsBackend(route);
-    safeLocalSet('vfixq_is_backend', route);
+    if (route) {
+      if (currentUser) {
+        window.history.pushState({}, '', '/backend');
+        setIsBackend(true);
+        safeLocalSet('vfixq_is_backend', true);
+      } else {
+        setIsLoginModalOpen(true);
+      }
+    } else {
+      window.history.pushState({}, '', '/');
+      setIsBackend(false);
+      setIsLoginModalOpen(false);
+      safeLocalSet('vfixq_is_backend', false);
+    }
   };
 
   const showToast = (msg: string) => {
@@ -951,7 +970,7 @@ export function App() {
 
   if (!isBackend) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans flex flex-col">
+      <div className="min-h-screen bg-slate-50 text-slate-800 antialiased font-sans flex flex-col relative">
         {/* Toast Notification */}
         {toastMessage && (
           <div className="fixed bottom-5 right-5 z-50 px-4 py-3 rounded bg-blue-600 text-white font-bold text-xs shadow-lg border border-blue-400 animate-slideUp">
@@ -959,7 +978,7 @@ export function App() {
           </div>
         )}
         
-        {/* Vfixq Portal view (Full Screen) */}
+        {/* Vfixq Portal view (Full Screen Storefront) */}
         <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
           <VfixqPortalView
             branches={branches}
@@ -977,18 +996,29 @@ export function App() {
             }}
           />
         </main>
+
+        {/* Login Modal Overlay over Storefront */}
+        {isLoginModalOpen && (
+          <LoginModal
+            users={users}
+            onLoginSuccess={handleLoginSuccess}
+            onGoToStorefront={() => setIsLoginModalOpen(false)}
+          />
+        )}
       </div>
     );
   }
 
-  // Backend View Authentication Guard
+  // Backend View Authentication Guard (Direct URL access fallback)
   if (!currentUser) {
     return (
-      <LoginModal
-        users={users}
-        onLoginSuccess={handleLoginSuccess}
-        onGoToStorefront={() => navigateToBackend(false)}
-      />
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <LoginModal
+          users={users}
+          onLoginSuccess={handleLoginSuccess}
+          onGoToStorefront={() => navigateToBackend(false)}
+        />
+      </div>
     );
   }
 
