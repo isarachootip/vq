@@ -268,6 +268,8 @@ export interface UserAccount {
   name: string;
   email: string;
   phone: string;
+  password?: string;
+  lineId?: string;
   role: UserRole;
   status: 'Active' | 'Inactive' | 'Suspended';
   branchId?: string;

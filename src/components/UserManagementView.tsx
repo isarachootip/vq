@@ -16,7 +16,11 @@ import {
   Wrench,
   ShoppingBag,
   Sliders,
-  Check
+  Check,
+  Lock,
+  Eye,
+  EyeOff,
+  MessageCircle
 } from 'lucide-react';
 
 interface UserManagementViewProps {
@@ -87,9 +91,17 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
   const [fName, setFName] = useState('');
   const [fEmail, setFEmail] = useState('');
   const [fPhone, setFPhone] = useState('');
+  const [fPassword, setFPassword] = useState('');
+  const [fLineId, setFLineId] = useState('');
   const [fRole, setFRole] = useState<UserRole>('admin');
   const [fStatus, setFStatus] = useState<'Active' | 'Inactive' | 'Suspended'>('Active');
   const [fBranchId, setFBranchId] = useState<string>('');
+  const [showModalPassword, setShowModalPassword] = useState(false);
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
+
+  const togglePasswordVisibility = (userId: string) => {
+    setVisiblePasswords(prev => ({ ...prev, [userId]: !prev[userId] }));
+  };
 
   // Open modal for Create or Edit
   const handleOpenCreateModal = () => {
@@ -98,9 +110,12 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
     setFName('');
     setFEmail('');
     setFPhone('');
+    setFPassword('');
+    setFLineId('');
     setFRole('admin');
     setFStatus('Active');
     setFBranchId(branches[0]?.id || '');
+    setShowModalPassword(false);
     setShowModal(true);
   };
 
@@ -110,9 +125,12 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
     setFName(u.name);
     setFEmail(u.email);
     setFPhone(u.phone);
+    setFPassword(u.password || '');
+    setFLineId(u.lineId || '');
     setFRole(u.role);
     setFStatus(u.status);
     setFBranchId(u.branchId || '');
+    setShowModalPassword(false);
     setShowModal(true);
   };
 
@@ -130,6 +148,8 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
         name: fName,
         email: fEmail,
         phone: fPhone,
+        password: fPassword.trim() || undefined,
+        lineId: fLineId.trim() || undefined,
         role: fRole,
         status: fStatus,
         branchId: fBranchId || undefined,
@@ -144,6 +164,8 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
         name: fName,
         email: fEmail,
         phone: fPhone,
+        password: fPassword.trim() || undefined,
+        lineId: fLineId.trim() || undefined,
         role: fRole,
         status: fStatus,
         branchId: fBranchId || undefined,
@@ -163,6 +185,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
         u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
         u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (u.lineId && u.lineId.toLowerCase().includes(searchQuery.toLowerCase())) ||
         u.phone.includes(searchQuery);
 
       const matchRole = selectedRoleFilter === 'ALL' || u.role === selectedRoleFilter;
@@ -321,7 +344,8 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                 <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200/80">
                   <th className="p-3">ชื่อผู้ใช้งาน / Username</th>
                   <th className="p-3">บทบาทสิทธิ์ (Role)</th>
-                  <th className="p-3">ข้อมูลติดต่อ</th>
+                  <th className="p-3">ข้อมูลติดต่อ & LINE ID</th>
+                  <th className="p-3">รหัสผ่าน (Password)</th>
                   <th className="p-3">สาขาที่สังกัด</th>
                   <th className="p-3">สถานะ</th>
                   <th className="p-3">วันที่สร้าง</th>
@@ -331,13 +355,14 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
               <tbody className="divide-y divide-slate-100">
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-8 text-slate-400 italic">
+                    <td colSpan={8} className="text-center py-8 text-slate-400 italic">
                       ไม่พบผู้ใช้งานที่ตรงตามเงื่อนไข
                     </td>
                   </tr>
                 ) : (
                   filteredUsers.map((u) => {
                     const cfg = ROLE_CONFIG[u.role];
+                    const isPassVisible = !!visiblePasswords[u.id];
                     return (
                       <tr key={u.id} className="hover:bg-slate-50 transition">
                         <td className="p-3">
@@ -368,6 +393,32 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                             <Phone size={11} className="text-slate-400" />
                             <span>{u.phone}</span>
                           </div>
+                          {u.lineId ? (
+                            <div className="flex items-center space-x-1 text-[11px] font-semibold text-emerald-700">
+                              <MessageCircle size={11} className="text-emerald-500" />
+                              <span>{u.lineId}</span>
+                            </div>
+                          ) : (
+                            <div className="text-[10px] text-slate-400 italic font-mono">- ไม่ได้ระบุ LINE ID -</div>
+                          )}
+                        </td>
+
+                        <td className="p-3 font-mono">
+                          {u.password ? (
+                            <div className="inline-flex items-center space-x-1.5 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200 text-[11px] text-slate-700">
+                              <Lock size={10} className="text-slate-400" />
+                              <span>{isPassVisible ? u.password : '••••••••'}</span>
+                              <button
+                                onClick={() => togglePasswordVisibility(u.id)}
+                                className="text-slate-400 hover:text-indigo-600 border-0 bg-transparent cursor-pointer p-0 ml-1 flex items-center"
+                                title={isPassVisible ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
+                              >
+                                {isPassVisible ? <EyeOff size={11} /> : <Eye size={11} />}
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 italic text-[10px]">ไม่ได้ตั้งค่า</span>
+                          )}
                         </td>
 
                         <td className="p-3">
@@ -576,6 +627,42 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                     onChange={(e) => setFPhone(e.target.value)}
                     className="v-input w-full py-1.5"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">รหัสผ่าน (Password):</label>
+                  <div className="relative">
+                    <input
+                      type={showModalPassword ? "text" : "password"}
+                      placeholder="กำหนดรหัสผ่าน เช่น Pass@123"
+                      value={fPassword}
+                      onChange={(e) => setFPassword(e.target.value)}
+                      className="v-input w-full py-1.5 pr-8 font-mono text-xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowModalPassword(!showModalPassword)}
+                      className="absolute right-2 top-2 text-slate-400 hover:text-indigo-600 border-0 bg-transparent cursor-pointer p-0"
+                    >
+                      {showModalPassword ? <EyeOff size={13} /> : <Eye size={13} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">LINE ID:</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="เช่น @line_id หรือ line_user"
+                      value={fLineId}
+                      onChange={(e) => setFLineId(e.target.value)}
+                      className="v-input w-full py-1.5 pl-7 text-xs font-mono"
+                    />
+                    <MessageCircle size={13} className="absolute left-2 top-2.5 text-emerald-500" />
+                  </div>
                 </div>
               </div>
 
