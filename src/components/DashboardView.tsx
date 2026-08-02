@@ -110,7 +110,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   // Manual Booking Modal States
   const [showManualBookingModal, setShowManualBookingModal] = useState<boolean>(false);
   const [mTicketNo, setMTicketNo] = useState<string>('');
-  const [mCustName, setMCustName] = useState<string>('');
+  const [mCustFirstName, setMCustFirstName] = useState<string>('');
+  const [mCustLastName, setMCustLastName] = useState<string>('');
   const [mCustPhone, setMCustPhone] = useState<string>('');
   const [mLineId, setMLineId] = useState<string>('');
   const [mCategoryCode, setMCategoryCode] = useState<string>('ALL');
@@ -334,7 +335,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       return;
     }
 
-    if (!mCustName.trim() || !mCustPhone.trim()) return;
+    const mCustName = `${mCustFirstName} ${mCustLastName}`.trim();
+    if (!mCustFirstName.trim() || !mCustLastName.trim() || !mCustPhone.trim()) return;
 
     const selectedService = services.find(s => s.id === mServiceId);
     if (!selectedService) return;
@@ -367,7 +369,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     
     // Reset Form
     setMTicketNo('');
-    setMCustName('');
+    setMCustFirstName('');
+    setMCustLastName('');
     setMCustPhone('');
     setMLineId('');
     setMServiceId(services[0]?.id || '');
@@ -903,15 +906,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </div>
 
               {/* Customer Info row */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="space-y-1">
-                  <label className="block font-bold text-slate-600">ชื่อลูกค้า:</label>
+                  <label className="block font-bold text-slate-600">ชื่อจริงลูกค้า:</label>
                   <input
                     type="text"
                     required
-                    placeholder="เช่น คุณสมเกียรติ มั่นคง"
-                    value={mCustName}
-                    onChange={(e) => setMCustName(e.target.value)}
+                    placeholder="เช่น คุณสมเกียรติ"
+                    value={mCustFirstName}
+                    onChange={(e) => setMCustFirstName(e.target.value)}
+                    className="v-input w-full py-2"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block font-bold text-slate-600">นามสกุล:</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="เช่น มั่นคง"
+                    value={mCustLastName}
+                    onChange={(e) => setMCustLastName(e.target.value)}
                     className="v-input w-full py-2"
                   />
                 </div>
@@ -924,7 +939,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     placeholder="เช่น 089-1234567"
                     value={mCustPhone}
                     onChange={(e) => setMCustPhone(e.target.value)}
-                    className="v-input w-full py-2"
+                    className="v-input w-full py-2 font-mono"
                   />
                 </div>
 

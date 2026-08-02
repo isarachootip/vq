@@ -15,6 +15,7 @@ import {
   CreditCard,
   Sparkles,
   MessageSquare,
+  MessageCircle,
   Send,
   ChevronLeft,
   ChevronRight
@@ -86,8 +87,10 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
   
   // Wizard States
   const [wizardStep, setWizardStep] = useState<number>(1);
-  const [customerName, setCustomerName] = useState<string>('');
+  const [customerFirstName, setCustomerFirstName] = useState<string>('');
+  const [customerLastName, setCustomerLastName] = useState<string>('');
   const [customerPhone, setCustomerPhone] = useState<string>('');
+  const [customerLineId, setCustomerLineId] = useState<string>('');
   const [selectedZone, setSelectedZone] = useState<string>('Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)');
   const [selectedBranchId, setSelectedBranchId] = useState<string>('');
   const [bookingDate, setBookingDate] = useState<string>('');
@@ -219,7 +222,8 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
   };
 
   const handleCheckoutSubmit = () => {
-    if (!selectedService || !customerName || !customerPhone || !bookingDate) return;
+    const fullCustomerName = `${customerFirstName} ${customerLastName}`.trim();
+    if (!selectedService || !fullCustomerName || !customerPhone || !bookingDate) return;
 
     const randNum = Math.floor(1000 + Math.random() * 9000);
     const bookingRef = `BK-V-${randNum}`;
@@ -228,8 +232,9 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
     const newBooking: QueueBooking = {
       id: `bk-${Date.now()}`,
       bookingRef,
-      customerName,
+      customerName: fullCustomerName,
       customerPhone,
+      lineId: customerLineId,
       addressZone: selectedZone,
       installationTypeId: selectedService.id,
       installationTypeName: selectedService.name,
@@ -248,8 +253,10 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
 
   const handleReset = () => {
     setSelectedService(null);
-    setCustomerName('');
+    setCustomerFirstName('');
+    setCustomerLastName('');
     setCustomerPhone('');
+    setCustomerLineId('');
     setBookingDate('');
     setIsSuccess(false);
     setWizardStep(1);
@@ -313,7 +320,7 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">ผู้สั่งซื้อบริการ:</span>
-              <span className="font-semibold text-slate-700">{customerName} ({customerPhone})</span>
+              <span className="font-semibold text-slate-700">{`${customerFirstName} ${customerLastName}`.trim()} ({customerPhone})</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">โซนจุดจอง:</span>
@@ -676,18 +683,24 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
           {/* STEP 2: Location & Contacts */}
           {wizardStep === 2 && (
             <div className="space-y-4 animate-fadeIn">
-              <h4 className="font-bold text-slate-800 text-xs border-b border-slate-200 pb-2">ขั้นตอนที่ 2: ที่อยู่ผู้รับบริการและข้อมูลสั่งซื้อสินค้า</h4>
+              <h4 className="font-bold text-slate-800 text-xs border-b border-slate-200 pb-2 flex items-center justify-between">
+                <span>ขั้นตอนที่ 2: ที่อยู่ผู้รับบริการและข้อมูลสั่งซื้อสินค้า</span>
+                <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-normal">
+                  *ยังไม่ต้องระบุเลขตั๋วงาน (เนื่องจากยังไม่ชำระเงิน)
+                </span>
+              </h4>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-3">
+              <div className="space-y-4">
+                {/* 1. Customer Name Row (First Name & Last Name) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1">ชื่อจริงผู้รับบริการ:</label>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">ชื่อจริงผู้รับบริการ:</label>
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="กรอกชื่อจริงและนามสกุล"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="เช่น คุณสมเกียรติ"
+                        value={customerFirstName}
+                        onChange={(e) => setCustomerFirstName(e.target.value)}
                         className="v-input w-full pl-9 py-2 text-xs"
                       />
                       <User className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
@@ -695,26 +708,60 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1">เบอร์โทรศัพท์มือถือ:</label>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">นามสกุล:</label>
                     <div className="relative">
                       <input
                         type="text"
-                        placeholder="ระบุเบอร์ติดต่อ 10 หลัก"
+                        placeholder="เช่น มั่นคง"
+                        value={customerLastName}
+                        onChange={(e) => setCustomerLastName(e.target.value)}
+                        className="v-input w-full pl-9 py-2 text-xs"
+                      />
+                      <User className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Contact Info Row (Phone & LINE ID) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">เบอร์โทรศัพท์มือถือ:</label>
+                    <div className="relative">
+                      <input
+                        type="tel"
+                        placeholder="เช่น 089-1234567"
                         value={customerPhone}
                         onChange={(e) => setCustomerPhone(e.target.value)}
-                        className="v-input w-full pl-9 py-2 text-xs"
+                        className="v-input w-full pl-9 py-2 text-xs font-mono"
                       />
                       <Phone className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-slate-500 mb-1">โซนพิกัดจัดเก็บคิวงานติดตั้ง:</label>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">LINE ID (ไลน์ไอดี):</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="เช่น @somkiat หรือ somkiat_line"
+                        value={customerLineId}
+                        onChange={(e) => setCustomerLineId(e.target.value)}
+                        className="v-input w-full pl-9 py-2 text-xs font-mono text-emerald-700"
+                      />
+                      <MessageCircle className="h-4 w-4 text-emerald-500 absolute left-3 top-2.5" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Zone & Branch Selection Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">โซนพิกัดจัดเก็บคิวงานติดตั้ง:</label>
                     <div className="relative">
                       <select
                         value={selectedZone}
                         onChange={(e) => setSelectedZone(e.target.value)}
-                        className="v-input w-full pl-9 py-2 text-xs"
+                        className="v-input w-full pl-9 py-2 text-xs font-semibold"
                       >
                         {SERVICE_ZONES.map((zone) => (
                           <option key={zone} value={zone}>{zone}</option>
@@ -723,37 +770,37 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
                       <MapPin className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <label className="block text-[11px] font-bold text-slate-500">เลือกสาขาไทวัสดุ / BnB Home ที่ซื้อสินค้า:</label>
-                  <input
-                    type="text"
-                    placeholder="พิมพ์ชื่อค้นหา (บางนา, ราชพฤกษ์, ปทุมธานี)..."
-                    value={branchSearchQuery}
-                    onChange={(e) => setBranchSearchQuery(e.target.value)}
-                    className="v-input w-full pl-9 py-2 text-xs"
-                  />
-                  
-                  <div className="space-y-1 max-h-36 overflow-y-auto mt-2 border border-slate-200/50 rounded-lg p-2 bg-slate-100/50">
-                    {filteredBranches.map((branch) => {
-                      const isSelected = selectedBranchId === branch.id;
-                      return (
-                        <button
-                          key={branch.id}
-                          type="button"
-                          onClick={() => setSelectedBranchId(branch.id)}
-                          className={`w-full text-left p-1.5 rounded text-[10px] flex justify-between items-center cursor-pointer transition ${
-                            isSelected 
-                              ? 'bg-blue-600/10 border border-blue-600/40 text-blue-600 font-bold' 
-                              : 'hover:bg-slate-100 text-slate-700'
-                          }`}
-                        >
-                          <span className="truncate">{branch.name} - {branch.fullName || 'ไทวัสดุ'}</span>
-                          {isSelected && <Check className="h-3 w-3" />}
-                        </button>
-                      );
-                    })}
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-bold text-slate-600">เลือกสาขาไทวัสดุ / BnB Home ที่ซื้อสินค้า:</label>
+                    <input
+                      type="text"
+                      placeholder="พิมพ์ชื่อค้นหา (บางนา, ราชพฤกษ์, ปทุมธานี)..."
+                      value={branchSearchQuery}
+                      onChange={(e) => setBranchSearchQuery(e.target.value)}
+                      className="v-input w-full pl-9 py-2 text-xs"
+                    />
+                    
+                    <div className="space-y-1 max-h-32 overflow-y-auto mt-2 border border-slate-200/50 rounded-lg p-2 bg-slate-100/50">
+                      {filteredBranches.map((branch) => {
+                        const isSelected = selectedBranchId === branch.id;
+                        return (
+                          <button
+                            key={branch.id}
+                            type="button"
+                            onClick={() => setSelectedBranchId(branch.id)}
+                            className={`w-full text-left p-1.5 rounded text-[10px] flex justify-between items-center cursor-pointer transition ${
+                              isSelected 
+                                ? 'bg-blue-600/10 border border-blue-600/40 text-blue-600 font-bold' 
+                                : 'hover:bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            <span className="truncate">{branch.name} - {branch.fullName || 'ไทวัสดุ'}</span>
+                            {isSelected && <Check className="h-3 w-3" />}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -767,7 +814,7 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
                 </button>
                 <button
                   onClick={() => setWizardStep(3)}
-                  disabled={!customerName || !customerPhone || !selectedBranchId}
+                  disabled={!customerFirstName.trim() || !customerLastName.trim() || !customerPhone.trim()}
                   className="v-btn-primary flex items-center space-x-2 py-1.5 text-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <span>ขั้นตอนถัดไป (วันเวลานัด)</span>
@@ -862,17 +909,21 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
                     <div className="grid grid-cols-2 gap-3.5">
                       <div>
                         <div className="text-[10px] text-slate-400">ลูกค้าผู้ว่าจ้าง:</div>
-                        <div className="font-semibold text-slate-700">{customerName}</div>
+                        <div className="font-semibold text-slate-700">{`${customerFirstName} ${customerLastName}`.trim() || '-'}</div>
                       </div>
                       <div>
                         <div className="text-[10px] text-slate-400">เบอร์โทรศัพท์:</div>
-                        <div className="font-semibold text-slate-700">{customerPhone}</div>
+                        <div className="font-semibold text-slate-700">{customerPhone || '-'}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-slate-400">LINE ID (ไลน์ไอดี):</div>
+                        <div className="font-semibold text-emerald-700 font-mono">{customerLineId || '-'}</div>
                       </div>
                       <div>
                         <div className="text-[10px] text-slate-400">โซนที่อยู่จัดเก็บคิว:</div>
                         <div className="font-semibold text-slate-700">{selectedZone}</div>
                       </div>
-                      <div>
+                      <div className="col-span-2">
                         <div className="text-[10px] text-slate-400">สาขาที่ซื้อสินค้า:</div>
                         <div className="font-semibold text-slate-700">
                           {branches.find(b => b.id === selectedBranchId)?.name || 'สาขาหลัก'}
