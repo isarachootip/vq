@@ -2,7 +2,7 @@ import pg from 'pg';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { INITIAL_ZONES, INITIAL_USERS } from '../src/mockData';
+import { INITIAL_ZONES, INITIAL_USERS, INITIAL_STANDARD_COSTS } from '../src/mockData';
 import { generate200Technicians } from '../src/generateTechs';
 
 const { Pool, Client } = pg;
@@ -113,8 +113,29 @@ async function seed() {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
       ALTER TABLE technicians ADD COLUMN IF NOT EXISTS user_id VARCHAR(255);
+
+      CREATE TABLE IF NOT EXISTS standard_costs (
+        id VARCHAR(255) PRIMARY KEY,
+        sku VARCHAR(100) NOT NULL,
+        group_name VARCHAR(255),
+        product_category VARCHAR(255),
+        service_type VARCHAR(255),
+        product_detail TEXT,
+        description TEXT NOT NULL,
+        unit VARCHAR(50) DEFAULT 'EACH',
+        gp_percent NUMERIC(5,2) DEFAULT 0,
+        cost_standard NUMERIC(12,2) DEFAULT 0,
+        cost_premium NUMERIC(12,2) DEFAULT 0,
+        price_standard NUMERIC(12,2) DEFAULT 0,
+        price_premium NUMERIC(12,2) DEFAULT 0,
+        cost_center VARCHAR(100),
+        retention VARCHAR(100),
+        remark TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
     `);
-    console.log('✅ Database schema (users, zones, technicians) verified.');
+    console.log('✅ Database schema (users, zones, technicians, standard_costs) verified.');
 
     // 3. Seed Users (Initial Admins & Staff)
     console.log(`👥 Seeding ${INITIAL_USERS.length} Core Users...`);
@@ -237,7 +258,43 @@ async function seed() {
     }
     console.log(`✅ Successfully seeded ${techCount} technicians linked to User Accounts.`);
 
-    // 6. Save local JSON backup files
+    // 6. Seed Standard Costs Master Data
+    console.log(`💰 Seeding ${INITIAL_STANDARD_COSTS.length} Standard Cost Master Records...`);
+    let stdCostCount = 0;
+    for (const item of INITIAL_STANDARD_COSTS) {
+      await pool.query(
+        `INSERT INTO standard_costs (id, sku, group_name, product_category, service_type, product_detail, description, unit, gp_percent, cost_standard, cost_premium, price_standard, price_premium, cost_center, retention, remark, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
+         ON CONFLICT (id) DO UPDATE 
+         SET sku = EXCLUDED.sku, group_name = EXCLUDED.group_name, product_category = EXCLUDED.product_category,
+             service_type = EXCLUDED.service_type, product_detail = EXCLUDED.product_detail, description = EXCLUDED.description,
+             unit = EXCLUDED.unit, gp_percent = EXCLUDED.gp_percent, cost_standard = EXCLUDED.cost_standard,
+             cost_premium = EXCLUDED.cost_premium, price_standard = EXCLUDED.price_standard, price_premium = EXCLUDED.price_premium,
+             cost_center = EXCLUDED.cost_center, retention = EXCLUDED.retention, remark = EXCLUDED.remark, updated_at = NOW()`,
+        [
+          item.id,
+          item.sku,
+          item.group || '',
+          item.productCategory || '',
+          item.serviceType || '',
+          item.productDetail || '',
+          item.description || '',
+          item.unit || 'EACH',
+          item.gpPercent || 0,
+          item.costStandard || 0,
+          item.costPremium || 0,
+          item.priceStandard || 0,
+          item.pricePremium || 0,
+          item.costCenter || '21713',
+          item.retention || '',
+          item.remark || ''
+        ]
+      );
+      stdCostCount++;
+    }
+    console.log(`✅ Successfully seeded ${stdCostCount} Standard Cost Master records.`);
+
+    // 7. Save local JSON backup files
     const dataDir = path.join(__dirname, '..', 'data');
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
@@ -245,7 +302,8 @@ async function seed() {
     fs.writeFileSync(path.join(dataDir, 'zones.json'), JSON.stringify(INITIAL_ZONES, null, 2));
     fs.writeFileSync(path.join(dataDir, 'technicians.json'), JSON.stringify(technicians, null, 2));
     fs.writeFileSync(path.join(dataDir, 'users.json'), JSON.stringify(allUsers, null, 2));
-    console.log('📁 Local backup JSON files generated in ./data/ (zones.json, technicians.json, users.json).');
+    fs.writeFileSync(path.join(dataDir, 'standard_costs.json'), JSON.stringify(INITIAL_STANDARD_COSTS, null, 2));
+    console.log('📁 Local backup JSON files generated in ./data/ (zones.json, technicians.json, users.json, standard_costs.json).');
 
     console.log('\n🎉 ALL DONE! Seed process completed successfully.');
   } catch (err: any) {

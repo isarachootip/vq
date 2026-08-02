@@ -21,8 +21,9 @@ import { InstallationAnalyticsView } from './components/InstallationAnalyticsVie
 import { UserManagementView } from './components/UserManagementView';
 import { LineCustomerChatView } from './components/LineCustomerChatView';
 import { LoginModal } from './components/LoginModal';
+import { StandardCostManagerView } from './components/StandardCostManagerView';
 
-import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner, TechnicianApplication, TechnicianSkill, SkillCategory, ServiceItem, UserAccount } from './types';
+import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner, TechnicianApplication, TechnicianSkill, SkillCategory, ServiceItem, UserAccount, StandardCostItem } from './types';
 import { 
   INITIAL_TECHNICIANS, 
   INITIAL_BOOKINGS, 
@@ -30,7 +31,8 @@ import {
   INITIAL_BRANCHES,
   INITIAL_ZONES,
   INITIAL_SKILLS,
-  INITIAL_USERS
+  INITIAL_USERS,
+  INITIAL_STANDARD_COSTS
 } from './mockData';
 
 import { 
@@ -58,7 +60,8 @@ import {
   TrendingUp,
   UserCheck,
   MessageCircle,
-  LogOut
+  LogOut,
+  Calculator
 } from 'lucide-react';
 
 const INITIAL_BANNERS: PortalBanner[] = [
@@ -298,6 +301,42 @@ export function App() {
     return loaded;
   });
 
+  const [standardCosts, setStandardCosts] = useState<StandardCostItem[]>(() =>
+    loadState<StandardCostItem[]>('vfixq_standard_costs', INITIAL_STANDARD_COSTS)
+  );
+
+  const handleAddStandardCost = (item: StandardCostItem) => {
+    const updated = [...standardCosts, item];
+    setStandardCosts(updated);
+    safeLocalSet('vfixq_standard_costs', updated);
+    showToast(`เพิ่ม Master SKU: ${item.sku} สำเร็จ`);
+    fetch('/api/standard-costs/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ standardCosts: updated })
+    }).catch(err => console.warn(err));
+  };
+
+  const handleUpdateStandardCost = (item: StandardCostItem) => {
+    const updated = standardCosts.map(i => i.id === item.id ? item : i);
+    setStandardCosts(updated);
+    safeLocalSet('vfixq_standard_costs', updated);
+    showToast(`อัปเดต Master SKU: ${item.sku} สำเร็จ`);
+    fetch('/api/standard-costs/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ standardCosts: updated })
+    }).catch(err => console.warn(err));
+  };
+
+  const handleDeleteStandardCost = (id: string) => {
+    const filtered = standardCosts.filter(i => i.id !== id);
+    setStandardCosts(filtered);
+    safeLocalSet('vfixq_standard_costs', filtered);
+    showToast('ลบรายการ Master SKU สำเร็จ');
+    fetch(`/api/standard-costs/${id}`, { method: 'DELETE' }).catch(err => console.warn(err));
+  };
+
   // Auth User State
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => 
     loadState<UserAccount | null>('vfixq_current_user', null)
@@ -448,6 +487,32 @@ export function App() {
         if (!storedUsers || storedUsers.length < 200) {
           setUsers(INITIAL_USERS);
           safeLocalSet('vfixq_users', INITIAL_USERS);
+        }
+      }
+
+      try {
+        // Fetch Standard Costs Master Data from API
+        const stdCostRes = await fetch('/api/standard-costs');
+        if (stdCostRes.ok) {
+          const data = await stdCostRes.json();
+          if (data.standardCosts && data.standardCosts.length > 0) {
+            setStandardCosts(data.standardCosts);
+            safeLocalSet('vfixq_standard_costs', data.standardCosts);
+          } else {
+            setStandardCosts(INITIAL_STANDARD_COSTS);
+            safeLocalSet('vfixq_standard_costs', INITIAL_STANDARD_COSTS);
+            fetch('/api/standard-costs/bulk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ standardCosts: INITIAL_STANDARD_COSTS })
+            }).catch(err => console.warn('Std cost bulk sync err:', err));
+          }
+        }
+      } catch {
+        const storedCosts = loadState<StandardCostItem[]>('vfixq_standard_costs', []);
+        if (!storedCosts || storedCosts.length === 0) {
+          setStandardCosts(INITIAL_STANDARD_COSTS);
+          safeLocalSet('vfixq_standard_costs', INITIAL_STANDARD_COSTS);
         }
       }
     }
@@ -954,6 +1019,7 @@ export function App() {
     { id: 'tech-applications', label: 'จัดการใบสมัครช่าง (Recruitment)', icon: FileText },
     { id: 'zone-manager', label: 'ข้อมูลพื้นที่และโซน (Zone)', icon: Map },
     { id: 'skill-manager', label: 'ข้อมูลทักษะช่าง (Skill)', icon: Wrench },
+    { id: 'standard-cost-manager', label: 'ค่าใช้จ่ายมาตรฐาน (Standard Cost)', icon: Calculator },
     { id: 'divider-2', label: 'จำลองผลลัพธ์', isDivider: true },
     { id: 'integration-flow', label: 'Integration Simulator', icon: Cpu },
     { id: 'penalty-audit', label: 'รายการลงโทษ E-CN', icon: ShieldAlert },
@@ -1319,6 +1385,15 @@ export function App() {
               onAddUser={handleAddUser}
               onUpdateUser={handleUpdateUser}
               onDeleteUser={handleDeleteUser}
+            />
+          )}
+
+          {activeTab === 'standard-cost-manager' && (
+            <StandardCostManagerView
+              items={standardCosts}
+              onAddItem={handleAddStandardCost}
+              onUpdateItem={handleUpdateStandardCost}
+              onDeleteItem={handleDeleteStandardCost}
             />
           )}
 

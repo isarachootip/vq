@@ -26,6 +26,26 @@ export interface Zone {
   coverageZipcodes: string[];
 }
 
+export interface StandardCostItem {
+  id: string;
+  sku: string;
+  group: string;
+  productCategory: string;
+  serviceType: string;
+  productDetail?: string;
+  description: string;
+  unit: string;
+  gpPercent: number;
+  costStandard: number;
+  costPremium: number;
+  priceStandard: number;
+  pricePremium: number;
+  costCenter?: string;
+  retention?: string;
+  remark?: string;
+  updatedAt?: string;
+}
+
 export interface Skill {
   id: string;
   code: string;

@@ -105,20 +105,44 @@ async function initDbTables() {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
       ALTER TABLE technicians ADD COLUMN IF NOT EXISTS user_id VARCHAR(255);
-    `);
-    console.log('✅ PostgreSQL database tables (users, zones, technicians) verified/created');
-  } catch (err) {
-    console.error('❌ Error initializing database tables:', err.message);
-  }
-}
 
-// Storage Paths
-const DATA_DIR = path.join(__dirname, 'data');
-const DATA_FILE = path.join(DATA_DIR, 'line_conversations.json');
-const ZONES_FILE = path.join(DATA_DIR, 'zones.json');
-const TECHS_FILE = path.join(DATA_DIR, 'technicians.json');
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-const CONFIG_FILE = path.join(DATA_DIR, 'line_config.json');
+      // Create standard_costs table
+      await dbPool.query(`
+        CREATE TABLE IF NOT EXISTS standard_costs (
+          id VARCHAR(255) PRIMARY KEY,
+          sku VARCHAR(100) NOT NULL,
+          group_name VARCHAR(255),
+          product_category VARCHAR(255),
+          service_type VARCHAR(255),
+          product_detail TEXT,
+          description TEXT NOT NULL,
+          unit VARCHAR(50) DEFAULT 'EACH',
+          gp_percent NUMERIC(5,2) DEFAULT 0,
+          cost_standard NUMERIC(12,2) DEFAULT 0,
+          cost_premium NUMERIC(12,2) DEFAULT 0,
+          price_standard NUMERIC(12,2) DEFAULT 0,
+          price_premium NUMERIC(12,2) DEFAULT 0,
+          cost_center VARCHAR(100),
+          retention VARCHAR(100),
+          remark TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      console.log('✅ PostgreSQL database tables (users, zones, technicians, standard_costs) verified/created');
+    } catch (err) {
+      console.error('❌ Error initializing database tables:', err.message);
+    }
+  }
+
+  // Storage Paths
+  const DATA_DIR = path.join(__dirname, 'data');
+  const DATA_FILE = path.join(DATA_DIR, 'line_conversations.json');
+  const ZONES_FILE = path.join(DATA_DIR, 'zones.json');
+  const TECHS_FILE = path.join(DATA_DIR, 'technicians.json');
+  const USERS_FILE = path.join(DATA_DIR, 'users.json');
+  const STANDARD_COSTS_FILE = path.join(DATA_DIR, 'standard_costs.json');
+  const CONFIG_FILE = path.join(DATA_DIR, 'line_config.json');
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -638,6 +662,108 @@ app.delete('/api/users/:id', async (req, res) => {
   const currentUsers = loadJson(USERS_FILE, []);
   const filtered = currentUsers.filter(u => u.id !== id);
   saveJson(USERS_FILE, filtered);
+
+  return res.json({ status: 'success', deletedId: id });
+});
+
+// ----------------------------------------------------
+// STANDARD COSTS MASTER API ENDPOINTS
+// ----------------------------------------------------
+app.get('/api/standard-costs', async (req, res) => {
+  if (isDbConnected && dbPool) {
+    try {
+      const result = await dbPool.query(`
+        SELECT id, sku, group_name as "group", product_category as "productCategory", service_type as "serviceType",
+               product_detail as "productDetail", description, unit, gp_percent as "gpPercent",
+               cost_standard as "costStandard", cost_premium as "costPremium", price_standard as "priceStandard",
+               price_premium as "pricePremium", cost_center as "costCenter", retention, remark,
+               created_at as "createdAt", updated_at as "updatedAt"
+        FROM standard_costs ORDER BY created_at ASC
+      `);
+      const formatted = result.rows.map(row => ({
+        ...row,
+        gpPercent: Number(row.gpPercent || 0),
+        costStandard: Number(row.costStandard || 0),
+        costPremium: Number(row.costPremium || 0),
+        priceStandard: Number(row.priceStandard || 0),
+        pricePremium: Number(row.pricePremium || 0)
+      }));
+      return res.json({ status: 'success', source: 'postgresql', standardCosts: formatted });
+    } catch (err) {
+      console.error('Error querying standard costs from PostgreSQL:', err);
+    }
+  }
+  const fallbackCosts = loadJson(STANDARD_COSTS_FILE, []);
+  return res.json({ status: 'success', source: 'json_file', standardCosts: fallbackCosts });
+});
+
+app.post('/api/standard-costs/bulk', async (req, res) => {
+  const { standardCosts } = req.body;
+  if (!Array.isArray(standardCosts)) {
+    return res.status(400).json({ error: 'standardCosts must be an array' });
+  }
+
+  let dbSavedCount = 0;
+  if (isDbConnected && dbPool) {
+    try {
+      for (const item of standardCosts) {
+        await dbPool.query(
+          `INSERT INTO standard_costs (id, sku, group_name, product_category, service_type, product_detail, description, unit, gp_percent, cost_standard, cost_premium, price_standard, price_premium, cost_center, retention, remark, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
+           ON CONFLICT (id) DO UPDATE 
+           SET sku = EXCLUDED.sku, group_name = EXCLUDED.group_name, product_category = EXCLUDED.product_category,
+               service_type = EXCLUDED.service_type, product_detail = EXCLUDED.product_detail, description = EXCLUDED.description,
+               unit = EXCLUDED.unit, gp_percent = EXCLUDED.gp_percent, cost_standard = EXCLUDED.cost_standard,
+               cost_premium = EXCLUDED.cost_premium, price_standard = EXCLUDED.price_standard, price_premium = EXCLUDED.price_premium,
+               cost_center = EXCLUDED.cost_center, retention = EXCLUDED.retention, remark = EXCLUDED.remark, updated_at = NOW()`,
+          [
+            item.id || `std-cost-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            item.sku || 'SKU-STD-000',
+            item.group || '',
+            item.productCategory || '',
+            item.serviceType || '',
+            item.productDetail || '',
+            item.description || '',
+            item.unit || 'EACH',
+            item.gpPercent || 0,
+            item.costStandard || 0,
+            item.costPremium || 0,
+            item.priceStandard || 0,
+            item.pricePremium || 0,
+            item.costCenter || '21713',
+            item.retention || '',
+            item.remark || ''
+          ]
+        );
+        dbSavedCount++;
+      }
+    } catch (err) {
+      console.error('Error saving standard costs to PostgreSQL:', err);
+    }
+  }
+
+  saveJson(STANDARD_COSTS_FILE, standardCosts);
+
+  return res.json({
+    status: 'success',
+    savedCount: standardCosts.length,
+    dbSavedCount,
+    source: isDbConnected ? 'postgresql' : 'json_file'
+  });
+});
+
+app.delete('/api/standard-costs/:id', async (req, res) => {
+  const { id } = req.params;
+  if (isDbConnected && dbPool) {
+    try {
+      await dbPool.query('DELETE FROM standard_costs WHERE id = $1', [id]);
+    } catch (err) {
+      console.error('Error deleting standard cost item from PostgreSQL:', err);
+    }
+  }
+  const currentItems = loadJson(STANDARD_COSTS_FILE, []);
+  const filtered = currentItems.filter(item => item.id !== id);
+  saveJson(STANDARD_COSTS_FILE, filtered);
 
   return res.json({ status: 'success', deletedId: id });
 });
