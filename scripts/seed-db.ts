@@ -2,7 +2,7 @@ import pg from 'pg';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { INITIAL_ZONES } from '../src/mockData';
+import { INITIAL_ZONES, INITIAL_USERS } from '../src/mockData';
 import { generate200Technicians } from '../src/generateTechs';
 
 const { Pool, Client } = pg;
@@ -64,6 +64,25 @@ async function seed() {
     // 2. Ensure tables exist
     console.log('📦 Initializing database schema...');
     await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id VARCHAR(255) PRIMARY KEY,
+        username VARCHAR(100) UNIQUE NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        phone VARCHAR(100),
+        password VARCHAR(255),
+        line_id VARCHAR(100),
+        role VARCHAR(50) NOT NULL,
+        status VARCHAR(50) DEFAULT 'Active',
+        branch_id VARCHAR(255),
+        branch_name VARCHAR(255),
+        avatar_url TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS zones (
         id VARCHAR(255) PRIMARY KEY,
         code VARCHAR(100) NOT NULL,
@@ -78,6 +97,7 @@ async function seed() {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS technicians (
         id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255),
         code VARCHAR(100) NOT NULL,
         name VARCHAR(255) NOT NULL,
         phone VARCHAR(100),
@@ -92,10 +112,38 @@ async function seed() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      ALTER TABLE technicians ADD COLUMN IF NOT EXISTS user_id VARCHAR(255);
     `);
-    console.log('✅ Database schema verified.');
+    console.log('✅ Database schema (users, zones, technicians) verified.');
 
-    // 3. Seed Zones
+    // 3. Seed Users (Initial Admins & Staff)
+    console.log(`👥 Seeding ${INITIAL_USERS.length} Core Users...`);
+    const allUsers = [...INITIAL_USERS];
+    for (const u of INITIAL_USERS) {
+      await pool.query(
+        `INSERT INTO users (id, username, name, email, phone, password, line_id, role, status, branch_id, branch_name, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+         ON CONFLICT (id) DO UPDATE 
+         SET username = EXCLUDED.username, name = EXCLUDED.name, email = EXCLUDED.email, phone = EXCLUDED.phone,
+             password = EXCLUDED.password, line_id = EXCLUDED.line_id, role = EXCLUDED.role, status = EXCLUDED.status,
+             branch_id = EXCLUDED.branch_id, branch_name = EXCLUDED.branch_name, updated_at = NOW()`,
+        [
+          u.id,
+          u.username,
+          u.name,
+          u.email || '',
+          u.phone || '',
+          u.password || 'Password@123',
+          u.lineId || '',
+          u.role,
+          u.status,
+          u.branchId || null,
+          u.branchName || null
+        ]
+      );
+    }
+
+    // 4. Seed Zones
     console.log(`📍 Seeding ${INITIAL_ZONES.length} Zones...`);
     let zoneCount = 0;
     for (const zone of INITIAL_ZONES) {
@@ -116,21 +164,62 @@ async function seed() {
     }
     console.log(`✅ Successfully seeded ${zoneCount} zones.`);
 
-    // 4. Seed Technicians
+    // 5. Seed Technicians & Auto-create Technician User Accounts
     const technicians = generate200Technicians();
-    console.log(`👷 Seeding ${technicians.length} Technicians...`);
+    console.log(`👷 Seeding ${technicians.length} Technicians and linking User Accounts...`);
     let techCount = 0;
     for (const tech of technicians) {
       const { id, code, name, phone, avatar, tier, rating, status, primaryZone, secondaryZones, skills, ...extraData } = tech;
+      
+      const techUserId = `usr-tech-${id}`;
+      const techUsername = `tech_${code.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+      const techPassword = `Pass@${code.replace(/[^a-zA-Z0-9]/g, '')}`;
+      const techLineId = `@tech_${code.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+
+      // Insert matching user account for technician
       await pool.query(
-        `INSERT INTO technicians (id, code, name, phone, avatar, tier, rating, status, primary_zone, secondary_zones, skills, extra_data, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+        `INSERT INTO users (id, username, name, email, phone, password, line_id, role, status, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
          ON CONFLICT (id) DO UPDATE 
-         SET code = EXCLUDED.code, name = EXCLUDED.name, phone = EXCLUDED.phone, avatar = EXCLUDED.avatar,
+         SET username = EXCLUDED.username, name = EXCLUDED.name, phone = EXCLUDED.phone,
+             password = EXCLUDED.password, line_id = EXCLUDED.line_id, status = EXCLUDED.status, updated_at = NOW()`,
+        [
+          techUserId,
+          techUsername,
+          name,
+          `${techUsername}@vservice-tech.co.th`,
+          phone || '',
+          techPassword,
+          techLineId,
+          'technician',
+          'Active'
+        ]
+      );
+
+      allUsers.push({
+        id: techUserId,
+        username: techUsername,
+        name,
+        email: `${techUsername}@vservice-tech.co.th`,
+        phone: phone || '',
+        password: techPassword,
+        lineId: techLineId,
+        role: 'technician',
+        status: 'Active',
+        createdAt: new Date().toISOString().split('T')[0]
+      });
+
+      // Insert technician linked to user_id
+      await pool.query(
+        `INSERT INTO technicians (id, user_id, code, name, phone, avatar, tier, rating, status, primary_zone, secondary_zones, skills, extra_data, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
+         ON CONFLICT (id) DO UPDATE 
+         SET user_id = EXCLUDED.user_id, code = EXCLUDED.code, name = EXCLUDED.name, phone = EXCLUDED.phone, avatar = EXCLUDED.avatar,
              tier = EXCLUDED.tier, rating = EXCLUDED.rating, status = EXCLUDED.status, primary_zone = EXCLUDED.primary_zone,
              secondary_zones = EXCLUDED.secondary_zones, skills = EXCLUDED.skills, extra_data = EXCLUDED.extra_data, updated_at = NOW()`,
         [
           id,
+          techUserId,
           code || 'T-999',
           name || 'Unassigned Tech',
           phone || '',
@@ -146,16 +235,17 @@ async function seed() {
       );
       techCount++;
     }
-    console.log(`✅ Successfully seeded ${techCount} technicians.`);
+    console.log(`✅ Successfully seeded ${techCount} technicians linked to User Accounts.`);
 
-    // 5. Save local JSON backup files
+    // 6. Save local JSON backup files
     const dataDir = path.join(__dirname, '..', 'data');
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
     fs.writeFileSync(path.join(dataDir, 'zones.json'), JSON.stringify(INITIAL_ZONES, null, 2));
     fs.writeFileSync(path.join(dataDir, 'technicians.json'), JSON.stringify(technicians, null, 2));
-    console.log('📁 Local backup JSON files generated in ./data/ directory.');
+    fs.writeFileSync(path.join(dataDir, 'users.json'), JSON.stringify(allUsers, null, 2));
+    console.log('📁 Local backup JSON files generated in ./data/ (zones.json, technicians.json, users.json).');
 
     console.log('\n🎉 ALL DONE! Seed process completed successfully.');
   } catch (err: any) {

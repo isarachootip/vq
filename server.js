@@ -52,6 +52,26 @@ if (dbConnectionString || process.env.POSTGRES_HOST) {
 async function initDbTables() {
   if (!dbPool) return;
   try {
+    // Create users table
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id VARCHAR(255) PRIMARY KEY,
+        username VARCHAR(100) UNIQUE NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        phone VARCHAR(100),
+        password VARCHAR(255),
+        line_id VARCHAR(100),
+        role VARCHAR(50) NOT NULL,
+        status VARCHAR(50) DEFAULT 'Active',
+        branch_id VARCHAR(255),
+        branch_name VARCHAR(255),
+        avatar_url TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Create zones table
     await dbPool.query(`
       CREATE TABLE IF NOT EXISTS zones (
@@ -69,6 +89,7 @@ async function initDbTables() {
     await dbPool.query(`
       CREATE TABLE IF NOT EXISTS technicians (
         id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255),
         code VARCHAR(100) NOT NULL,
         name VARCHAR(255) NOT NULL,
         phone VARCHAR(100),
@@ -83,8 +104,9 @@ async function initDbTables() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+      ALTER TABLE technicians ADD COLUMN IF NOT EXISTS user_id VARCHAR(255);
     `);
-    console.log('✅ PostgreSQL database tables (zones, technicians) verified/created');
+    console.log('✅ PostgreSQL database tables (users, zones, technicians) verified/created');
   } catch (err) {
     console.error('❌ Error initializing database tables:', err.message);
   }
@@ -95,6 +117,7 @@ const DATA_DIR = path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'line_conversations.json');
 const ZONES_FILE = path.join(DATA_DIR, 'zones.json');
 const TECHS_FILE = path.join(DATA_DIR, 'technicians.json');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
 const CONFIG_FILE = path.join(DATA_DIR, 'line_config.json');
 
 if (!fs.existsSync(DATA_DIR)) {
@@ -533,6 +556,88 @@ app.delete('/api/technicians/:id', async (req, res) => {
   const currentTechs = loadJson(TECHS_FILE, []);
   const filtered = currentTechs.filter(t => t.id !== id);
   saveJson(TECHS_FILE, filtered);
+
+  return res.json({ status: 'success', deletedId: id });
+});
+
+// ----------------------------------------------------
+// USER API ENDPOINTS (PostgreSQL + Local File Fallback)
+// ----------------------------------------------------
+app.get('/api/users', async (req, res) => {
+  if (isDbConnected && dbPool) {
+    try {
+      const result = await dbPool.query('SELECT id, username, name, email, phone, password, line_id as "lineId", role, status, branch_id as "branchId", branch_name as "branchName", avatar_url as "avatarUrl", created_at as "createdAt" FROM users ORDER BY created_at ASC');
+      return res.json({ status: 'success', source: 'postgresql', users: result.rows });
+    } catch (err) {
+      console.error('Error querying users from PostgreSQL:', err);
+    }
+  }
+  const fallbackUsers = loadJson(USERS_FILE, []);
+  return res.json({ status: 'success', source: 'json_file', users: fallbackUsers });
+});
+
+app.post('/api/users/bulk', async (req, res) => {
+  const { users } = req.body;
+  if (!Array.isArray(users)) {
+    return res.status(400).json({ error: 'users must be an array' });
+  }
+
+  let dbSavedCount = 0;
+  if (isDbConnected && dbPool) {
+    try {
+      for (const u of users) {
+        await dbPool.query(
+          `INSERT INTO users (id, username, name, email, phone, password, line_id, role, status, branch_id, branch_name, avatar_url, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+           ON CONFLICT (id) DO UPDATE 
+           SET username = EXCLUDED.username, name = EXCLUDED.name, email = EXCLUDED.email, phone = EXCLUDED.phone,
+               password = EXCLUDED.password, line_id = EXCLUDED.line_id, role = EXCLUDED.role, status = EXCLUDED.status,
+               branch_id = EXCLUDED.branch_id, branch_name = EXCLUDED.branch_name, avatar_url = EXCLUDED.avatar_url, updated_at = NOW()`,
+          [
+            u.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            u.username,
+            u.name,
+            u.email || '',
+            u.phone || '',
+            u.password || 'Pass1234',
+            u.lineId || '',
+            u.role || 'technician',
+            u.status || 'Active',
+            u.branchId || null,
+            u.branchName || null,
+            u.avatarUrl || null
+          ]
+        );
+        dbSavedCount++;
+      }
+    } catch (err) {
+      console.error('Error saving users to PostgreSQL:', err);
+    }
+  }
+
+  // Backup to JSON file as fallback
+  saveJson(USERS_FILE, users);
+
+  return res.json({
+    status: 'success',
+    savedCount: users.length,
+    dbSavedCount,
+    source: isDbConnected ? 'postgresql' : 'json_file'
+  });
+});
+
+app.delete('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  if (isDbConnected && dbPool) {
+    try {
+      await dbPool.query('DELETE FROM users WHERE id = $1', [id]);
+    } catch (err) {
+      console.error('Error deleting user from PostgreSQL:', err);
+    }
+  }
+  const currentUsers = loadJson(USERS_FILE, []);
+  const filtered = currentUsers.filter(u => u.id !== id);
+  saveJson(USERS_FILE, filtered);
 
   return res.json({ status: 'success', deletedId: id });
 });
