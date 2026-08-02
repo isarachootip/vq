@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Branch, QueueBooking, PortalBanner, ServiceItem } from '../types';
+import type { Branch, QueueBooking, PortalBanner, ServiceItem, Zone } from '../types';
 import { CustomDateInput } from './CustomDateInput';
 import { SERVICE_ZONES } from '../mockData';
 import { 
@@ -38,6 +38,7 @@ interface VfixqPortalViewProps {
   }) => void;
   services: ServiceItem[];
   bannerSlideInterval?: number;
+  zones?: Zone[];
 }
 
 const formatDateDDMMYYYY = (dateStr: string | null) => {
@@ -55,8 +56,15 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
   banners,
   onRegisterTechnician,
   services,
-  bannerSlideInterval
+  bannerSlideInterval,
+  zones
 }) => {
+  const availableZonesList = React.useMemo(() => {
+    if (zones && zones.length > 0) {
+      return zones.map(z => z.name);
+    }
+    return SERVICE_ZONES;
+  }, [zones]);
   const [activeCategory, setActiveCategory] = useState<string>('ทั้งหมด');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
@@ -763,7 +771,7 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
                         onChange={(e) => setSelectedZone(e.target.value)}
                         className="v-input w-full pl-9 py-2 text-xs font-semibold"
                       >
-                        {SERVICE_ZONES.map((zone) => (
+                        {availableZonesList.map((zone) => (
                           <option key={zone} value={zone}>{zone}</option>
                         ))}
                       </select>
@@ -1144,7 +1152,7 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
                       onChange={(e) => setTechAppZone(e.target.value)}
                       className="v-input w-full py-2"
                     >
-                      {SERVICE_ZONES.map((zone) => (
+                      {availableZonesList.map((zone) => (
                         <option key={zone} value={zone}>{zone}</option>
                       ))}
                     </select>

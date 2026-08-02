@@ -1091,6 +1091,7 @@ export function App() {
           <VfixqPortalView
             branches={branches}
             banners={banners}
+            zones={zones}
             onRegisterTechnician={handleRegisterTechnician}
             services={services}
             bannerSlideInterval={systemConfig.bannerSlideInterval}
@@ -1393,6 +1394,7 @@ export function App() {
             <VfixqPortalView
               branches={branches}
               banners={banners}
+              zones={zones}
               onRegisterTechnician={handleRegisterTechnician}
               services={services}
               bannerSlideInterval={systemConfig.bannerSlideInterval}

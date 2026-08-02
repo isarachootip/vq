@@ -2393,12 +2393,7 @@ export const INITIAL_INSTALLATION_TYPES: InstallationTypeConfig[] = [
   },
 ];
 
-export const SERVICE_ZONES = [
-  'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)',
-  'Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ - บางบัวทอง)',
-  'Zone 3: ปทุมธานี (รังสิต - ลำลูกกา - คลองหลวง)',
-  'Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์ - สำโรง)',
-];
+export const SERVICE_ZONES: string[] = INITIAL_ZONES.map((z) => z.name);
 
 export const AVAILABLE_TIME_SLOTS: TimeSlot[] = [
   { id: 'slot-am-1', startTime: '09:00', endTime: '12:00', period: 'Morning' },
