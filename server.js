@@ -1047,6 +1047,8 @@ app.delete('/api/integration-logs', async (req, res) => {
   }
   saveJson(INTEGRATION_LOGS_FILE, []);
   return res.json({ status: 'success', message: 'Cleared all integration logs' });
+});
+
 // Serve Swagger UI Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/api-docs-json', (req, res) => {
