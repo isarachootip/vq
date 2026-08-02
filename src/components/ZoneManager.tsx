@@ -104,28 +104,24 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
 
   // Helper: Match Technicians to Zone
   const getTechniciansForZone = (zone: Zone): Technician[] => {
-    const zName = zone.name.toLowerCase();
-    const zCode = zone.code.toLowerCase();
-    const cleanZName = zName.replace(/^\[(bkk|upc|ct)\]\s*/, '').trim();
+    const zName = zone.name.trim().toLowerCase();
+    const zCode = zone.code.trim().toLowerCase();
+    const cleanZName = zName.replace(/^\[[a-z]+\]\s*/i, '').trim();
 
     return technicians.filter((t) => {
-      const pZone = (t.primaryZone || '').toLowerCase();
-      const secZones = (t.secondaryZones || []).map((sz) => sz.toLowerCase()).join(' ');
+      const pZone = (t.primaryZone || '').trim().toLowerCase();
+      const secZonesList = (t.secondaryZones || []).map((sz) => sz.trim().toLowerCase());
 
-      if (zCode === 'z01' || zCode === 'zone-1' || zCode === 'zone 1') {
-        if (pZone.includes('zone 1') || pZone.includes('สุขุมวิท') || secZones.includes('zone 1')) return true;
-      }
-      if (zCode === 'z02' || zCode === 'zone-2' || zCode === 'zone 2') {
-        if (pZone.includes('zone 2') || pZone.includes('นนทบุรี') || secZones.includes('zone 2')) return true;
+      // 1. Direct exact name or code match
+      if (pZone === zName || secZonesList.includes(zName)) return true;
+      if (pZone.includes(zCode) || secZonesList.some((s) => s.includes(zCode))) return true;
+
+      // 2. Clean name match (without region tag like [BKK])
+      if (cleanZName.length > 5) {
+        if (pZone.includes(cleanZName) || secZonesList.some((s) => s.includes(cleanZName))) return true;
       }
 
-      return (
-        pZone.includes(cleanZName) ||
-        pZone.includes(zCode) ||
-        secZones.includes(cleanZName) ||
-        secZones.includes(zCode) ||
-        (zName.includes('bkk') && (pZone.includes('กรุงเทพ') || pZone.includes('bkk') || pZone.includes('สุขุมวิท')))
-      );
+      return false;
     });
   };
 
