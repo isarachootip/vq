@@ -869,18 +869,44 @@ export function App() {
 
   // Handlers for User Management
   const handleAddUser = (newUser: UserAccount) => {
-    setUsers((prev) => [newUser, ...prev]);
+    const updated = [newUser, ...users];
+    setUsers(updated);
+    safeLocalSet('vfixq_users', updated);
     showToast(`เพิ่มผู้ใช้งาน ${newUser.name} (${newUser.role}) สำเร็จ`);
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newUser)
+    }).catch(err => console.warn('API error adding user:', err));
   };
 
   const handleUpdateUser = (updatedUser: UserAccount) => {
-    setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)));
+    const updated = users.map((u) => (u.id === updatedUser.id ? updatedUser : u));
+    setUsers(updated);
+    safeLocalSet('vfixq_users', updated);
     showToast(`อัปเดตสิทธิ์ของ ${updatedUser.name} เรียบร้อยแล้ว`);
+
+    if (currentUser && currentUser.id === updatedUser.id) {
+      setCurrentUser(updatedUser);
+      safeLocalSet('vfixq_current_user', updatedUser);
+    }
+
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedUser)
+    }).catch(err => console.warn('API error updating user:', err));
   };
 
   const handleDeleteUser = (userId: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== userId));
+    const filtered = users.filter((u) => u.id !== userId);
+    setUsers(filtered);
+    safeLocalSet('vfixq_users', filtered);
     showToast('ลบบัญชีผู้ใช้งานสำเร็จ');
+
+    fetch(`/api/users/${userId}`, {
+      method: 'DELETE'
+    }).catch(err => console.warn('API error deleting user:', err));
   };
 
   // Handlers for Technician

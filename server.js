@@ -601,6 +601,56 @@ app.get('/api/users', async (req, res) => {
   return res.json({ status: 'success', source: 'json_file', users: fallbackUsers });
 });
 
+app.post('/api/users', async (req, res) => {
+  const u = req.body;
+  if (!u || !u.username) {
+    return res.status(400).json({ error: 'user payload invalid' });
+  }
+
+  const userId = u.id || `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+  const userObj = { ...u, id: userId };
+
+  if (isDbConnected && dbPool) {
+    try {
+      await dbPool.query(
+        `INSERT INTO users (id, username, name, email, phone, password, line_id, role, status, branch_id, branch_name, avatar_url, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+         ON CONFLICT (id) DO UPDATE 
+         SET username = EXCLUDED.username, name = EXCLUDED.name, email = EXCLUDED.email, phone = EXCLUDED.phone,
+             password = EXCLUDED.password, line_id = EXCLUDED.line_id, role = EXCLUDED.role, status = EXCLUDED.status,
+             branch_id = EXCLUDED.branch_id, branch_name = EXCLUDED.branch_name, avatar_url = EXCLUDED.avatar_url, updated_at = NOW()`,
+        [
+          userId,
+          userObj.username,
+          userObj.name,
+          userObj.email || '',
+          userObj.phone || '',
+          userObj.password || 'Pass1234',
+          userObj.lineId || '',
+          userObj.role || 'technician',
+          userObj.status || 'Active',
+          userObj.branchId || null,
+          userObj.branchName || null,
+          userObj.avatarUrl || null
+        ]
+      );
+    } catch (err) {
+      console.error('Error saving single user to PostgreSQL:', err);
+    }
+  }
+
+  const currentUsers = loadJson(USERS_FILE, []);
+  const idx = currentUsers.findIndex(item => item.id === userId);
+  if (idx >= 0) {
+    currentUsers[idx] = userObj;
+  } else {
+    currentUsers.unshift(userObj);
+  }
+  saveJson(USERS_FILE, currentUsers);
+
+  return res.json({ status: 'success', user: userObj });
+});
+
 app.post('/api/users/bulk', async (req, res) => {
   const { users } = req.body;
   if (!Array.isArray(users)) {

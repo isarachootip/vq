@@ -557,7 +557,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       {/* Modal Add / Edit User */}
       {showModal && (
         <div className="fixed inset-0 z-150 flex items-center justify-center p-4 bg-slate-900/60 animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200 text-xs">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl space-y-4 border border-slate-200 text-xs max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div className="flex items-center space-x-2 font-bold text-slate-800 text-sm">
                 <UserIcon className="h-5 w-5 text-indigo-600" />
