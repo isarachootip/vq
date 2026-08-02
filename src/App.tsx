@@ -1284,6 +1284,7 @@ export function App() {
               bookings={bookings}
               technicians={technicians}
               services={services}
+              zones={zones}
               onDispatchToKanna={handleDispatchToKanna}
               onAssignTechnician={handleAssignTechnician}
               onSelectBookingForSim={() => {

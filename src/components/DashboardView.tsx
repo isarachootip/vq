@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import type { QueueBooking, Technician, ServiceItem } from '../types';
+import React, { useState, useMemo } from 'react';
+import type { QueueBooking, Technician, ServiceItem, Zone } from '../types';
+import { INITIAL_ZONES } from '../mockData';
 import { CustomDateInput } from './CustomDateInput';
 import { InteractiveMapPickerModal } from './InteractiveMapPickerModal';
 import { 
@@ -25,6 +26,7 @@ interface DashboardViewProps {
   bookings: QueueBooking[];
   technicians: Technician[];
   services: ServiceItem[];
+  zones?: Zone[];
   onDispatchToKanna: (bookingId: string) => void;
   onSelectBookingForSim: (booking: QueueBooking) => void;
   onConfirmBooking: (newBooking: QueueBooking) => void;
@@ -94,11 +96,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   bookings,
   technicians,
   services,
+  zones,
   onDispatchToKanna,
   onSelectBookingForSim,
   onConfirmBooking,
   onAssignTechnician,
 }) => {
+  const allZonesList = useMemo(() => {
+    return zones && zones.length > 0 ? zones : INITIAL_ZONES;
+  }, [zones]);
+
+  const bkkZones = useMemo(() => {
+    return allZonesList.filter(z => z.name.includes('[BKK]') || z.code.includes('Z01') || z.id.includes('bkk') || !z.name.includes('[UPC]'));
+  }, [allZonesList]);
+
+  const upcZones = useMemo(() => {
+    return allZonesList.filter(z => z.name.includes('[UPC]') || z.code.includes('Z02') || z.id.includes('upc') || z.name.includes('ภาค'));
+  }, [allZonesList]);
+
   const [selectedDate, setSelectedDate] = useState<string | null>('2026-07-24'); // Default to 24th to highlight demo data
   const [viewYear, setViewYear] = useState<number>(2026);
   const [viewMonth, setViewMonth] = useState<number>(7); // 1 = Jan, 7 = Jul
@@ -624,33 +639,31 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <option value="UPC">🏞️ UPC (ต่างจังหวัด/ภูมิภาค)</option>
           </select>
 
-          {/* Zone Filter */}
+          {/* Zone Filter derived dynamically from Master Zone table */}
           <select
             value={selectedZone}
             onChange={(e) => setSelectedZone(e.target.value)}
-            className="v-input py-1 text-xs font-medium"
+            className="v-input py-1 text-xs font-medium max-w-[280px]"
           >
-            <option value="ALL">📍 ทุกโซนพื้นที่บริการ</option>
+            <option value="ALL">📍 ทุกโซนพื้นที่บริการ ({allZonesList.length} โซนระบบ)</option>
 
             {(selectedRegion === 'ALL' || selectedRegion === 'BKK') && (
-              <optgroup label="🏙️ โซนกรุงเทพและปริมณฑล (BKK)">
-                <option value="Zone 1">Zone 1: สุขุมวิท - บางนา - ประเวศ</option>
-                <option value="Zone 2">Zone 2: ราชพฤกษ์ - ปากเกร็ด - แจ้งวัฒนะ</option>
-                <option value="Zone 3">Zone 3: รังสิต - คลองหลวง - ลำลูกกา</option>
-                <option value="Zone 4">Zone 4: เทพารักษ์ - บางพลี - ศรีนครินทร์</option>
-                <option value="Zone 5">Zone 5: ธนบุรี - ตลิ่งชัน - บางแค</option>
-                <option value="Zone 6">Zone 6: ตอนเหนือ - จตุจักร - ลาดพร้าว</option>
+              <optgroup label={`🏙️ โซนกรุงเทพและปริมณฑล (BKK) — ${bkkZones.length} โซน`}>
+                {bkkZones.map((z) => (
+                  <option key={z.id} value={z.name}>
+                    {z.code ? `${z.code}: ${z.name}` : z.name}
+                  </option>
+                ))}
               </optgroup>
             )}
 
             {(selectedRegion === 'ALL' || selectedRegion === 'UPC') && (
-              <optgroup label="🏞️ โซนต่างจังหวัด / ภูมิภาค (UPC)">
-                <option value="Zone UPC-N1">Zone UPC-N1: ภาคเหนือ (เชียงใหม่ - ลำพูน)</option>
-                <option value="Zone UPC-NE1">Zone UPC-NE1: ภาคอีสาน (ขอนแก่น - อุดร)</option>
-                <option value="Zone UPC-E1">Zone UPC-E1: ภาคตะวันออก (ชลบุรี - ระยอง)</option>
-                <option value="Zone UPC-S1">Zone UPC-S1: ภาคใต้ (ภูเก็ต - สุราษฎร์)</option>
-                <option value="Zone UPC-W1">Zone UPC-W1: ภาคตะวันตก (นครปฐม - ราชบุรี)</option>
-                <option value="Zone UPC-C1">Zone UPC-C1: ภาคกลางบน (พิษณุโลก - นครสวรรค์)</option>
+              <optgroup label={`🏞️ โซนต่างจังหวัด / ภูมิภาค (UPC) — ${upcZones.length} โซน`}>
+                {upcZones.map((z) => (
+                  <option key={z.id} value={z.name}>
+                    {z.code ? `${z.code}: ${z.name}` : z.name}
+                  </option>
+                ))}
               </optgroup>
             )}
           </select>
@@ -1058,25 +1071,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       }}
                       className="v-input w-full py-2 bg-white font-semibold text-slate-800 border-amber-500/40"
                     >
-                      {mRegion === 'BKK' ? (
-                        <>
-                          <option value="Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)">Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา - ประเวศ)</option>
-                          <option value="Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)">Zone 2: นนทบุรี (ราชพฤกษ์ - ปากเกร็ด - แจ้งวัฒนะ)</option>
-                          <option value="Zone 3: ปทุมธานี (รังสิต - ลำลูกกา)">Zone 3: ปทุมธานี (รังสิต - คลองหลวง - ลำลูกกา)</option>
-                          <option value="Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์)">Zone 4: สมุทรปราการ (เทพารักษ์ - บางพลี - ศรีนครินทร์)</option>
-                          <option value="Zone 5: กรุงเทพฯ ฝั่งธนบุรี (ตลิ่งชัน - บางแค)">Zone 5: กรุงเทพฯ ฝั่งธนบุรี (ตลิ่งชัน - บางแค - เพชรเกษม)</option>
-                          <option value="Zone 6: กรุงเทพฯ ตอนเหนือ (จตุจักร - ลาดพร้าว)">Zone 6: กรุงเทพฯ ตอนเหนือ (จตุจักร - ลาดพร้าว - สายไหม)</option>
-                        </>
-                      ) : (
-                        <>
-                          <option value="Zone UPC-N1: เชียงใหม่ - ลำพูน">Zone UPC-N1: ภาคเหนือ (เชียงใหม่ - ลำพูน - เชียงราย)</option>
-                          <option value="Zone UPC-NE1: ขอนแก่น - อุดรธานี">Zone UPC-NE1: ภาคอีสาน (ขอนแก่น - อุดรธานี - นครราชสีมา)</option>
-                          <option value="Zone UPC-E1: ชลบุรี - ระยอง">Zone UPC-E1: ภาคตะวันออก (ชลบุรี - พัทยา - ระยอง)</option>
-                          <option value="Zone UPC-S1: ภูเก็ต - สุราษฎร์ธานี">Zone UPC-S1: ภาคใต้ (ภูเก็ต - สุราษฎร์ธานี - หาดใหญ่)</option>
-                          <option value="Zone UPC-W1: นครปฐม - ราชบุรี">Zone UPC-W1: ภาคตะวันตก (นครปฐม - ราชบุรี - กาญจนบุรี)</option>
-                          <option value="Zone UPC-C1: พิษณุโลก - นครสวรรค์">Zone UPC-C1: ภาคกลางบน (พิษณุโลก - นครสวรรค์ - พิจิตร)</option>
-                        </>
-                      )}
+                      {(mRegion === 'BKK' ? bkkZones : upcZones).map((z) => (
+                        <option key={z.id} value={z.name}>
+                          {z.code ? `${z.code}: ${z.name}` : z.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
