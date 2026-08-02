@@ -857,7 +857,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 5. Manual Booking Form Modal */}
       {showManualBookingModal && (
         <div className="fixed inset-0 z-150 flex items-center justify-center p-4 bg-slate-900/60 animate-fadeIn">
-          <div className="v-panel p-6 bg-white w-full max-w-lg border border-slate-200 rounded-2xl shadow-2xl space-y-4 text-xs">
+          <div className="v-panel p-6 bg-white w-full max-w-3xl border border-slate-200 rounded-2xl shadow-2xl space-y-4 text-xs max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div className="flex items-center space-x-2 text-sm font-bold text-slate-800">
                 <Phone className="h-5 w-5 text-amber-500" />

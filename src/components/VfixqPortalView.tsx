@@ -576,7 +576,7 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
 
       {/* 4. MULTI-STEP BOOKING WIZARD MODAL */}
       {selectedService && !isSuccess && (
-        <div className="v-panel p-6 bg-white space-y-6 border border-slate-200 max-w-3xl mx-auto shadow-md">
+        <div className="v-panel p-6 bg-white space-y-6 border border-slate-200 max-w-4xl mx-auto shadow-md">
           {/* Header wizard */}
           <div className="flex justify-between items-center border-b border-slate-200 pb-4">
             <div className="flex items-center space-x-3">
