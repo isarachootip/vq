@@ -260,6 +260,7 @@ export type UserRole =
   | 'supervisor' 
   | 'technician' 
   | 'storecs' 
+  | 'storegr'
   | 'customer';
 
 export interface UserAccount {

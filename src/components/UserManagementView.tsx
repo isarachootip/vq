@@ -20,7 +20,8 @@ import {
   Lock,
   Eye,
   EyeOff,
-  MessageCircle
+  MessageCircle,
+  Package
 } from 'lucide-react';
 
 interface UserManagementViewProps {
@@ -51,7 +52,7 @@ export const ROLE_CONFIG: Record<UserRole, { label: string; description: string;
     icon: <Sliders className="h-3.5 w-3.5" />
   },
   technician: {
-    label: 'technician (ช่างเทคนิค)',
+    label: 'technician (ช่างเทคนิค / ช่างรับงาน)',
     description: 'รับงานติดตั้ง อัปเดตสถานะงาน STS และดู Skill Matrix ของตนเอง',
     badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
     icon: <Wrench className="h-3.5 w-3.5" />
@@ -61,6 +62,12 @@ export const ROLE_CONFIG: Record<UserRole, { label: string; description: string;
     description: 'บันทึกจองคิวงานหน้าร้าน ประสานงานลูกค้าประจำสาขา',
     badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
     icon: <Building className="h-3.5 w-3.5" />
+  },
+  storegr: {
+    label: 'storegr (เจ้าหน้าที่ GR สาขา)',
+    description: 'ตรวจรับสินค้าอุปกรณ์คลัง จัดเตรียมสินค้าและเบิกจ่ายสินค้าติดตั้งประจำสาขา',
+    badgeClass: 'bg-teal-100 text-teal-800 border-teal-300',
+    icon: <Package className="h-3.5 w-3.5" />
   },
   customer: {
     label: 'customer (ลูกค้าทั่วไป)',
@@ -203,6 +210,7 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       supervisor: 0,
       technician: 0,
       storecs: 0,
+      storegr: 0,
       customer: 0
     };
     users.forEach(u => {
@@ -260,24 +268,24 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
       </div>
 
       {/* Role Summary KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {(['sys_admin', 'admin', 'supervisor', 'technician', 'storecs', 'customer'] as const).map((r) => {
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+        {(['sys_admin', 'admin', 'supervisor', 'technician', 'storecs', 'storegr', 'customer'] as const).map((r) => {
           const cfg = ROLE_CONFIG[r];
           return (
             <div
               key={r}
               onClick={() => setSelectedRoleFilter(selectedRoleFilter === r ? 'ALL' : r)}
-              className={`p-3.5 rounded-2xl border transition cursor-pointer ${
+              className={`p-3 rounded-2xl border transition cursor-pointer ${
                 selectedRoleFilter === r
                   ? 'bg-indigo-50 border-indigo-400 ring-2 ring-indigo-200'
                   : 'bg-white border-slate-200 hover:border-indigo-300'
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className={`p-2 rounded-xl border ${cfg.badgeClass}`}>
+                <span className={`p-1.5 rounded-xl border ${cfg.badgeClass}`}>
                   {cfg.icon}
                 </span>
-                <span className="text-xl font-black text-slate-800">{roleCounts[r]}</span>
+                <span className="text-lg font-black text-slate-800">{roleCounts[r]}</span>
               </div>
               <div className="mt-2">
                 <div className="text-xs font-bold text-slate-800 truncate">{r}</div>
@@ -317,7 +325,8 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                 <option value="supervisor">3. supervisor</option>
                 <option value="technician">4. technician</option>
                 <option value="storecs">5. storecs</option>
-                <option value="customer">6. customer</option>
+                <option value="storegr">6. storegr</option>
+                <option value="customer">7. customer</option>
               </select>
 
               <select
@@ -573,9 +582,10 @@ export const UserManagementView: React.FC<UserManagementViewProps> = ({
                   <option value="sys_admin">1. sys_admin (ผู้ดูแลระบบสูงสุด)</option>
                   <option value="admin">2. admin (ผู้ดูแลระบบ)</option>
                   <option value="supervisor">3. supervisor (ผู้ควบคุมงาน)</option>
-                  <option value="technician">4. technician (ช่างเทคนิค)</option>
+                  <option value="technician">4. technician (ช่างเทคนิค / ช่างรับงาน)</option>
                   <option value="storecs">5. storecs (เจ้าหน้าที่ CS สาขา)</option>
-                  <option value="customer">6. customer (ลูกค้าทั่วไป)</option>
+                  <option value="storegr">6. storegr (เจ้าหน้าที่ GR คลังสาขา)</option>
+                  <option value="customer">7. customer (ลูกค้าทั่วไป)</option>
                 </select>
                 <p className="text-[10px] text-slate-400 mt-1">{ROLE_CONFIG[fRole].description}</p>
               </div>
