@@ -20,6 +20,7 @@ import { TechDashboardView } from './components/TechDashboardView';
 import { InstallationAnalyticsView } from './components/InstallationAnalyticsView';
 import { UserManagementView } from './components/UserManagementView';
 import { LineCustomerChatView } from './components/LineCustomerChatView';
+import { LoginModal } from './components/LoginModal';
 
 import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner, TechnicianApplication, TechnicianSkill, SkillCategory, ServiceItem, UserAccount } from './types';
 import { 
@@ -56,7 +57,8 @@ import {
   BarChart3,
   TrendingUp,
   UserCheck,
-  MessageCircle
+  MessageCircle,
+  LogOut
 } from 'lucide-react';
 
 const INITIAL_BANNERS: PortalBanner[] = [
@@ -295,6 +297,23 @@ export function App() {
     if (!loaded || loaded.length < 200) return INITIAL_USERS;
     return loaded;
   });
+
+  // Auth User State
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => 
+    loadState<UserAccount | null>('vfixq_current_user', null)
+  );
+
+  const handleLoginSuccess = (user: UserAccount) => {
+    setCurrentUser(user);
+    safeLocalSet('vfixq_current_user', user);
+    showToast(`ยินดีต้อนรับคุณ ${user.name} (${user.role}) เข้าสู่ระบบ!`);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    safeLocalSet('vfixq_current_user', null);
+    showToast('ออกจากระบบหลังบ้านเรียบร้อยแล้ว');
+  };
 
   // Configuration States
   const [matchWeights, setMatchWeights] = useState<any>(() => 
@@ -962,6 +981,17 @@ export function App() {
     );
   }
 
+  // Backend View Authentication Guard
+  if (!currentUser) {
+    return (
+      <LoginModal
+        users={users}
+        onLoginSuccess={handleLoginSuccess}
+        onGoToStorefront={() => navigateToBackend(false)}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row text-slate-800 antialiased font-sans">
       {/* Toast Notification */}
@@ -1056,12 +1086,12 @@ export function App() {
         {/* Sidebar Footer */}
         <div className="p-4 border-t border-slate-200 bg-slate-50/50 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 border border-slate-300">
-              AD
+            <div className="h-7 w-7 rounded-full bg-gradient-to-tr from-amber-500 to-amber-600 flex items-center justify-center text-xs font-black text-slate-950 shadow-xs border border-amber-400">
+              {currentUser.name.charAt(0)}
             </div>
             <div>
-              <p className="text-[11px] font-bold text-slate-700">Administrator</p>
-              <p className="text-[9px] text-slate-400 font-mono">vService Portal</p>
+              <p className="text-[11px] font-bold text-slate-800 line-clamp-1">{currentUser.name}</p>
+              <p className="text-[9px] text-indigo-600 font-mono font-bold">@{currentUser.username}</p>
             </div>
           </div>
           <button
@@ -1083,6 +1113,28 @@ export function App() {
             <h2 className="text-sm md:text-base font-bold text-slate-800 font-sans">
               {menuItems.find((item) => item.id === activeTab)?.label || 'Workspace'}
             </h2>
+          </div>
+
+          {/* User Profile Pill & Logout Button */}
+          <div className="flex items-center space-x-3">
+            <div className="hidden sm:flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-1 rounded-xl">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold text-[10px] flex items-center justify-center shadow-xs">
+                {currentUser.name.charAt(0)}
+              </div>
+              <div className="text-left">
+                <div className="text-xs font-bold text-slate-800 leading-tight">{currentUser.name}</div>
+                <div className="text-[9px] text-indigo-600 font-mono font-bold">Role: {currentUser.role}</div>
+              </div>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer"
+              title="ออกจากระบบ"
+            >
+              <LogOut size={13} />
+              <span>ออกจากระบบ</span>
+            </button>
           </div>
         </header>
 
