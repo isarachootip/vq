@@ -2560,7 +2560,7 @@ export const INITIAL_USERS: UserAccount[] = [
     name: 'ช่างสมชาย & ทีม (ช่างใหญ่)',
     email: 'somchai.tech@vservice.co.th',
     phone: '089-111-2233',
-    password: 'Password@123',
+    password: 'p123',
     lineId: '@tech_somchai',
     role: 'technician',
     status: 'Active',

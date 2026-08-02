@@ -173,7 +173,7 @@ async function seed() {
       
       const techUserId = `usr-tech-${id}`;
       const techUsername = `tech_${code.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
-      const techPassword = `Pass@${code.replace(/[^a-zA-Z0-9]/g, '')}`;
+      const techPassword = 'p123';
       const techLineId = `@tech_${code.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
 
       // Insert matching user account for technician
