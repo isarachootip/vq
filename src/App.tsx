@@ -253,7 +253,7 @@ export function App() {
   const [branches, setBranches] = useState<Branch[]>(INITIAL_BRANCHES);
   const [zones, setZones] = useState<Zone[]>(() => {
     const loaded = loadState<Zone[]>('vfixq_zones', INITIAL_ZONES);
-    if (!loaded || loaded.some((z) => z.id === 'zone-1' || z.code === 'Z01')) return INITIAL_ZONES;
+    if (!loaded || loaded.length < 87 || loaded.some((z) => z.id === 'zone-1' || z.code === 'Z01')) return INITIAL_ZONES;
     return loaded;
   });
   const [skills, setSkills] = useState<Skill[]>(() => 
@@ -262,7 +262,7 @@ export function App() {
 
   const [technicians, setTechnicians] = useState<Technician[]>(() => {
     const loaded = loadState<Technician[]>('vfixq_technicians', INITIAL_TECHNICIANS);
-    if (!loaded || loaded.length < 150 || loaded.some((t) => t.id === 'tech-01')) return INITIAL_TECHNICIANS;
+    if (!loaded || loaded.length < 200 || loaded.some((t) => t.id === 'tech-01')) return INITIAL_TECHNICIANS;
     return loaded;
   });
 
@@ -342,15 +342,24 @@ export function App() {
         const zonesRes = await fetch('/api/zones');
         if (zonesRes.ok) {
           const data = await zonesRes.json();
-          if (data.zones && data.zones.length > 0) {
+          if (data.zones && data.zones.length >= 87) {
             setZones(data.zones);
             safeLocalSet('vfixq_zones', data.zones);
+          } else {
+            // Seed backend if response is empty or incomplete
+            setZones(INITIAL_ZONES);
+            safeLocalSet('vfixq_zones', INITIAL_ZONES);
+            fetch('/api/zones/bulk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ zones: INITIAL_ZONES })
+            }).catch(err => console.warn('Zone bulk sync err:', err));
           }
         }
       } catch {
         // Fallback to localStorage / INITIAL_ZONES if API unreachable
         const storedZones = loadState<Zone[]>('vfixq_zones', []);
-        if (!storedZones || storedZones.length < 10 || storedZones.some((z) => z.id === 'zone-1' || z.code === 'Z01')) {
+        if (!storedZones || storedZones.length < 87 || storedZones.some((z) => z.id === 'zone-1' || z.code === 'Z01')) {
           setZones(INITIAL_ZONES);
           safeLocalSet('vfixq_zones', INITIAL_ZONES);
         }
@@ -361,15 +370,24 @@ export function App() {
         const techsRes = await fetch('/api/technicians');
         if (techsRes.ok) {
           const data = await techsRes.json();
-          if (data.technicians && data.technicians.length > 0) {
+          if (data.technicians && data.technicians.length >= 200) {
             setTechnicians(data.technicians);
             safeLocalSet('vfixq_technicians', data.technicians);
+          } else {
+            // Seed backend if response is empty or incomplete
+            setTechnicians(INITIAL_TECHNICIANS);
+            safeLocalSet('vfixq_technicians', INITIAL_TECHNICIANS);
+            fetch('/api/technicians/bulk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ technicians: INITIAL_TECHNICIANS })
+            }).catch(err => console.warn('Tech bulk sync err:', err));
           }
         }
       } catch {
         // Fallback to localStorage / INITIAL_TECHNICIANS if API unreachable
         const storedTechs = loadState<Technician[]>('vfixq_technicians', []);
-        if (!storedTechs || storedTechs.length < 150 || storedTechs.some((t) => t.id === 'tech-01')) {
+        if (!storedTechs || storedTechs.length < 200 || storedTechs.some((t) => t.id === 'tech-01')) {
           setTechnicians(INITIAL_TECHNICIANS);
           safeLocalSet('vfixq_technicians', INITIAL_TECHNICIANS);
         }
