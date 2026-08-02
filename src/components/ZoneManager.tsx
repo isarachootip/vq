@@ -15,10 +15,10 @@ import {
   ChevronRight, 
   Filter, 
   ExternalLink,
-  Send,
   Eye,
   LayoutGrid,
-  List
+  List,
+  Workflow
 } from 'lucide-react';
 
 interface ZoneManagerProps {
@@ -1257,10 +1257,10 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
                         {b.status === 'Pending Dispatch' && onDispatchToKanna && (
                           <button
                             onClick={() => onDispatchToKanna(b.id)}
-                            className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-2.5 py-1 rounded-md flex items-center gap-1 cursor-pointer"
+                            className="bg-amber-500 hover:bg-amber-600 text-slate-900 font-extrabold px-2.5 py-1 rounded-md flex items-center gap-1 cursor-pointer transition shadow-xs"
                           >
-                            <Send className="h-3 w-3" />
-                            <span>ส่งงานต่อระบบ KANNA</span>
+                            <Workflow className="h-3 w-3" />
+                            <span>ส่งงานต่อระบบ BuildFlow</span>
                           </button>
                         )}
                       </div>

@@ -943,7 +943,7 @@ export function App() {
     setBookings((prev) =>
       prev.map((b) => (b.id === bookingId ? { ...b, status: 'Dispatched to KANNA' } : b))
     );
-    showToast('ส่งข้อมูลงานติดตั้งไปยังระบบ KANNA (Project Flow) เรียบร้อยแล้ว');
+    showToast('ส่งข้อมูลงานติดตั้งไปยังระบบ BuildFlow (Project Flow) เรียบร้อยแล้ว');
   };
 
   const handleAssignTechnician = (bookingId: string, techId: string, techName: string) => {

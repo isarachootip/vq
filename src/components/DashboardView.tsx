@@ -7,7 +7,6 @@ import {
   Clock, 
   CheckCircle2, 
   AlertTriangle, 
-  Send, 
   Filter, 
   MapPin, 
   ShieldAlert, 
@@ -19,7 +18,8 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCheck,
-  Sparkles
+  Sparkles,
+  Workflow
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -411,13 +411,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         <div className="v-panel p-4 flex items-center space-x-4 bg-white border border-slate-200">
           <div className="p-3 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100">
-            <Send className="h-6 w-6" />
+            <Workflow className="h-6 w-6" />
           </div>
           <div>
             <div className="text-2xl font-bold text-slate-800">
               {bookings.filter((b) => b.status === 'Dispatched to KANNA' || b.status === 'STS In-Progress').length}
             </div>
-            <div className="text-xs text-slate-500 font-medium">งานใน KANNA / STS</div>
+            <div className="text-xs text-slate-500 font-medium">งานใน BuildFlow / STS</div>
           </div>
         </div>
 
@@ -842,10 +842,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           {b.status === 'Scheduled' && (
                             <button
                               onClick={() => onDispatchToKanna(b.id)}
-                              className="px-2 py-1 rounded bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-[10px] transition flex items-center space-x-1 shadow-sm border-0 cursor-pointer"
+                              className="px-2 py-1 rounded bg-amber-500 hover:bg-amber-600 text-slate-900 font-extrabold text-[10px] transition flex items-center space-x-1 shadow-sm border-0 cursor-pointer"
                             >
-                              <Send className="h-3 w-3" />
-                              <span>ส่ง KANNA</span>
+                              <Workflow className="h-3 w-3" />
+                              <span>ส่ง BuildFlow</span>
                             </button>
                           )}
 
