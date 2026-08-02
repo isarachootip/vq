@@ -298,7 +298,9 @@ export function App() {
   const [users, setUsers] = useState<UserAccount[]>(() => {
     const loaded = loadState<UserAccount[]>('vfixq_users', INITIAL_USERS);
     if (!loaded || loaded.length < 200) return INITIAL_USERS;
-    return loaded;
+    const userMap: Record<string, UserAccount> = {};
+    loaded.forEach(u => { userMap[u.id] = u; });
+    return Object.values(userMap);
   });
 
   const [standardCosts, setStandardCosts] = useState<StandardCostItem[]>(() =>
@@ -468,8 +470,11 @@ export function App() {
         if (usersRes.ok) {
           const data = await usersRes.json();
           if (data.users && data.users.length >= 200) {
-            setUsers(data.users);
-            safeLocalSet('vfixq_users', data.users);
+            const userMap: Record<string, UserAccount> = {};
+            data.users.forEach((u: UserAccount) => { userMap[u.id] = u; });
+            const cleanUsers = Object.values(userMap);
+            setUsers(cleanUsers);
+            safeLocalSet('vfixq_users', cleanUsers);
           } else {
             // Seed backend if response is empty or incomplete
             setUsers(INITIAL_USERS);

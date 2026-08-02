@@ -598,7 +598,15 @@ app.get('/api/users', async (req, res) => {
     }
   }
   const fallbackUsers = loadJson(USERS_FILE, []);
-  return res.json({ status: 'success', source: 'json_file', users: fallbackUsers });
+  const uniqueUsers = [];
+  const seenIds = new Set();
+  for (const u of fallbackUsers) {
+    if (u.id && !seenIds.has(u.id)) {
+      seenIds.add(u.id);
+      uniqueUsers.push(u);
+    }
+  }
+  return res.json({ status: 'success', source: 'json_file', users: uniqueUsers });
 });
 
 app.post('/api/users', async (req, res) => {

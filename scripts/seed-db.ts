@@ -217,18 +217,20 @@ async function seed() {
         ]
       );
 
-      allUsers.push({
-        id: techUserId,
-        username: techUsername,
-        name,
-        email: `${techUsername}@vservice-tech.co.th`,
-        phone: phone || '',
-        password: techPassword,
-        lineId: techLineId,
-        role: 'technician',
-        status: 'Active',
-        createdAt: new Date().toISOString().split('T')[0]
-      });
+      if (!allUsers.some(u => u.id === techUserId)) {
+        allUsers.push({
+          id: techUserId,
+          username: techUsername,
+          name,
+          email: `${techUsername}@vservice-tech.co.th`,
+          phone: phone || '',
+          password: techPassword,
+          lineId: techLineId,
+          role: 'technician',
+          status: 'Active',
+          createdAt: new Date().toISOString().split('T')[0]
+        });
+      }
 
       // Insert technician linked to user_id
       await pool.query(
