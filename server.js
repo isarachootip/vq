@@ -4,8 +4,6 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pg from 'pg';
-import swaggerUi from 'swagger-ui-express';
-import { swaggerSpec } from './swagger.js';
 
 const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
@@ -1049,12 +1047,7 @@ app.delete('/api/integration-logs', async (req, res) => {
   return res.json({ status: 'success', message: 'Cleared all integration logs' });
 });
 
-// Serve Swagger UI Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.get('/api-docs-json', (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.send(swaggerSpec);
-});
+
 
 // Serve static built frontend files for production
 const distPath = path.join(__dirname, 'dist');
