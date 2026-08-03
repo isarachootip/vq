@@ -1,0 +1,87 @@
+{
+	"info": {
+		"_postman_id": "vbooking-api-collection",
+		"name": "vbooking / BuildFlow API Integration Collection",
+		"description": "Postman Collection สำหรับทดสอบยิง API ระบบ vbooking (vibepjm.online) และซิงก์เข้า BuildFlow (buildflowx.online)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Dispatch Direct to BuildFlow (Relay Proxy)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"projectId\": \"P020826-001\",\n  \"customerName\": \"คุณวิชัย ใจดี\",\n  \"customerPhone\": \"081-234-5678\",\n  \"customerAddress\": \"99/1 ถ.สุขุมวิท กรุงเทพฯ\",\n  \"jobDetails\": \"ติดตั้งระบบไฟ Smart Home ห้องครัว\",\n  \"assignedTeam\": \"ทีมช่าง A\"\n}"
+				},
+				"url": {
+					"raw": "https://vibepjm.online/api/buildflow/dispatch",
+					"protocol": "https",
+					"host": [
+						"vibepjm",
+						"online"
+					],
+					"path": [
+						"api",
+						"buildflow",
+						"dispatch"
+					]
+				}
+			}
+		},
+		{
+			"name": "2. Send Direct to BuildFlow API (buildflowx.online)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"project_id\": \"P020826-001\",\n  \"customer_name\": \"คุณวิชัย ใจดี\",\n  \"customer_phone\": \"081-234-5678\",\n  \"installation_details\": \"รีโนเวทห้องครัวและติดตั้ง Smart Home\",\n  \"technician_team\": \"ทีมช่าง A\"\n}"
+				},
+				"url": {
+					"raw": "https://buildflowx.online/api/v1/projects",
+					"protocol": "https",
+					"host": [
+						"buildflowx",
+						"online"
+					],
+					"path": [
+						"api",
+						"v1",
+						"projects"
+					]
+				}
+			}
+		},
+		{
+			"name": "3. Get Integration Logs (PostgreSQL / Coolify)",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://vibepjm.online/api/integration-logs",
+					"protocol": "https",
+					"host": [
+						"vibepjm",
+						"online"
+					],
+					"path": [
+						"api",
+						"integration-logs"
+					]
+				}
+			}
+		}
+	]
+}
