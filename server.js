@@ -916,6 +916,120 @@ app.delete('/api/standard-costs/:id', async (req, res) => {
   return res.json({ status: 'success', deletedId: id });
 });
 
+// Leads API Endpoints
+const LEADS_FILE = path.join(DATA_DIR, 'leads.json');
+
+app.post('/api/leads', async (req, res) => {
+  const leadData = req.body || {};
+  const newLead = {
+    id: leadData.id || `lead_${Date.now()}`,
+    customer_name: leadData.customer_name || 'Customer',
+    customer_phone: leadData.customer_phone || '',
+    customer_address: leadData.customer_address || '',
+    customer_latitude: leadData.customer_latitude || null,
+    customer_longitude: leadData.customer_longitude || null,
+    map_url: leadData.map_url || '',
+    job_type: leadData.job_type || 'General Service',
+    notes: leadData.notes || '',
+    status: 'New',
+    created_at: new Date().toISOString()
+  };
+
+  if (isDbConnected && dbPool) {
+    try {
+      await dbPool.query(`
+        CREATE TABLE IF NOT EXISTS leads (
+          id VARCHAR(255) PRIMARY KEY,
+          customer_name VARCHAR(255) NOT NULL,
+          customer_phone VARCHAR(100),
+          customer_address TEXT,
+          customer_latitude NUMERIC,
+          customer_longitude NUMERIC,
+          map_url TEXT,
+          job_type VARCHAR(255),
+          notes TEXT,
+          status VARCHAR(50) DEFAULT 'New',
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      await dbPool.query(
+        `INSERT INTO leads (id, customer_name, customer_phone, customer_address, customer_latitude, customer_longitude, map_url, job_type, notes, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [newLead.id, newLead.customer_name, newLead.customer_phone, newLead.customer_address, newLead.customer_latitude, newLead.customer_longitude, newLead.map_url, newLead.job_type, newLead.notes, newLead.status]
+      );
+    } catch (err) {
+      console.error('Error inserting lead to DB:', err);
+    }
+  }
+
+  const currentLeads = loadJson(LEADS_FILE, []);
+  saveJson(LEADS_FILE, [newLead, ...currentLeads]);
+
+  return res.json({ status: 'success', message: 'Lead added successfully', lead: newLead });
+});
+
+app.get('/api/leads', async (req, res) => {
+  let leads = [];
+  if (isDbConnected && dbPool) {
+    try {
+      const result = await dbPool.query('SELECT * FROM leads ORDER BY created_at DESC');
+      leads = result.rows;
+    } catch (err) {
+      console.error('Error fetching leads from DB:', err);
+    }
+  }
+  if (leads.length === 0) {
+    leads = loadJson(LEADS_FILE, []);
+  }
+  return res.json({ status: 'success', count: leads.length, leads });
+});
+
+// Projects API Endpoint
+const PROJECTS_FILE = path.join(DATA_DIR, 'projects.json');
+
+app.post('/api/projects', async (req, res) => {
+  const p = req.body || {};
+  const newProj = {
+    id: p.id || `P${new Date().toISOString().slice(2,10).replace(/-/g,'')}-001`,
+    name: p.name || 'New Project',
+    description: p.description || '',
+    status: p.status || 'In Progress',
+    startDate: p.startDate || new Date().toISOString().slice(0,10),
+    endDate: p.endDate || null,
+    budget: p.budget || 0,
+    address: p.address || '',
+    created_at: new Date().toISOString()
+  };
+
+  const currentProjects = loadJson(PROJECTS_FILE, []);
+  saveJson(PROJECTS_FILE, [newProj, ...currentProjects]);
+
+  return res.json({ status: 'success', message: 'Project created successfully', project: newProj });
+});
+
+// Tasks API Endpoint
+const TASKS_FILE = path.join(DATA_DIR, 'tasks.json');
+
+app.post('/api/tasks', async (req, res) => {
+  const t = req.body || {};
+  const newTask = {
+    id: t.id || `task_${Date.now()}`,
+    projectId: t.projectId || 'P1',
+    title: t.title || 'New Task',
+    description: t.description || '',
+    status: t.status || 'To Do',
+    priority: t.priority || 'Medium',
+    estimatedHours: t.estimatedHours || 0,
+    created_at: new Date().toISOString()
+  };
+
+  const currentTasks = loadJson(TASKS_FILE, []);
+  saveJson(TASKS_FILE, [newTask, ...currentTasks]);
+
+  return res.json({ status: 'success', message: 'Task created successfully', task: newTask });
+});
+
 // BuildFlow Production Dispatch Endpoint & Relay Proxy
 app.post(['/api/buildflow/dispatch', '/api/v1/projects'], async (req, res) => {
   const payload = req.body || {};
