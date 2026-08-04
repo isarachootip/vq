@@ -140,7 +140,17 @@ export const ZoneManager: React.FC<ZoneManagerProps> = ({
       z.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       z.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const isBkk = z.name.toUpperCase().includes('BKK') || z.code.startsWith('Z01') || z.code.startsWith('Z02') || z.code.startsWith('Z03') || z.code.startsWith('Z04');
+    const isBkk = !z.name.toUpperCase().includes('[UPC]') && (
+      z.name.toUpperCase().includes('BKK') || 
+      z.name.includes('กรุงเทพ') || 
+      z.name.includes('นนทบุรี') || 
+      z.name.includes('ปทุมธานี') || 
+      z.name.includes('สมุทรปราการ') || 
+      z.code.startsWith('Z01') || 
+      z.code.startsWith('Z02') || 
+      z.code.startsWith('Z03') || 
+      z.code.startsWith('Z04')
+    );
     const matchesRegion =
       regionFilter === 'ALL' ||
       (regionFilter === 'BKK' && isBkk) ||

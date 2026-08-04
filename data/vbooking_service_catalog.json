@@ -1,0 +1,294 @@
+[
+  {
+    "code": "ELEC_INSTALL",
+    "name": "ติดตั้งเครื่องใช้ไฟฟ้า",
+    "name_en": "Electrical Appliance Installation",
+    "icon": "zap",
+    "sub_categories": [
+      {
+        "code": "AC_INSTALL_9000BTU",
+        "name": "ติดตั้งแอร์ 9,000 BTU",
+        "name_en": "AC Installation 9,000 BTU",
+        "required_skill_level": 2,
+        "est_duration_hours": 2.5,
+        "required_team_size": 1,
+        "price_standard": 900,
+        "price_premium": 1500
+      },
+      {
+        "code": "AC_INSTALL_12000BTU",
+        "name": "ติดตั้งแอร์ 12,000 BTU",
+        "name_en": "AC Installation 12,000 BTU",
+        "required_skill_level": 2,
+        "est_duration_hours": 3,
+        "required_team_size": 1,
+        "price_standard": 1200,
+        "price_premium": 1800
+      },
+      {
+        "code": "AC_INSTALL_18000BTU",
+        "name": "ติดตั้งแอร์ 18,000 BTU",
+        "name_en": "AC Installation 18,000 BTU",
+        "required_skill_level": 2,
+        "est_duration_hours": 4,
+        "required_team_size": 2,
+        "price_standard": 1800,
+        "price_premium": 2500
+      },
+      {
+        "code": "AC_INSTALL_24000BTU",
+        "name": "ติดตั้งแอร์ 24,000 BTU",
+        "name_en": "AC Installation 24,000 BTU",
+        "required_skill_level": 3,
+        "est_duration_hours": 5,
+        "required_team_size": 2,
+        "price_standard": 2500,
+        "price_premium": 3500
+      },
+      {
+        "code": "AC_CLEAN",
+        "name": "ล้างแอร์",
+        "name_en": "AC Cleaning",
+        "required_skill_level": 1,
+        "est_duration_hours": 1.5,
+        "required_team_size": 1,
+        "price_standard": 500,
+        "price_premium": 800
+      },
+      {
+        "code": "WASHING_MACHINE_INSTALL",
+        "name": "ติดตั้งเครื่องซักผ้า",
+        "name_en": "Washing Machine Installation",
+        "required_skill_level": 1,
+        "est_duration_hours": 1.5,
+        "required_team_size": 1,
+        "price_standard": 600,
+        "price_premium": 900
+      },
+      {
+        "code": "WATER_HEATER_INSTALL",
+        "name": "ติดตั้งเครื่องทำน้ำอุ่น",
+        "name_en": "Water Heater Installation",
+        "required_skill_level": 2,
+        "est_duration_hours": 2,
+        "required_team_size": 1,
+        "price_standard": 800,
+        "price_premium": 1200
+      },
+      {
+        "code": "TV_WALL_MOUNT",
+        "name": "ติดตั้งทีวีบนผนัง",
+        "name_en": "TV Wall Mount Installation",
+        "required_skill_level": 1,
+        "est_duration_hours": 1.5,
+        "required_team_size": 1,
+        "price_standard": 700,
+        "price_premium": 1000
+      },
+      {
+        "code": "SOLAR_PANEL_INSTALL",
+        "name": "ติดตั้งแผงโซลาร์เซลล์",
+        "name_en": "Solar Panel Installation",
+        "required_skill_level": 3,
+        "est_duration_hours": 8,
+        "required_team_size": 3,
+        "price_standard": 15000,
+        "price_premium": 25000
+      }
+    ]
+  },
+  {
+    "code": "CONSTRUCTION",
+    "name": "งานก่อสร้างและตกแต่ง",
+    "name_en": "Construction & Decoration",
+    "icon": "hard-hat",
+    "sub_categories": [
+      {
+        "code": "CEMENT_POUR",
+        "name": "เทปูนทั่วไป",
+        "name_en": "General Cement Pouring",
+        "required_skill_level": 2,
+        "est_duration_hours": 6,
+        "required_team_size": 2,
+        "price_standard": 2500,
+        "price_premium": 4000
+      },
+      {
+        "code": "TILE_INSTALL_FLOOR",
+        "name": "ปูกระเบื้องพื้น",
+        "name_en": "Floor Tile Installation",
+        "required_skill_level": 2,
+        "est_duration_hours": 8,
+        "required_team_size": 2,
+        "price_standard": 3500,
+        "price_premium": 5500
+      },
+      {
+        "code": "TILE_INSTALL_WALL",
+        "name": "ปูกระเบื้องผนัง",
+        "name_en": "Wall Tile Installation",
+        "required_skill_level": 2,
+        "est_duration_hours": 8,
+        "required_team_size": 2,
+        "price_standard": 4000,
+        "price_premium": 6000
+      },
+      {
+        "code": "WALL_CONSTRUCTION",
+        "name": "ก่อผนังอิฐ",
+        "name_en": "Brick Wall Construction",
+        "required_skill_level": 2,
+        "est_duration_hours": 8,
+        "required_team_size": 2,
+        "price_standard": 4500,
+        "price_premium": 7000
+      },
+      {
+        "code": "PAINT_INTERIOR",
+        "name": "ทาสีภายใน",
+        "name_en": "Interior Painting",
+        "required_skill_level": 1,
+        "est_duration_hours": 8,
+        "required_team_size": 2,
+        "price_standard": 3000,
+        "price_premium": 5000
+      },
+      {
+        "code": "PLUMBING_PIPE",
+        "name": "งานท่อประปา",
+        "name_en": "Plumbing Pipe Work",
+        "required_skill_level": 2,
+        "est_duration_hours": 4,
+        "required_team_size": 1,
+        "price_standard": 2000,
+        "price_premium": 3500
+      },
+      {
+        "code": "CEILING_INSTALL",
+        "name": "ติดตั้งฝ้าเพดาน",
+        "name_en": "Ceiling Installation",
+        "required_skill_level": 2,
+        "est_duration_hours": 6,
+        "required_team_size": 2,
+        "price_standard": 3500,
+        "price_premium": 5500
+      }
+    ]
+  },
+  {
+    "code": "CLEANING",
+    "name": "ทำความสะอาด",
+    "name_en": "Cleaning Service",
+    "icon": "sparkles",
+    "sub_categories": [
+      {
+        "code": "DEEP_CLEAN_CONDO",
+        "name": "ทำความสะอาดคอนโดล้างลึก",
+        "name_en": "Deep Cleaning - Condo",
+        "required_skill_level": 1,
+        "est_duration_hours": 4,
+        "required_team_size": 2,
+        "price_standard": 2000,
+        "price_premium": 3500
+      },
+      {
+        "code": "DEEP_CLEAN_HOUSE",
+        "name": "ทำความสะอาดบ้านล้างลึก",
+        "name_en": "Deep Cleaning - House",
+        "required_skill_level": 1,
+        "est_duration_hours": 6,
+        "required_team_size": 3,
+        "price_standard": 3500,
+        "price_premium": 6000
+      },
+      {
+        "code": "POST_CONSTRUCTION_CLEAN",
+        "name": "เก็บกวาดหลังก่อสร้าง",
+        "name_en": "Post-Construction Cleaning",
+        "required_skill_level": 1,
+        "est_duration_hours": 8,
+        "required_team_size": 3,
+        "price_standard": 5000,
+        "price_premium": 8000
+      },
+      {
+        "code": "REGULAR_CLEAN_2BR",
+        "name": "ทำความสะอาดประจำ (2 ห้องนอน)",
+        "name_en": "Regular Cleaning - 2 Bedrooms",
+        "required_skill_level": 1,
+        "est_duration_hours": 2,
+        "required_team_size": 1,
+        "price_standard": 800,
+        "price_premium": 1200
+      },
+      {
+        "code": "REGULAR_CLEAN_3BR",
+        "name": "ทำความสะอาดประจำ (3 ห้องนอน)",
+        "name_en": "Regular Cleaning - 3 Bedrooms",
+        "required_skill_level": 1,
+        "est_duration_hours": 3,
+        "required_team_size": 2,
+        "price_standard": 1200,
+        "price_premium": 1800
+      },
+      {
+        "code": "OFFICE_CLEAN",
+        "name": "ทำความสะอาดสำนักงาน",
+        "name_en": "Office Cleaning",
+        "required_skill_level": 1,
+        "est_duration_hours": 4,
+        "required_team_size": 2,
+        "price_standard": 2500,
+        "price_premium": 4000
+      },
+      {
+        "code": "WINDOW_CLEAN_HIGH",
+        "name": "ล้างกระจกความสูง (ใช้เชือก)",
+        "name_en": "High-Rise Window Cleaning",
+        "required_skill_level": 3,
+        "est_duration_hours": 8,
+        "required_team_size": 2,
+        "price_standard": 8000,
+        "price_premium": 15000
+      }
+    ]
+  },
+  {
+    "code": "FURNITURE",
+    "name": "งานเฟอร์นิเจอร์",
+    "name_en": "Furniture Assembly & Installation",
+    "icon": "sofa",
+    "sub_categories": [
+      {
+        "code": "FURNITURE_ASSEMBLE",
+        "name": "ประกอบเฟอร์นิเจอร์ (ชุดเล็ก)",
+        "name_en": "Small Furniture Assembly",
+        "required_skill_level": 1,
+        "est_duration_hours": 2,
+        "required_team_size": 1,
+        "price_standard": 700,
+        "price_premium": 1200
+      },
+      {
+        "code": "WARDROBE_INSTALL",
+        "name": "ติดตั้งตู้เสื้อผ้าบิ้วอิน",
+        "name_en": "Built-in Wardrobe Installation",
+        "required_skill_level": 2,
+        "est_duration_hours": 6,
+        "required_team_size": 2,
+        "price_standard": 3000,
+        "price_premium": 5000
+      },
+      {
+        "code": "KITCHEN_CABINET_INSTALL",
+        "name": "ติดตั้งตู้ครัว",
+        "name_en": "Kitchen Cabinet Installation",
+        "required_skill_level": 2,
+        "est_duration_hours": 8,
+        "required_team_size": 2,
+        "price_standard": 5000,
+        "price_premium": 8000
+      }
+    ]
+  }
+]

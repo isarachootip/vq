@@ -7,6 +7,34 @@
 	},
 	"item": [
 		{
+			"name": "0. Leads - Add New Lead (POST /api/leads)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"customer_name\": \"คุณวิชัย ใจดี\",\n  \"customer_phone\": \"081-234-5678\",\n  \"customer_address\": \"99/1 ถ.สุขุมวิท กรุงเทพฯ\",\n  \"customer_latitude\": 13.7563,\n  \"customer_longitude\": 100.5018,\n  \"map_url\": \"https://maps.google.com/?q=13.7563,100.5018\",\n  \"job_type\": \"รีโนเวทห้องครัว\",\n  \"notes\": \"สนใจประเมินราคาด่วนจากหน้าเว็บ\"\n}"
+				},
+				"url": {
+					"raw": "https://vibepjm.online/api/leads",
+					"protocol": "https",
+					"host": [
+						"vibepjm",
+						"online"
+					],
+					"path": [
+						"api",
+						"leads"
+					]
+				}
+			}
+		},
+		{
 			"name": "1. Dispatch Direct to BuildFlow (Relay Proxy)",
 			"request": {
 				"method": "POST",
@@ -50,10 +78,10 @@
 					"raw": "{\n  \"project_id\": \"P020826-001\",\n  \"customer_name\": \"คุณวิชัย ใจดี\",\n  \"customer_phone\": \"081-234-5678\",\n  \"installation_details\": \"รีโนเวทห้องครัวและติดตั้ง Smart Home\",\n  \"technician_team\": \"ทีมช่าง A\"\n}"
 				},
 				"url": {
-					"raw": "https://buildflowx.online/api/v1/projects",
+					"raw": "https://vibepjm.online/api/v1/projects",
 					"protocol": "https",
 					"host": [
-						"buildflowx",
+						"vibepjm",
 						"online"
 					],
 					"path": [

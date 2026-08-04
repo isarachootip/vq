@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { MapPin, Search, Check, X } from 'lucide-react';
+import { parseCoordinatesFromText, formatLatDms, formatLngDms } from '../utils/coordinateUtils';
 
 interface InteractiveMapPickerModalProps {
   initialLat: number;
@@ -49,7 +50,7 @@ export const InteractiveMapPickerModal: React.FC<InteractiveMapPickerModalProps>
       html: `
         <div class="relative flex items-center justify-center -top-4">
           <div class="animate-bounce">
-            <div class="w-8 h-8 rounded-full bg-rose-600 border-2 border-white shadow-xl flex items-center justify-center text-white">
+            <div class="w-8 h-8 rounded-full bg-emerald-600 border-2 border-white shadow-xl flex items-center justify-center text-white font-bold text-sm">
               📍
             </div>
           </div>
@@ -72,15 +73,15 @@ export const InteractiveMapPickerModal: React.FC<InteractiveMapPickerModalProps>
     // Update lat/lng on marker drag
     marker.on('dragend', () => {
       const pos = marker.getLatLng();
-      setCurrentLat(Number(pos.lat.toFixed(5)));
-      setCurrentLng(Number(pos.lng.toFixed(5)));
+      setCurrentLat(Number(pos.lat.toFixed(6)));
+      setCurrentLng(Number(pos.lng.toFixed(6)));
     });
 
     // Click on map to move marker
     map.on('click', (e: L.LeafletMouseEvent) => {
       marker.setLatLng(e.latlng);
-      setCurrentLat(Number(e.latlng.lat.toFixed(5)));
-      setCurrentLng(Number(e.latlng.lng.toFixed(5)));
+      setCurrentLat(Number(e.latlng.lat.toFixed(6)));
+      setCurrentLng(Number(e.latlng.lng.toFixed(6)));
     });
 
     return () => {
@@ -91,13 +92,27 @@ export const InteractiveMapPickerModal: React.FC<InteractiveMapPickerModalProps>
     };
   }, []);
 
-  // Free Search using Nominatim OpenStreetMap Geocoding
+  // Search location name OR extract coordinates from pasted DMS/Google Maps text
   const handleNominatimSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchLocation.trim()) return;
 
     setIsSearching(true);
     setSearchError('');
+
+    // Check if input contains DMS coordinates, decimal numbers, or Google Maps URL
+    const parsed = parseCoordinatesFromText(searchLocation);
+    if (parsed) {
+      setCurrentLat(parsed.lat);
+      setCurrentLng(parsed.lng);
+      if (mapRef.current && markerRef.current) {
+        mapRef.current.setView([parsed.lat, parsed.lng], 16);
+        markerRef.current.setLatLng([parsed.lat, parsed.lng]);
+      }
+      setIsSearching(false);
+      return;
+    }
+
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
@@ -109,15 +124,15 @@ export const InteractiveMapPickerModal: React.FC<InteractiveMapPickerModalProps>
         const lat = parseFloat(data[0].lat);
         const lon = parseFloat(data[0].lon);
 
-        setCurrentLat(Number(lat.toFixed(5)));
-        setCurrentLng(Number(lon.toFixed(5)));
+        setCurrentLat(Number(lat.toFixed(6)));
+        setCurrentLng(Number(lon.toFixed(6)));
 
         if (mapRef.current && markerRef.current) {
           mapRef.current.setView([lat, lon], 15);
           markerRef.current.setLatLng([lat, lon]);
         }
       } else {
-        setSearchError('ไม่พบสถานที่นี้ ลองระบุชื่อเขต/อำเภอ หรือสถานที่ใกล้เคียง');
+        setSearchError('ไม่พบสถานที่นี้ ลองระบุชื่อเขต/อำเภอ พิกัด DMS หรือวางลิงก์ Google Maps');
       }
     } catch (err) {
       setSearchError('การค้นหาล้มเหลว กรุณาคลิกเลือกจุดบนแผนที่โดยตรง');
@@ -179,14 +194,16 @@ export const InteractiveMapPickerModal: React.FC<InteractiveMapPickerModalProps>
 
         {/* Bottom Coordinates & Confirm Footer */}
         <div className="p-3.5 bg-white border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
-          <div className="flex items-center gap-3 font-mono text-xs">
+          <div className="flex items-center gap-4 font-mono text-xs">
             <div>
-              <span className="text-[10px] text-slate-400 block font-sans">ละติจูด (Lat)</span>
+              <span className="text-[10px] text-slate-400 block font-sans font-medium">ละติจูด (Lat)</span>
               <strong className="text-slate-900 font-extrabold">{currentLat}</strong>
+              <span className="text-[10px] text-emerald-600 block">{formatLatDms(currentLat)}</span>
             </div>
             <div>
-              <span className="text-[10px] text-slate-400 block font-sans">ลองจิจูด (Lng)</span>
+              <span className="text-[10px] text-slate-400 block font-sans font-medium">ลองจิจูด (Lng)</span>
               <strong className="text-slate-900 font-extrabold">{currentLng}</strong>
+              <span className="text-[10px] text-emerald-600 block">{formatLngDms(currentLng)}</span>
             </div>
           </div>
 

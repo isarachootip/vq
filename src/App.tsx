@@ -22,6 +22,7 @@ import { UserManagementView } from './components/UserManagementView';
 import { LineCustomerChatView } from './components/LineCustomerChatView';
 import { LoginModal } from './components/LoginModal';
 import { StandardCostManagerView } from './components/StandardCostManagerView';
+import { VBookingMonitorView } from './components/VBookingMonitorView';
 
 import type { Technician, QueueBooking, PenaltyRecord, Branch, Zone, Skill, BranchAnnouncement, ChatMessage, ChatChannel, PortalBanner, TechnicianApplication, TechnicianSkill, SkillCategory, ServiceItem, UserAccount, StandardCostItem } from './types';
 import { 
@@ -61,7 +62,8 @@ import {
   UserCheck,
   MessageCircle,
   LogOut,
-  Calculator
+  Calculator,
+  Zap
 } from 'lucide-react';
 
 const INITIAL_BANNERS: PortalBanner[] = [
@@ -388,8 +390,8 @@ export function App() {
     loadState<any>('vfixq_system_config', {
       cooldownThreshold: 45,
       suspensionThreshold: 90,
-      buildflowApiUrl: 'https://buildflowx.online/api/v1/projects',
-      kannaApiUrl: 'https://buildflowx.online/api/v1/projects',
+      buildflowApiUrl: 'https://buildflowx.online/api/leads',
+      kannaApiUrl: 'https://buildflowx.online/api/leads',
       stsWebhookUrl: 'https://sts-api.vservice.co.th/webhooks/checkin',
       qcInspectorUrl: 'https://qc-inspect.vservice.co.th/api/audits',
       eCnErpUrl: 'https://erp.vservice.co.th/ecn/billing',
@@ -954,11 +956,16 @@ export function App() {
 
     const dispatchPayload = {
       sourceSystem: 'Installer Management (VQ)',
-      targetSystem: 'BuildFlow',
+      targetSystem: 'BuildFlow Leads',
+      ticketNo: booking?.ticketNo || booking?.bookingRef,
       bookingRef: booking?.bookingRef,
       customerName: booking?.customerName,
       customerPhone: booking?.customerPhone,
+      lineId: booking?.lineId || '',
+      customerAddress: booking?.customerAddress || booking?.addressZone,
       addressZone: booking?.addressZone,
+      latitude: booking?.latitude || 13.75633,
+      longitude: booking?.longitude || 100.50177,
       installationTypeName: booking?.installationTypeName,
       assignedTechTeamName: booking?.assignedTechTeamName,
       bookingDate: booking?.bookingDate,
@@ -967,11 +974,11 @@ export function App() {
     };
 
     try {
-      showToast('🚀 กำลังส่งข้อมูลไปยังระบบ BuildFlow...');
+      showToast('🚀 กำลังยิงข้อมูลไปยังระบบ BuildFlow (buildflowx.online/leads)...');
       
       // Try backend relay API on Coolify first to avoid browser CORS limits
       const localRelayUrl = '/api/buildflow/dispatch';
-      const targetUrl = systemConfig.buildflowApiUrl || systemConfig.kannaApiUrl || 'https://buildflowx.online/api/v1/projects';
+      const targetUrl = systemConfig.buildflowApiUrl || systemConfig.kannaApiUrl || 'https://buildflowx.online/leads';
 
       let response = await fetch(localRelayUrl, {
         method: 'POST',
@@ -989,7 +996,7 @@ export function App() {
       }
 
       if (response && response.ok) {
-        showToast('✅ ส่งข้อมูลงานติดตั้งไปยังระบบ BuildFlow (buildflowx.online) สำเร็จ');
+        showToast('✅ ส่งข้อมูลงานติดตั้งไปยังระบบ BuildFlow (buildflowx.online/leads) สำเร็จ');
       } else {
         showToast('⚡ อัปเดตสถานะเป็น Dispatched to BuildFlow เรียบร้อยแล้ว');
       }
@@ -1127,6 +1134,8 @@ export function App() {
     { id: 'settings', label: 'การตั้งค่าระบบ (Configs)', icon: Settings },
     { id: 'divider-3', label: 'เอกสารเรียนรู้', isDivider: true },
     { id: 'km-hub', label: 'คู่มือระบบ & FAQ (KM)', icon: BookOpen },
+    { id: 'divider-4', label: 'vBooking Partner API', isDivider: true },
+    { id: 'vbooking-monitor', label: '📡 vBooking Monitor & API Clients', icon: Zap },
   ];
 
   if (!isBackend) {
@@ -1537,6 +1546,10 @@ export function App() {
               onDeleteBanner={handleDeleteBanner}
               minioConfig={{ endpoint: systemConfig.minioEndpoint || '', accessKey: systemConfig.minioAccessKey || '', secretKey: systemConfig.minioSecretKey || '' }}
             />
+          )}
+
+          {activeTab === 'vbooking-monitor' && (
+            <VBookingMonitorView />
           )}
         </main>
       </div>

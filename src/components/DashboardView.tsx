@@ -4,6 +4,7 @@ import { INITIAL_ZONES } from '../mockData';
 import { CustomDateInput } from './CustomDateInput';
 import { InteractiveMapPickerModal } from './InteractiveMapPickerModal';
 import { BuildFlowIcon } from './BuildFlowIcon';
+import { parseCoordinatesFromText, formatLatDms, formatLngDms, reverseGeocodeAddress } from '../utils/coordinateUtils';
 import { 
   Clock, 
   CheckCircle2, 
@@ -43,6 +44,34 @@ const CATEGORY_GROUPS = [
   { code: 'FLOOR', name: 'Flooring - งานพื้น ผนัง และฝ้าเพดาน' },
   { code: 'PLUMB', name: 'Plumbing - งานระบบประปาและสุขภัณฑ์' },
 ];
+
+export const isBkkZone = (z: { name?: string; code?: string; id?: string } | string): boolean => {
+  const nameStr = typeof z === 'string' ? z : (z?.name || '');
+  const codeStr = typeof z === 'string' ? '' : (z?.code || '');
+  const idStr = typeof z === 'string' ? '' : (z?.id || '');
+  
+  const nameUpper = nameStr.toUpperCase();
+  const codeUpper = codeStr.toUpperCase();
+  const idLower = idStr.toLowerCase();
+
+  // Check if explicitly marked as UPC
+  if (nameUpper.includes('[UPC]')) return false;
+
+  // BKK encompasses Bangkok & Greater Bangkok (นนทบุรี, ปทุมธานี, สมุทรปราการ)
+  return (
+    nameUpper.includes('[BKK]') ||
+    nameUpper.includes('BKK') ||
+    nameUpper.includes('กรุงเทพ') ||
+    nameUpper.includes('นนทบุรี') ||
+    nameUpper.includes('ปทุมธานี') ||
+    nameUpper.includes('สมุทรปราการ') ||
+    codeUpper.startsWith('Z01') ||
+    codeUpper.startsWith('Z02') ||
+    codeUpper.startsWith('Z03') ||
+    codeUpper.startsWith('Z04') ||
+    idLower.includes('bkk')
+  );
+};
 
 export const detectZoneFromCoordinates = (lat: number, lng: number): { region: 'BKK' | 'UPC'; zone: string } => {
   if (isNaN(lat) || isNaN(lng)) {
@@ -142,7 +171,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [showMapPicker, setShowMapPicker] = useState<boolean>(false);
   const [autoZoneMessage, setAutoZoneMessage] = useState<string>('');
 
-  const handleUpdateCoordinates = (latVal: string, lngVal: string) => {
+  // Smart Coordinate Auto-Fill & Extraction states
+  const [mCustAddress, setMCustAddress] = useState<string>('286 ซอย รามอินทรา 57 แยก 8 แขวงท่าแร้ง เขตบางเขน กรุงเทพมหานคร...');
+  const [isSearchingAddress, setIsSearchingAddress] = useState<boolean>(false);
+  const [pasteCoordText, setPasteCoordText] = useState<string>('');
+  const [extractStatusMsg, setExtractStatusMsg] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [isLocatingGps, setIsLocatingGps] = useState<boolean>(false);
+  const [isGeocoding, setIsGeocoding] = useState<boolean>(false);
+  const [geocodedAddress, setGeocodedAddress] = useState<string>('');
+
+  const handleUpdateCoordinates = async (latVal: string, lngVal: string, autoGeocode: boolean = true) => {
     setMLat(latVal);
     setMLng(lngVal);
     const latNum = parseFloat(latVal);
@@ -152,6 +190,144 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       setMRegion(detected.region);
       setMZone(detected.zone);
       setAutoZoneMessage(`⚡ กำหนดให้อยู่อัตโนมัติ: ${detected.zone}`);
+
+      if (autoGeocode) {
+        setIsGeocoding(true);
+        try {
+          const addr = await reverseGeocodeAddress(latNum, lngNum);
+          if (addr) {
+            setGeocodedAddress(addr);
+            setMCustAddress(addr);
+          }
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setIsGeocoding(false);
+        }
+      }
+    }
+  };
+
+  const handleExtractCoordinates = async (rawText?: string) => {
+    const textToParse = rawText !== undefined ? rawText : pasteCoordText;
+    if (!textToParse.trim()) {
+      setExtractStatusMsg({ type: 'error', text: '⚠️ กรุณาป้อนพิกัด DMS, พิกัดตัวเลข หรือวางลิงก์ Google Maps' });
+      return;
+    }
+
+    const result = parseCoordinatesFromText(textToParse);
+    if (result) {
+      setExtractStatusMsg({ type: 'info', text: '⏳ กำลังถอดค่าพิกัดและแปลงที่อยู่อัตโนมัติ...' });
+      setMLat(String(result.lat));
+      setMLng(String(result.lng));
+      const detected = detectZoneFromCoordinates(result.lat, result.lng);
+      setMRegion(detected.region);
+      setMZone(detected.zone);
+      setAutoZoneMessage(`⚡ กำหนดให้อยู่อัตโนมัติ: ${detected.zone}`);
+
+      setIsGeocoding(true);
+      const addr = await reverseGeocodeAddress(result.lat, result.lng);
+      setIsGeocoding(false);
+
+      if (addr) {
+        setGeocodedAddress(addr);
+        setMCustAddress(addr);
+        setExtractStatusMsg({
+          type: 'success',
+          text: `✅ ถอดพิกัดสำเร็จ (ละติจูด ${result.lat}, ลองจิจูด ${result.lng}) และดึงที่อยู่อัตโนมัติเรียบร้อย!`,
+        });
+      } else {
+        setExtractStatusMsg({
+          type: 'success',
+          text: `✅ ถอดค่าพิกัดสำเร็จ: ละติจูด ${result.lat}, ลองจิจูด ${result.lng}`,
+        });
+      }
+    } else {
+      setExtractStatusMsg({
+        type: 'error',
+        text: '⚠️ ไม่สามารถถอดค่าพิกัดได้ กรุณาตรวจสอบรูปแบบ เช่น 13°51\'07.1"N 100°38\'36.3"E หรือ URL Google Maps',
+      });
+    }
+  };
+
+  const handleGetBrowserGps = () => {
+    if (!navigator.geolocation) {
+      setExtractStatusMsg({ type: 'error', text: '⚠️ เบราว์เซอร์ของคุณไม่รองรับการดึงตำแหน่ง GPS' });
+      return;
+    }
+    setIsLocatingGps(true);
+    setExtractStatusMsg({ type: 'info', text: '⏳ กำลังดึงพิกัดตำแหน่งปัจจุบันจากอุปกรณ์ (GPS)...' });
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setIsLocatingGps(false);
+        const lat = Number(pos.coords.latitude.toFixed(6));
+        const lng = Number(pos.coords.longitude.toFixed(6));
+        handleUpdateCoordinates(String(lat), String(lng));
+        setExtractStatusMsg({
+          type: 'success',
+          text: `🎯 ดึงพิกัดปัจจุบันสำเร็จ: ${lat}, ${lng}`,
+        });
+      },
+      (err) => {
+        setIsLocatingGps(false);
+        setExtractStatusMsg({
+          type: 'error',
+          text: `⚠️ ไม่สามารถดึงพิกัด GPS ได้ (${err.message})`,
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
+  const handleSearchCoordinatesFromAddress = async () => {
+    if (!mCustAddress.trim()) {
+      setExtractStatusMsg({ type: 'error', text: '⚠️ กรุณากรอกข้อความที่อยู่ก่อนค้นหาพิกัด' });
+      return;
+    }
+    setIsSearchingAddress(true);
+    setExtractStatusMsg({ type: 'info', text: '⏳ กำลังค้นหาพิกัดจากข้อความที่อยู่...' });
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          mCustAddress + ' Thailand'
+        )}&limit=1`
+      );
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        handleUpdateCoordinates(String(lat.toFixed(6)), String(lon.toFixed(6)));
+        setExtractStatusMsg({
+          type: 'success',
+          text: `✅ ค้นหาพิกัดจากข้อความที่อยู่สำเร็จ: ละติจูด ${lat.toFixed(6)}, ลองจิจูด ${lon.toFixed(6)}`,
+        });
+      } else {
+        setExtractStatusMsg({ type: 'error', text: '⚠️ ไม่พบพิกัดสำหรับที่อยู่นี้ ลองระบุชื่อเขต/อำเภอ หรือสถานที่ใกล้เคียง' });
+      }
+    } catch (err) {
+      setExtractStatusMsg({ type: 'error', text: '⚠️ การค้นหาพิกัดล้มเหลว กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต' });
+    } finally {
+      setIsSearchingAddress(false);
+    }
+  };
+
+  const handleReverseGeocode = async () => {
+    const latNum = parseFloat(mLat);
+    const lngNum = parseFloat(mLng);
+    if (isNaN(latNum) || isNaN(lngNum)) {
+      setExtractStatusMsg({ type: 'error', text: '⚠️ กรุณาระบุพิกัดละติจูดและลองจิจูดให้ถูกต้องก่อน' });
+      return;
+    }
+    setIsGeocoding(true);
+    setExtractStatusMsg({ type: 'info', text: '⏳ กำลังค้นหาที่อยู่จากพิกัดแผนที่...' });
+    const addr = await reverseGeocodeAddress(latNum, lngNum);
+    setIsGeocoding(false);
+    if (addr) {
+      setGeocodedAddress(addr);
+      setMCustAddress(addr);
+      setExtractStatusMsg({ type: 'success', text: `🏠 แปลงพิกัดเป็นที่อยู่และกรอกลงช่องที่อยู่อัตโนมัติ: ${addr}` });
+    } else {
+      setExtractStatusMsg({ type: 'error', text: '⚠️ ไม่พบข้อมูลที่อยู่สำหรับพิกัดนี้' });
     }
   };
 
@@ -245,11 +421,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const matchesDate = !selectedDate || b.bookingDate === selectedDate;
     
     // Region Filter (BKK vs UPC)
-    const isUpc = b.addressZone.includes('UPC') || b.addressZone.includes('ภาค') || b.addressZone.includes('เชียงใหม่') || b.addressZone.includes('ขอนแก่น') || b.addressZone.includes('ชลบุรี') || b.addressZone.includes('ภูเก็ต') || b.addressZone.includes('นครปฐม') || b.addressZone.includes('พิษณุโลก');
+    const isBkk = isBkkZone(b.addressZone);
     const matchesRegion = 
       selectedRegion === 'ALL' ||
-      (selectedRegion === 'BKK' && !isUpc) ||
-      (selectedRegion === 'UPC' && isUpc);
+      (selectedRegion === 'BKK' && isBkk) ||
+      (selectedRegion === 'UPC' && !isBkk);
 
     const matchesZone = selectedZone === 'ALL' || b.addressZone.includes(selectedZone);
     const matchesStatus = selectedStatus === 'ALL' || b.status === selectedStatus;
@@ -972,57 +1148,212 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
               </div>
 
-              {/* Location & GPS Coordinates Section FIRST with Auto Zone Detection */}
-              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-3">
-                <div className="flex justify-between items-center">
-                  <label className="block font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                    <span className="text-amber-600">🗺️</span>
-                    <span>1. เลือกพิกัดสถานที่ติดตั้ง (GPS Coordinates) & ปักหมุด GIS:</span>
+              {/* Address / Location Search Section (ตรงตาม buildflowx.online/leads) */}
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 shadow-2xs">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <label className="font-bold text-slate-700 text-xs flex items-center gap-1.5">
+                    <span className="text-emerald-600 font-bold">🏡</span>
+                    <span>ที่อยู่ / พิกัดสถานที่หน้างาน:</span>
                   </label>
                   <button
                     type="button"
-                    onClick={() => setShowMapPicker(true)}
-                    className="v-btn-primary py-1 px-2.5 text-[10px] flex items-center gap-1 font-bold shadow-xs cursor-pointer bg-amber-500 hover:bg-amber-600 text-slate-900 border-0"
+                    onClick={handleSearchCoordinatesFromAddress}
+                    disabled={isSearchingAddress}
+                    className="text-[11px] font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 rounded-lg border border-emerald-300 flex items-center gap-1 cursor-pointer transition shadow-2xs"
                   >
-                    <span>📍 ปักหมุดเลือกพิกัดบนแผนที่ (ฟรี GIS)</span>
+                    <span>🔍 {isSearchingAddress ? 'กำลังค้นหาพิกัด...' : 'ค้นหาพิกัดจากข้อความที่อยู่'}</span>
                   </button>
                 </div>
+                <input
+                  type="text"
+                  placeholder="เช่น 286 ซอย รามอินทรา 57 แยก 8 แขวงท่าแร้ง เขตบางเขน กรุงเทพมหานคร..."
+                  value={mCustAddress}
+                  onChange={(e) => setMCustAddress(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSearchCoordinatesFromAddress();
+                    }
+                  }}
+                  className="v-input w-full py-2 text-xs bg-white border-slate-300 focus:border-emerald-500 font-sans"
+                />
+              </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="block font-bold text-slate-600 text-[11px]">📍 ละติจูด (Latitude):</label>
-                    <input
-                      type="text"
-                      placeholder="เช่น 13.75633"
-                      value={mLat}
-                      onChange={(e) => handleUpdateCoordinates(e.target.value, mLng)}
-                      className="v-input w-full py-1.5 font-mono text-xs bg-white"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="block font-bold text-slate-600 text-[11px]">📍 ลองจิจูด (Longitude):</label>
-                    <input
-                      type="text"
-                      placeholder="เช่น 100.50177"
-                      value={mLng}
-                      onChange={(e) => handleUpdateCoordinates(mLat, e.target.value)}
-                      className="v-input w-full py-1.5 font-mono text-xs bg-white"
-                    />
+              {/* Location & GPS Coordinates Section FIRST with Smart Extraction & Auto Zone Detection */}
+              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-3.5 shadow-xs">
+                {/* Header Row */}
+                <div className="flex flex-wrap justify-between items-center gap-2 pb-2.5 border-b border-amber-500/20">
+                  <label className="block font-extrabold text-slate-800 text-xs flex items-center gap-2">
+                    <span className="p-1 rounded-md bg-amber-500 text-slate-900 shadow-2xs text-xs">🗺️</span>
+                    <span className="text-slate-900 font-bold text-xs">1. เลือกพิกัดสถานที่ติดตั้ง (GPS Coordinates) & ปักหมุด GIS:</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleGetBrowserGps}
+                      disabled={isLocatingGps}
+                      className="py-1.5 px-3 text-[11px] flex items-center gap-1.5 font-extrabold cursor-pointer bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-400 rounded-lg shadow-2xs transition"
+                    >
+                      <span className="text-emerald-600">🎯</span>
+                      <span>{isLocatingGps ? 'กำลังดึง GPS...' : 'ดึงพิกัดปัจจุบัน (GPS)'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowMapPicker(true)}
+                      className="py-1.5 px-3 text-[11px] flex items-center gap-1.5 font-extrabold shadow-2xs cursor-pointer bg-amber-500 hover:bg-amber-600 text-slate-900 border border-amber-600/30 rounded-lg transition"
+                    >
+                      <span>📍</span>
+                      <span>ปักหมุดเลือกพิกัดบนแผนที่ (ฟรี GIS)</span>
+                    </button>
                   </div>
                 </div>
 
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${mLat || '13.75633'},${mLng || '100.50177'}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[10px] text-blue-600 font-bold hover:underline flex items-center gap-1 justify-end"
-                >
-                  <MapPin className="h-3 w-3 text-blue-500" />
-                  <span>เปิด Google Maps ตรวจสอบตำแหน่งพิกัดบ้านลูกค้า ↗</span>
-                </a>
+                {/* Smart Auto-Fill & URL Extractor Box (Dashed Green Box as seen in Image 2) */}
+                <div className="p-3.5 bg-white border-2 border-dashed border-emerald-500 rounded-xl space-y-2.5 shadow-2xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <label className="font-extrabold text-emerald-900 text-xs flex items-center gap-1.5">
+                      <span className="text-emerald-600 font-bold">📋</span>
+                      <span>วางพิกัด หรือ ลิงก์จาก Google Maps อัจฉริยะ (Smart Auto-Fill)</span>
+                    </label>
+                    <span className="text-[10.5px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md font-mono">
+                      รองรับ DMS (13°51'08.1"N) & URL
+                    </span>
+                  </div>
+
+                  {/* Lightbulb Tip Description (Image 2 style) */}
+                  <div className="p-2.5 bg-emerald-50/90 border border-emerald-200 rounded-lg text-[11px] text-emerald-900 leading-relaxed font-medium">
+                    💡 <strong>วิธีก๊อปปี้จาก Google Maps:</strong> ก๊อปปี้ข้อความพิกัดในช่องค้นหา (เช่น <code>13°51'07.1"N 100°38'36.3"E</code> หรือ <code>13.851979, 100.643406</code>) หรือก๊อปปี้ลิงก์ URL มาวางในช่องนี้ ระบบจะถอดค่าแยกละติจูด/ลองจิจูดและดึงที่ให้อัตโนมัติ!
+                  </div>
+
+                  {/* Input & Extract Button */}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="วางพิกัด เช่น 13°51'07.1&quot;N 100°38'36.3&quot;E"
+                      value={pasteCoordText}
+                      onChange={(e) => {
+                        setPasteCoordText(e.target.value);
+                        if (e.target.value.length > 5) {
+                          const res = parseCoordinatesFromText(e.target.value);
+                          if (res) {
+                            handleUpdateCoordinates(String(res.lat), String(res.lng));
+                            setExtractStatusMsg({
+                              type: 'success',
+                              text: `✅ ถอดค่าพิกัดสำเร็จ: ละติจูด ${res.lat}, ลองจิจูด ${res.lng}`,
+                            });
+                          }
+                        }
+                      }}
+                      className="v-input flex-1 py-2 px-3 text-xs bg-slate-50 focus:bg-white font-mono border-slate-300 focus:border-emerald-500 rounded-lg shadow-2xs"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleExtractCoordinates(pasteCoordText)}
+                      className="px-4 py-2 text-xs font-extrabold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs transition"
+                    >
+                      <span>✨</span>
+                      <span>ถอดค่าพิกัด</span>
+                    </button>
+                  </div>
+
+                  {/* Extraction Status Feedback */}
+                  {extractStatusMsg && (
+                    <div
+                      className={`text-[11px] p-2 rounded-lg font-bold flex items-center justify-between animate-fadeIn ${
+                        extractStatusMsg.type === 'success'
+                          ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                          : extractStatusMsg.type === 'error'
+                          ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                          : 'bg-amber-100 text-amber-900 border border-amber-200'
+                      }`}
+                    >
+                      <span>{extractStatusMsg.text}</span>
+                      <button
+                        type="button"
+                        onClick={() => setExtractStatusMsg(null)}
+                        className="text-xs text-slate-400 hover:text-slate-600 ml-2 font-bold cursor-pointer border-0 bg-transparent"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Latitude & Longitude Inputs Grid (Image 1 2-column layout) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1 bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+                    <label className="block font-bold text-slate-700 text-[11px]">
+                      <span>📍 ละติจูด (Latitude):</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="13.851979 หรือ 13°51'07.1&quot;N"
+                      value={mLat}
+                      onChange={(e) => handleUpdateCoordinates(e.target.value, mLng)}
+                      className="v-input w-full py-1.5 font-mono text-xs text-slate-900 font-bold bg-slate-50 focus:bg-white border-slate-300 focus:border-emerald-500 rounded-lg"
+                    />
+                    {mLat && !isNaN(parseFloat(mLat)) && (
+                      <p className="text-[10px] text-emerald-700 font-mono pt-0.5">
+                        {mLat} หรือ {formatLatDms(parseFloat(mLat))}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1 bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs">
+                    <label className="block font-bold text-slate-700 text-[11px]">
+                      <span>📍 ลองจิจูด (Longitude):</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="100.643406 หรือ 100°38'36.3&quot;E"
+                      value={mLng}
+                      onChange={(e) => handleUpdateCoordinates(mLat, e.target.value)}
+                      className="v-input w-full py-1.5 font-mono text-xs text-slate-900 font-bold bg-slate-50 focus:bg-white border-slate-300 focus:border-emerald-500 rounded-lg"
+                    />
+                    {mLng && !isNaN(parseFloat(mLng)) && (
+                      <p className="text-[10px] text-emerald-700 font-mono pt-0.5">
+                        {mLng} หรือ {formatLngDms(parseFloat(mLng))}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons Row */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleReverseGeocode}
+                    disabled={isGeocoding}
+                    className="text-[11px] font-bold text-emerald-900 bg-white hover:bg-emerald-50 px-3.5 py-1.5 rounded-lg border border-emerald-300 flex items-center gap-1.5 cursor-pointer transition shadow-2xs"
+                  >
+                    <span>🏡</span>
+                    <span>{isGeocoding ? 'กำลังแปลงพิกัด...' : 'แปลงพิกัดนี้เป็นที่อยู่ข้อความ'}</span>
+                  </button>
+
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${mLat || '13.75633'},${mLng || '100.50177'}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-emerald-900 font-bold hover:underline flex items-center gap-1.5 justify-end bg-white px-3.5 py-1.5 rounded-lg border border-slate-300 shadow-2xs"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>เปิด Google Maps ตรวจสอบตำแหน่งพิกัดบ้านลูกค้า ↗</span>
+                  </a>
+                </div>
+
+                {/* Display Reverse Geocoded Address if found */}
+                {geocodedAddress && (
+                  <div className="p-2.5 bg-emerald-100/80 border border-emerald-300 rounded-xl text-xs text-emerald-950 flex items-start gap-2 animate-fadeIn shadow-2xs">
+                    <span className="text-base">📍</span>
+                    <div className="flex-1">
+                      <strong className="block text-[11px] text-emerald-900 font-bold">ที่อยู่จากการแปลงพิกัด:</strong>
+                      <p className="text-[11.5px] leading-tight">{geocodedAddress}</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Region & Auto Zone selection derived from GPS */}
-                <div className="pt-2.5 border-t border-amber-500/20 space-y-2">
+                <div className="pt-2.5 border-t border-emerald-500/20 space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="block font-bold text-slate-800 text-xs">🌏 โซนพื้นที่ให้บริการ (ระบุตาม GPS อัตโนมัติ):</label>
                     {autoZoneMessage && (
@@ -1042,7 +1373,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       }}
                       className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-xs border cursor-pointer transition ${
                         mRegion === 'BKK' 
-                          ? 'bg-amber-500 text-slate-900 border-amber-600 shadow-xs' 
+                          ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs' 
                           : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
@@ -1057,7 +1388,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       }}
                       className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-xs border cursor-pointer transition ${
                         mRegion === 'UPC' 
-                          ? 'bg-amber-500 text-slate-900 border-amber-600 shadow-xs' 
+                          ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs' 
                           : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                       }`}
                     >
@@ -1073,7 +1404,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         setMZone(e.target.value);
                         setAutoZoneMessage('');
                       }}
-                      className="v-input w-full py-2 bg-white font-semibold text-slate-800 border-amber-500/40"
+                      className="v-input w-full py-2 bg-white font-semibold text-slate-800 border-emerald-500/40"
                     >
                       {(mRegion === 'BKK' ? bkkZones : upcZones).map((z) => (
                         <option key={z.id} value={z.name}>

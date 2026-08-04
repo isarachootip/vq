@@ -136,6 +136,7 @@ export interface QueueBooking {
   ticketNo?: string; // 10-digit ticket number
   customerName: string;
   customerPhone: string;
+  customerAddress?: string;
   lineId?: string;
   addressZone: string;
   latitude?: number;

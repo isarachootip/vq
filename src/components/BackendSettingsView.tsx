@@ -413,7 +413,7 @@ export const BackendSettingsView: React.FC<BackendSettingsViewProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={systemConfig.buildflowApiUrl || systemConfig.kannaApiUrl || 'https://buildflowx.online/api/v1/projects'}
+                  value={systemConfig.buildflowApiUrl || systemConfig.kannaApiUrl || 'https://buildflowx.online/api/leads'}
                   onChange={(e) => {
                     handleConfigChange('buildflowApiUrl', e.target.value);
                     handleConfigChange('kannaApiUrl', e.target.value);

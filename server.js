@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pg from 'pg';
+import { createHash, randomBytes } from 'crypto';
 
 const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
@@ -130,7 +131,86 @@ async function initDbTables() {
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log('✅ PostgreSQL database tables (users, zones, technicians, standard_costs) verified/created');
+
+    // vBooking API - API Clients table
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS vbooking_clients (
+        id VARCHAR(50) PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        api_key_hash VARCHAR(255) NOT NULL,
+        api_key_prefix VARCHAR(20) NOT NULL,
+        rate_limit_per_min INTEGER DEFAULT 60,
+        daily_quota INTEGER DEFAULT 10000,
+        status VARCHAR(20) DEFAULT 'ACTIVE',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // vBooking API - Request Logs table
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS vbooking_request_logs (
+        id BIGSERIAL PRIMARY KEY,
+        client_id VARCHAR(50),
+        client_name VARCHAR(100),
+        endpoint VARCHAR(255) NOT NULL,
+        method VARCHAR(10) NOT NULL,
+        status_code INTEGER NOT NULL,
+        response_time_ms INTEGER DEFAULT 0,
+        client_ip VARCHAR(45),
+        error_details TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE INDEX IF NOT EXISTS idx_vbooking_logs_created ON vbooking_request_logs(created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_vbooking_logs_client ON vbooking_request_logs(client_id);
+    `);
+
+    // vBooking API - Booking Holds table
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS vbooking_booking_holds (
+        id VARCHAR(50) PRIMARY KEY,
+        hold_token VARCHAR(100) UNIQUE NOT NULL,
+        client_id VARCHAR(50),
+        tech_id VARCHAR(50) NOT NULL,
+        service_category VARCHAR(50),
+        service_sub_category VARCHAR(50) NOT NULL,
+        booking_date DATE NOT NULL,
+        time_slot VARCHAR(50) NOT NULL,
+        location JSONB DEFAULT '{}'::jsonb,
+        expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+        status VARCHAR(20) DEFAULT 'ACTIVE',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // vBooking API - Confirmed Bookings table
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS vbooking_bookings (
+        id VARCHAR(50) PRIMARY KEY,
+        booking_ref VARCHAR(50) UNIQUE NOT NULL,
+        hold_token VARCHAR(100),
+        client_id VARCHAR(50),
+        client_ref_id VARCHAR(100),
+        tech_id VARCHAR(50) NOT NULL,
+        tech_name VARCHAR(100),
+        service_category VARCHAR(50),
+        service_sub_category VARCHAR(50) NOT NULL,
+        booking_date DATE NOT NULL,
+        time_slot VARCHAR(50) NOT NULL,
+        est_duration_hours NUMERIC(4,1),
+        customer_name VARCHAR(100) NOT NULL,
+        customer_phone VARCHAR(20) NOT NULL,
+        customer_email VARCHAR(100),
+        location JSONB DEFAULT '{}'::jsonb,
+        payment_status VARCHAR(20) DEFAULT 'PENDING',
+        payment_ref VARCHAR(100),
+        status VARCHAR(30) DEFAULT 'CONFIRMED',
+        notes TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    console.log('✅ PostgreSQL database tables (users, zones, technicians, standard_costs, vbooking_*) verified/created');
     } catch (err) {
       console.error('❌ Error initializing database tables:', err.message);
     }
@@ -1031,23 +1111,46 @@ app.post('/api/tasks', async (req, res) => {
 });
 
 // BuildFlow Production Dispatch Endpoint & Relay Proxy
-app.post(['/api/buildflow/dispatch', '/api/v1/projects'], async (req, res) => {
+app.post(['/api/buildflow/dispatch', '/api/v1/projects', '/api/leads'], async (req, res) => {
   const payload = req.body || {};
   console.log('🚀 [BuildFlow Dispatch Request Received on Coolify]:', payload);
 
-  const targetUrl = process.env.BUILDFLOW_API_URL || 'https://buildflowx.online/api/v1/projects';
+  const targetUrl = process.env.BUILDFLOW_API_URL || 'https://buildflowx.online/api/leads';
   let externalStatus = 'skipped';
   let externalResponse = null;
 
+  // Build standard BuildFlow Lead Payload format
+  const custName = payload.customerName || payload.customer_name || 'ลูกค้าใหม่ (VQ)';
+  const custPhone = payload.customerPhone || payload.customer_phone || '';
+  const custAddress = payload.customerAddress || payload.customer_address || payload.addressZone || '';
+  const lat = payload.latitude || payload.customer_latitude || null;
+  const lng = payload.longitude || payload.customer_longitude || null;
+  const mapUrl = payload.map_url || (lat && lng ? `https://www.google.com/maps?q=${lat},${lng}` : null);
+  const jobType = payload.installationTypeName || payload.job_type || 'Quick Service';
+  const notesStr = `[Ticket: ${payload.ticketNo || payload.bookingRef || '-'}] [Zone: ${payload.addressZone || '-'}] ${payload.assignedTechTeamName ? `[Tech: ${payload.assignedTechTeamName}]` : ''}`;
+
+  const buildFlowLeadPayload = {
+    customer_name: custName,
+    customer_phone: custPhone,
+    customer_address: custAddress,
+    customer_latitude: lat ? Number(lat) : null,
+    customer_longitude: lng ? Number(lng) : null,
+    map_url: mapUrl,
+    job_type: jobType,
+    status: 'New',
+    notes: notesStr
+  };
+
   try {
-    // Relay request server-to-server (bypasses browser CORS on Production)
+    // Relay request server-to-server to BuildFlow API endpoint (bypasses browser CORS)
     const response = await fetch(targetUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'X-User-Id': 'admin'
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(buildFlowLeadPayload)
     });
 
     externalStatus = response.status === 200 || response.status === 201 ? 'success' : 'forwarded';
@@ -1066,16 +1169,17 @@ app.post(['/api/buildflow/dispatch', '/api/v1/projects'], async (req, res) => {
   const newLogEntry = {
     id: Date.now(),
     source_system: payload.sourceSystem || 'Installer Management (VQ)',
-    target_system: 'BuildFlow',
+    target_system: 'BuildFlow Leads',
     action: 'DISPATCH_PROJECT',
-    payload,
+    payload: buildFlowLeadPayload,
     created_at: new Date().toISOString()
   };
   saveJson(INTEGRATION_LOGS_FILE, [newLogEntry, ...currentLogs].slice(0, 100));
 
-  // Save to PostgreSQL if connected
+  // Save directly to PostgreSQL (buildflowdb) if connected
   if (isDbConnected && dbPool) {
     try {
+      // 1. Audit log table
       await dbPool.query(`
         CREATE TABLE IF NOT EXISTS integration_logs (
           id SERIAL PRIMARY KEY,
@@ -1091,13 +1195,38 @@ app.post(['/api/buildflow/dispatch', '/api/v1/projects'], async (req, res) => {
         `INSERT INTO integration_logs (source_system, target_system, action, payload) VALUES ($1, $2, $3, $4)`,
         [
           payload.sourceSystem || 'Installer Management (VQ)',
-          'BuildFlow',
+          'BuildFlow Leads',
           'DISPATCH_PROJECT',
-          JSON.stringify(payload)
+          JSON.stringify(buildFlowLeadPayload)
         ]
       );
+
+      // 2. Direct insert into BuildFlow leads table in buildflowdb
+      await dbPool.query(`
+        CREATE TABLE IF NOT EXISTS leads (
+          id SERIAL PRIMARY KEY,
+          customer_name VARCHAR(255),
+          customer_phone VARCHAR(50),
+          customer_address TEXT,
+          customer_latitude NUMERIC,
+          customer_longitude NUMERIC,
+          map_url TEXT,
+          job_type VARCHAR(255),
+          status VARCHAR(50) DEFAULT 'New',
+          notes TEXT,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      await dbPool.query(`
+        INSERT INTO leads (customer_name, customer_phone, customer_address, customer_latitude, customer_longitude, map_url, job_type, status, notes)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `, [custName, custPhone, custAddress, lat, lng, mapUrl, jobType, 'New', notesStr]);
+
+      console.log('✅ Lead record inserted directly into PostgreSQL buildflowdb leads table!');
     } catch (dbErr) {
-      console.error('Error logging integration dispatch to DB:', dbErr);
+      console.error('Notice inserting lead directly to DB:', dbErr.message);
     }
   }
 
@@ -1162,6 +1291,301 @@ app.delete('/api/integration-logs', async (req, res) => {
 });
 
 
+
+// ============================================================
+// vBOOKING API v1 — External Partner API for Technician Booking
+// ============================================================
+
+// ── In-Memory stores (fallback when DB not connected) ──
+const vbookingClientsStore = loadJson(path.join(DATA_DIR, 'vbooking_clients.json'), []);
+const vbookingHoldsMap = new Map();
+const vbookingBookingsStore = loadJson(path.join(DATA_DIR, 'vbooking_bookings.json'), []);
+const vbookingLogsStore = [];
+const rateLimitCounters = new Map();
+
+// ── Crypto helpers ──
+// crypto imported at top of file
+
+function hashApiKey(key) { return createHash('sha256').update(key).digest('hex'); }
+function generateApiKey(clientId) { return `vbk_${clientId.slice(-8)}_${randomBytes(20).toString('hex')}`; }
+function genId(prefix) { return `${prefix}_${Date.now()}_${randomBytes(3).toString('hex')}`; }
+
+// ── Async log helper ──
+async function logVbReq({ client_id, client_name, endpoint, method, status_code, response_time_ms, client_ip, error_details }) {
+  const entry = { client_id, client_name, endpoint, method, status_code, response_time_ms: Math.round(response_time_ms || 0), client_ip, error_details, created_at: new Date().toISOString() };
+  vbookingLogsStore.unshift(entry);
+  if (vbookingLogsStore.length > 2000) vbookingLogsStore.pop();
+  if (isDbConnected && dbPool) {
+    try { await dbPool.query('INSERT INTO vbooking_request_logs (client_id,client_name,endpoint,method,status_code,response_time_ms,client_ip,error_details) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)', [client_id||null, client_name||null, endpoint, method, status_code, Math.round(response_time_ms||0), client_ip, error_details||null]); } catch {}
+  }
+}
+
+// ── Auth + Rate Limit Middleware ──
+async function vbAuth(req, res, next) {
+  const t0 = Date.now();
+  const apiKey = req.headers['x-api-key'] || req.query.api_key;
+  if (!apiKey) {
+    await logVbReq({ endpoint: req.path, method: req.method, status_code: 401, response_time_ms: Date.now()-t0, client_ip: req.ip, error_details: 'Missing X-API-Key' });
+    return res.status(401).json({ status:'error', code:'MISSING_API_KEY', message:'กรุณาใส่ X-API-Key ใน HTTP Header' });
+  }
+  const keyHash = hashApiKey(apiKey);
+  let client = null;
+  if (isDbConnected && dbPool) {
+    try { const r = await dbPool.query('SELECT * FROM vbooking_clients WHERE api_key_hash=$1 AND status=$2',[keyHash,'ACTIVE']); if(r.rows.length) client=r.rows[0]; } catch {}
+  }
+  if (!client) client = vbookingClientsStore.find(c => c.api_key_hash === keyHash && c.status === 'ACTIVE');
+  if (!client) {
+    await logVbReq({ endpoint: req.path, method: req.method, status_code: 401, response_time_ms: Date.now()-t0, client_ip: req.ip, error_details: 'Invalid API Key' });
+    return res.status(401).json({ status:'error', code:'INVALID_API_KEY', message:'API Key ไม่ถูกต้องหรือถูกระงับการใช้งาน' });
+  }
+  // Rate limit
+  const now = Date.now(), winMs = 60000;
+  let ctr = rateLimitCounters.get(client.id);
+  if (!ctr || now - ctr.w > winMs) { ctr = { count: 0, w: now }; rateLimitCounters.set(client.id, ctr); }
+  ctr.count++;
+  if (ctr.count > (client.rate_limit_per_min || 60)) {
+    await logVbReq({ client_id: client.id, client_name: client.name, endpoint: req.path, method: req.method, status_code: 429, response_time_ms: Date.now()-t0, client_ip: req.ip, error_details: 'Rate limit exceeded' });
+    return res.status(429).json({ status:'error', code:'RATE_LIMIT_EXCEEDED', message:`เกิน ${client.rate_limit_per_min||60} req/min`, retry_after_seconds: Math.ceil((winMs-(now-ctr.w))/1000) });
+  }
+  req.vbClient = client; req.vbT0 = t0;
+  res.on('finish', () => logVbReq({ client_id: client.id, client_name: client.name, endpoint: req.path, method: req.method, status_code: res.statusCode, response_time_ms: Date.now()-t0, client_ip: req.ip }));
+  next();
+}
+
+// ── Admin Auth ──
+function vbAdmin(req, res, next) {
+  if (req.headers['x-admin-key'] !== (process.env.VBOOKING_ADMIN_KEY || 'vbk_admin_2026')) return res.status(403).json({ status:'error', code:'FORBIDDEN', message:'ต้องการ X-Admin-Key ที่ถูกต้อง' });
+  next();
+}
+
+// ── Load helpers ──
+async function vbLoadTechs() {
+  if (isDbConnected && dbPool) { try { const r = await dbPool.query('SELECT id,code,name,phone,avatar,tier,rating,status,primary_zone as "primaryZone",secondary_zones as "secondaryZones",skills,extra_data FROM technicians ORDER BY rating DESC'); return r.rows.map(row => ({...row,...(row.extra_data||{}),secondaryZones:row.secondaryZones||[],skills:row.skills||[]})); } catch {} }
+  return loadJson(TECHS_FILE, []);
+}
+async function vbLoadZones() {
+  if (isDbConnected && dbPool) { try { const r = await dbPool.query('SELECT id,code,name,coverage_zipcodes as "coverageZipcodes" FROM zones'); return r.rows; } catch {} }
+  return loadJson(ZONES_FILE, []);
+}
+function vbLoadCatalog() { return loadJson(path.join(DATA_DIR, 'vbooking_service_catalog.json'), []); }
+
+function haversineKm(lat1,lng1,lat2,lng2) {
+  if(!lat1||!lng1||!lat2||!lng2) return null;
+  const R=6371, d2r=Math.PI/180, dLat=(lat2-lat1)*d2r, dLng=(lng2-lng1)*d2r;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*d2r)*Math.cos(lat2*d2r)*Math.sin(dLng/2)**2;
+  return +(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))).toFixed(1);
+}
+
+function computeSlots(tech, durHrs) {
+  if(tech.status==='In Cooldown'||tech.status==='Offline') return [];
+  const all=[{s:'08:00',e:'12:00',h:4},{s:'13:00',e:'17:00',h:4},{s:'08:00',e:'17:00',h:9}];
+  return all.filter(sl=>sl.h>=durHrs).map(sl=>`${sl.s}-${sl.e}`);
+}
+
+// ── SERVICE CATALOG ──
+app.get('/api/vbooking/service-catalog', (req, res) => {
+  const cat = vbLoadCatalog();
+  const { category } = req.query;
+  return res.json({ status:'success', catalog: category ? cat.filter(c=>c.code===category) : cat });
+});
+
+// ── TECHNICIAN SEARCH ──
+app.get('/api/vbooking/technicians/search', vbAuth, async (req, res) => {
+  const { service_category, service_sub_category, booking_date, postal_code, lat, lng, max_results=5, sort_by='match_score', preferred_tech_id } = req.query;
+  if (!booking_date) return res.status(400).json({ status:'error', code:'MISSING_PARAMS', message:'ต้องระบุ booking_date (YYYY-MM-DD)' });
+  if (!service_sub_category && !service_category) return res.status(400).json({ status:'error', code:'MISSING_PARAMS', message:'ต้องระบุ service_category หรือ service_sub_category' });
+
+  const catalog = vbLoadCatalog();
+  let svcMeta = null;
+  for (const cat of catalog) {
+    if (service_sub_category) { const s=cat.sub_categories?.find(x=>x.code===service_sub_category); if(s){svcMeta={...s,category_code:cat.code,category_name:cat.name};break;} }
+    else if (cat.code===service_category) { svcMeta={code:service_category,name:cat.name,est_duration_hours:3,required_skill_level:1,category_code:service_category};break; }
+  }
+  const durHrs = svcMeta?.est_duration_hours||3, reqSkill=svcMeta?.required_skill_level||1;
+
+  const [techs, zones] = await Promise.all([vbLoadTechs(), vbLoadZones()]);
+  let zoneId=null;
+  if(postal_code) { const z=zones.find(z=>(z.coverageZipcodes||[]).includes(String(postal_code))); if(z) zoneId=z.id; }
+
+  const scored = techs
+    .filter(t=>t.status==='Available'||t.status==='On Job')
+    .map(t=>{
+      let score=40;
+      const hasSkill=(t.skills||[]).some(s=>(s.category===service_category)&&(s.level||1)>=reqSkill);
+      if(hasSkill) score+=25; else if((t.skills||[]).length>0) score+=5;
+      if(zoneId){ if((t.primaryZone||'').includes(zoneId)) score+=20; else if((t.secondaryZones||[]).some(z=>z.includes(zoneId))) score+=10; }
+      if(t.tier==='Gold') score+=10; else if(t.tier==='Silver') score+=5;
+      score+=Math.round((Number(t.rating||4)-3)*5);
+      score-=Math.round((t.penaltyPoints||0)/10);
+      if(preferred_tech_id&&t.id===preferred_tech_id) score+=30;
+      score=Math.min(100,Math.max(0,score));
+      const tLat=t.extra_data?.latitude||t.latitude, tLng=t.extra_data?.longitude||t.longitude;
+      return { tech_id:t.id,name:t.name,match_score:parseFloat(score.toFixed(1)),skill_level:`Level ${reqSkill}`,tier:t.tier,rating:Number(t.rating||4.5),completed_jobs:t.completedJobs||0,primary_zone:t.primaryZone,proximity_km:haversineKm(Number(lat),Number(lng),tLat,tLng),available_slots:computeSlots(t,durHrs),starting_price:svcMeta?.price_standard||null };
+    })
+    .filter(t=>t.available_slots.length>0);
+
+  if(sort_by==='rating') scored.sort((a,b)=>b.rating-a.rating);
+  else if(sort_by==='proximity'&&lat&&lng) scored.sort((a,b)=>(a.proximity_km||999)-(b.proximity_km||999));
+  else if(sort_by==='price') scored.sort((a,b)=>(a.starting_price||0)-(b.starting_price||0));
+  else scored.sort((a,b)=>b.match_score-a.match_score);
+
+  return res.json({ status:'success', search_params:{service_category,service_sub_category,booking_date,postal_code,lat,lng}, service_info:svcMeta, estimated_job_duration_hours:durHrs, result_count:scored.slice(0,Number(max_results)).length, results:scored.slice(0,Number(max_results)) });
+});
+
+// ── TECHNICIAN PROFILE ──
+app.get('/api/vbooking/technicians/:tech_id', vbAuth, async (req, res) => {
+  const techs = await vbLoadTechs();
+  const t = techs.find(x=>x.id===req.params.tech_id||x.code===req.params.tech_id);
+  if(!t) return res.status(404).json({ status:'error', code:'NOT_FOUND', message:'ไม่พบช่างนี้' });
+  const {id,code,name,phone,avatar,tier,rating,status,primaryZone,secondaryZones,skills,completedJobs,penaltyPoints,dailyCapacityHours,workDays,jobTypes,skillsExpertise}=t;
+  return res.json({ status:'success', technician:{id,code,name,phone,avatar,tier,rating:Number(rating),status,primary_zone:primaryZone,secondary_zones:secondaryZones,skills,completed_jobs:completedJobs,penalty_points:penaltyPoints,daily_capacity_hours:dailyCapacityHours,work_days:workDays,job_types:jobTypes,skills_expertise:skillsExpertise} });
+});
+
+// ── AVAILABLE SLOTS ──
+app.get('/api/vbooking/technicians/:tech_id/slots', vbAuth, async (req, res) => {
+  const techs = await vbLoadTechs();
+  const t = techs.find(x=>x.id===req.params.tech_id);
+  if(!t) return res.status(404).json({ status:'error', code:'NOT_FOUND', message:'ไม่พบช่างนี้' });
+  const { date_from, date_to, service_sub_category } = req.query;
+  const catalog=vbLoadCatalog(); let durHrs=3;
+  if(service_sub_category){for(const cat of catalog){const s=cat.sub_categories?.find(x=>x.code===service_sub_category);if(s){durHrs=s.est_duration_hours;break;}}}
+  const from=new Date(date_from||new Date()), days=Math.min(14,Math.round((new Date(date_to||new Date(from.getTime()+7*86400000))-from)/86400000)+1);
+  const availability=[];
+  const dayNames=['อา','จ','อ','พ','พฤ','ศ','ส'];
+  for(let i=0;i<days;i++){const d=new Date(from.getTime()+i*86400000);const dow=d.getDay();const slots=dow===0||dow===6?[]:computeSlots(t,durHrs);availability.push({date:d.toISOString().split('T')[0],day_of_week:dayNames[dow],is_available:slots.length>0,slots});}
+  return res.json({ status:'success', tech_id:t.id, tech_name:t.name, estimated_job_duration_hours:durHrs, availability });
+});
+
+// ── BOOKING HOLD (Step 1) ──
+app.post('/api/vbooking/bookings/hold', vbAuth, async (req, res) => {
+  const { tech_id, service_category, service_sub_category, booking_date, time_slot, location, client_ref_id } = req.body;
+  if(!tech_id||!service_sub_category||!booking_date||!time_slot) return res.status(400).json({ status:'error', code:'MISSING_PARAMS', message:'ต้องระบุ tech_id, service_sub_category, booking_date, time_slot' });
+  const techs=await vbLoadTechs(), tech=techs.find(t=>t.id===tech_id);
+  if(!tech) return res.status(404).json({ status:'error', code:'NOT_FOUND', message:'ไม่พบช่างนี้' });
+  if(tech.status==='In Cooldown'||tech.status==='Offline') return res.status(409).json({ status:'error', code:'TECH_UNAVAILABLE', message:`ช่าง ${tech.name} ไม่พร้อมรับงาน (${tech.status})` });
+  const dup=[...vbookingHoldsMap.values()].find(h=>h.tech_id===tech_id&&h.booking_date===booking_date&&h.time_slot===time_slot&&h.status==='ACTIVE'&&new Date(h.expires_at)>new Date());
+  if(dup) return res.status(409).json({ status:'error', code:'SLOT_TAKEN', message:`สล็อต ${time_slot} วันที่ ${booking_date} ถูกล็อคแล้ว กรุณาเลือกสล็อตอื่น` });
+  const holdId=genId('hold'), holdToken=`HOLD_${randomBytes(8).toString('hex').toUpperCase()}`, ttl=900, expiresAt=new Date(Date.now()+ttl*1000).toISOString();
+  const h={id:holdId,hold_token:holdToken,client_id:req.vbClient.id,client_ref_id:client_ref_id||null,tech_id,service_category:service_category||null,service_sub_category,booking_date,time_slot,location:location||{},expires_at:expiresAt,status:'ACTIVE',created_at:new Date().toISOString()};
+  vbookingHoldsMap.set(holdToken,h);
+  if(isDbConnected&&dbPool){try{await dbPool.query('INSERT INTO vbooking_booking_holds (id,hold_token,client_id,tech_id,service_category,service_sub_category,booking_date,time_slot,location,expires_at,status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',[holdId,holdToken,req.vbClient.id,tech_id,service_category||null,service_sub_category,booking_date,time_slot,JSON.stringify(location||{}),'ACTIVE',expiresAt]);}catch(e){console.warn('hold DB warn:',e.message);}}
+  setTimeout(()=>{const x=vbookingHoldsMap.get(holdToken);if(x&&x.status==='ACTIVE'){x.status='EXPIRED';vbookingHoldsMap.set(holdToken,x);}},ttl*1000);
+  return res.status(201).json({ status:'success', message:'ล็อคสล็อตช่างสำเร็จ กรุณา Confirm ภายใน 15 นาที', hold_token:holdToken, tech_id, tech_name:tech.name, booking_date, time_slot, service_sub_category, expires_at:expiresAt, ttl_seconds:ttl });
+});
+
+// ── BOOKING CONFIRM (Step 2) ──
+app.post('/api/vbooking/bookings/confirm', vbAuth, async (req, res) => {
+  const { hold_token, customer_info, payment_info, notes } = req.body;
+  if(!hold_token) return res.status(400).json({ status:'error', code:'MISSING_PARAMS', message:'ต้องระบุ hold_token' });
+  if(!customer_info?.name||!customer_info?.phone) return res.status(400).json({ status:'error', code:'MISSING_PARAMS', message:'ต้องระบุ customer_info.name และ customer_info.phone' });
+  let hold=vbookingHoldsMap.get(hold_token);
+  if(!hold&&isDbConnected&&dbPool){try{const r=await dbPool.query('SELECT * FROM vbooking_booking_holds WHERE hold_token=$1',[hold_token]);if(r.rows.length)hold=r.rows[0];}catch{}}
+  if(!hold) return res.status(404).json({ status:'error', code:'HOLD_NOT_FOUND', message:'ไม่พบ Hold Token นี้' });
+  if(hold.status==='EXPIRED'||new Date(hold.expires_at)<new Date()) return res.status(410).json({ status:'error', code:'HOLD_EXPIRED', message:'Hold Token หมดอายุแล้ว กรุณา Hold ใหม่' });
+  if(hold.status==='CONFIRMED') return res.status(409).json({ status:'error', code:'ALREADY_CONFIRMED', message:'การจองนี้ถูก Confirm แล้ว' });
+  if(hold.client_id!==req.vbClient.id) return res.status(403).json({ status:'error', code:'FORBIDDEN', message:'Hold นี้ไม่ได้เป็นของ Client ท่าน' });
+  const techs=await vbLoadTechs(), tech=techs.find(t=>t.id===hold.tech_id);
+  const catalog=vbLoadCatalog(); let durHrs=3;
+  for(const cat of catalog){const s=cat.sub_categories?.find(x=>x.code===hold.service_sub_category);if(s){durHrs=s.est_duration_hours;break;}}
+  const bookingId=genId('bk'), bookingRef=`BK-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
+  const bk={id:bookingId,booking_ref:bookingRef,hold_token,client_id:req.vbClient.id,client_ref_id:hold.client_ref_id||null,tech_id:hold.tech_id,tech_name:tech?.name||'N/A',service_category:hold.service_category||null,service_sub_category:hold.service_sub_category,booking_date:hold.booking_date,time_slot:hold.time_slot,est_duration_hours:durHrs,customer_name:customer_info.name,customer_phone:customer_info.phone,customer_email:customer_info.email||null,location:hold.location||{},payment_status:payment_info?.payment_status||'PENDING',payment_ref:payment_info?.transaction_ref||null,status:'CONFIRMED',notes:notes||null,created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
+  const hx=vbookingHoldsMap.get(hold_token); if(hx){hx.status='CONFIRMED';vbookingHoldsMap.set(hold_token,hx);}
+  vbookingBookingsStore.push(bk); saveJson(path.join(DATA_DIR,'vbooking_bookings.json'),vbookingBookingsStore);
+  if(isDbConnected&&dbPool){try{await dbPool.query('INSERT INTO vbooking_bookings (id,booking_ref,hold_token,client_id,client_ref_id,tech_id,tech_name,service_category,service_sub_category,booking_date,time_slot,est_duration_hours,customer_name,customer_phone,customer_email,location,payment_status,payment_ref,status,notes) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)',[bookingId,bookingRef,hold_token,req.vbClient.id,hold.client_ref_id||null,hold.tech_id,tech?.name||'N/A',hold.service_category||null,hold.service_sub_category,hold.booking_date,hold.time_slot,durHrs,customer_info.name,customer_info.phone,customer_info.email||null,JSON.stringify(hold.location||{}),payment_info?.payment_status||'PENDING',payment_info?.transaction_ref||null,'CONFIRMED',notes||null]);await dbPool.query('UPDATE vbooking_booking_holds SET status=$1 WHERE hold_token=$2',['CONFIRMED',hold_token]);}catch(e){console.warn('confirm DB warn:',e.message);}}
+  return res.status(201).json({ status:'success', message:'ยืนยันการจองบริการสำเร็จ', booking_id:bookingId, booking_ref:bookingRef, status:'CONFIRMED', assigned_technician:{tech_id:hold.tech_id,name:tech?.name||'N/A',phone:tech?.phone||null}, booking_date:hold.booking_date, time_slot:hold.time_slot, service_sub_category:hold.service_sub_category, estimated_duration_hours:durHrs, customer:{name:customer_info.name,phone:customer_info.phone}, created_at:bk.created_at });
+});
+
+// ── GET BOOKING STATUS ──
+app.get('/api/vbooking/bookings/:booking_id', vbAuth, async (req, res) => {
+  const id=req.params.booking_id; let bk=null;
+  if(isDbConnected&&dbPool){try{const r=await dbPool.query('SELECT * FROM vbooking_bookings WHERE id=$1 OR booking_ref=$1',[id]);if(r.rows.length)bk=r.rows[0];}catch{}}
+  if(!bk) bk=vbookingBookingsStore.find(b=>b.id===id||b.booking_ref===id);
+  if(!bk) return res.status(404).json({ status:'error', code:'NOT_FOUND', message:'ไม่พบการจองนี้' });
+  if(bk.client_id!==req.vbClient.id) return res.status(403).json({ status:'error', code:'FORBIDDEN', message:'ไม่มีสิทธิ์เข้าถึงการจองนี้' });
+  return res.json({ status:'success', booking:bk });
+});
+
+// ── CANCEL BOOKING ──
+app.post('/api/vbooking/bookings/:booking_id/cancel', vbAuth, async (req, res) => {
+  const id=req.params.booking_id, { reason }=req.body; let bk=null;
+  if(isDbConnected&&dbPool){try{const r=await dbPool.query('SELECT * FROM vbooking_bookings WHERE id=$1 OR booking_ref=$1',[id]);if(r.rows.length)bk=r.rows[0];}catch{}}
+  if(!bk) bk=vbookingBookingsStore.find(b=>b.id===id||b.booking_ref===id);
+  if(!bk) return res.status(404).json({ status:'error', code:'NOT_FOUND', message:'ไม่พบการจองนี้' });
+  if(bk.client_id!==req.vbClient.id) return res.status(403).json({ status:'error', code:'FORBIDDEN', message:'ไม่มีสิทธิ์ยกเลิกการจองนี้' });
+  if(bk.status==='CANCELLED') return res.status(409).json({ status:'error', code:'ALREADY_CANCELLED', message:'การจองนี้ถูกยกเลิกแล้ว' });
+  const idx=vbookingBookingsStore.findIndex(b=>b.id===id||b.booking_ref===id); if(idx>=0){vbookingBookingsStore[idx].status='CANCELLED';vbookingBookingsStore[idx].updated_at=new Date().toISOString();}
+  saveJson(path.join(DATA_DIR,'vbooking_bookings.json'),vbookingBookingsStore);
+  if(isDbConnected&&dbPool){try{await dbPool.query('UPDATE vbooking_bookings SET status=$1,updated_at=NOW() WHERE id=$2 OR booking_ref=$2',['CANCELLED',id]);}catch{}}
+  return res.json({ status:'success', message:`ยกเลิกการจอง ${bk.booking_ref} สำเร็จ`, booking_ref:bk.booking_ref, cancelled_at:new Date().toISOString(), reason:reason||null });
+});
+
+// ── ADMIN: CREATE CLIENT ──
+app.post('/api/vbooking/admin/clients', vbAdmin, (req, res) => {
+  const { name, rate_limit_per_min=60, daily_quota=10000 } = req.body;
+  if(!name) return res.status(400).json({ status:'error', message:'ต้องระบุ name' });
+  const cid=`CLIENT_${name.toUpperCase().replace(/\s+/g,'_').slice(0,16)}_${randomBytes(3).toString('hex').toUpperCase()}`;
+  const apiKey=generateApiKey(cid), keyHash=hashApiKey(apiKey), keyPrefix=apiKey.slice(0,16);
+  const c={id:cid,name,api_key_hash:keyHash,api_key_prefix:keyPrefix,rate_limit_per_min:Number(rate_limit_per_min),daily_quota:Number(daily_quota),status:'ACTIVE',created_at:new Date().toISOString()};
+  vbookingClientsStore.push(c); saveJson(path.join(DATA_DIR,'vbooking_clients.json'),vbookingClientsStore);
+  if(isDbConnected&&dbPool){try{dbPool.query('INSERT INTO vbooking_clients (id,name,api_key_hash,api_key_prefix,rate_limit_per_min,daily_quota,status) VALUES ($1,$2,$3,$4,$5,$6,$7)',[cid,name,keyHash,keyPrefix,rate_limit_per_min,daily_quota,'ACTIVE']);}catch{}}
+  return res.status(201).json({ status:'success', message:'สร้าง API Client สำเร็จ — บันทึก API Key นี้ไว้ (แสดงเพียงครั้งเดียว)', client:{...c,api_key:apiKey} });
+});
+
+// ── ADMIN: LIST CLIENTS ──
+app.get('/api/vbooking/admin/clients', vbAdmin, async (req, res) => {
+  let clients=[];
+  if(isDbConnected&&dbPool){try{const r=await dbPool.query('SELECT id,name,api_key_prefix,rate_limit_per_min,daily_quota,status,created_at FROM vbooking_clients ORDER BY created_at DESC');clients=r.rows;}catch{}}
+  if(!clients.length) clients=vbookingClientsStore.map(({api_key_hash,...rest})=>rest);
+  const today=new Date().toISOString().split('T')[0];
+  for(const c of clients) c.requests_today=vbookingLogsStore.filter(l=>l.client_id===c.id&&l.created_at.startsWith(today)).length;
+  return res.json({ status:'success', count:clients.length, clients });
+});
+
+// ── ADMIN: METRICS ──
+app.get('/api/vbooking/admin/monitoring/metrics', vbAdmin, async (req, res) => {
+  let logs=[...vbookingLogsStore];
+  if(isDbConnected&&dbPool){try{const r=await dbPool.query("SELECT * FROM vbooking_request_logs WHERE created_at>=NOW()-INTERVAL '7 days' ORDER BY created_at DESC LIMIT 5000");if(r.rows.length)logs=r.rows;}catch{}}
+  const now=new Date(), todayStr=now.toISOString().split('T')[0];
+  const today=logs.filter(l=>l.created_at.startsWith(todayStr));
+  const ok=today.filter(l=>l.status_code<400), err=today.filter(l=>l.status_code>=400), rl=today.filter(l=>l.status_code===429);
+  const lats=today.map(l=>Number(l.response_time_ms||0)).filter(v=>v>0).sort((a,b)=>a-b);
+  const avg=lats.length?Math.round(lats.reduce((a,b)=>a+b,0)/lats.length):0, p95=lats.length?lats[Math.floor(lats.length*0.95)]||0:0;
+  const oneMinAgo=new Date(now-60000).toISOString(), rpm=logs.filter(l=>l.created_at>oneMinAgo).length;
+  const tot=today.length||1, s2=today.filter(l=>l.status_code<300).length, s4=today.filter(l=>l.status_code>=400&&l.status_code<500).length, s5=today.filter(l=>l.status_code>=500).length;
+  const epC={}, clC={}, clN={}; for(const l of today){epC[l.endpoint]=(epC[l.endpoint]||0)+1;if(l.client_id){clC[l.client_id]=(clC[l.client_id]||0)+1;clN[l.client_id]=l.client_name;}}
+  const topEp=Object.entries(epC).sort(([,a],[,b])=>b-a).slice(0,5).map(([endpoint,count])=>({endpoint,count}));
+  const topCl=Object.entries(clC).sort(([,a],[,b])=>b-a).slice(0,5).map(([cid,count])=>({client_id:cid,client_name:clN[cid]||cid,count}));
+  const hourly=[]; for(let h=23;h>=0;h--){const s=new Date(now-h*3600000),e=new Date(now-(h-1)*3600000);const hl=logs.filter(l=>{const t=new Date(l.created_at);return t>=s&&t<e;});hourly.push({hour:String(s.getHours()).padStart(2,'0'),requests:hl.length,errors:hl.filter(l=>l.status_code>=400).length});}
+  return res.json({ status:'success', metrics:{ total_requests_today:today.length, total_requests_week:logs.length, success_rate:today.length?parseFloat(((ok.length/today.length)*100).toFixed(1)):0, error_rate:today.length?parseFloat(((err.length/today.length)*100).toFixed(1)):0, avg_latency_ms:avg, p95_latency_ms:p95, rpm_current:rpm, rpm_peak:rpm, rate_limit_hits:rl.length, top_endpoints:topEp, top_clients:topCl, status_distribution:[{status:'2xx',count:s2,pct:parseFloat(((s2/tot)*100).toFixed(1))},{status:'4xx',count:s4,pct:parseFloat(((s4/tot)*100).toFixed(1))},{status:'5xx',count:s5,pct:parseFloat(((s5/tot)*100).toFixed(1))}], hourly_trend:hourly } });
+});
+
+// ── ADMIN: LOGS (Paginated) ──
+app.get('/api/vbooking/admin/monitoring/logs', vbAdmin, async (req, res) => {
+  const { page=1, limit=20, status_code, client_id, endpoint } = req.query;
+  const off=(Number(page)-1)*Number(limit);
+  let logs=[];
+  if(isDbConnected&&dbPool){
+    try{
+      const conds=['1=1'], params=[];
+      if(status_code){params.push(Number(status_code));conds.push(`status_code=$${params.length}`);}
+      if(client_id){params.push(`%${client_id}%`);conds.push(`client_id ILIKE $${params.length}`);}
+      if(endpoint){params.push(`%${endpoint}%`);conds.push(`endpoint ILIKE $${params.length}`);}
+      params.push(Number(limit));params.push(off);
+      const r=await dbPool.query(`SELECT id,client_id,client_name,endpoint,method,status_code,response_time_ms,client_ip,error_details,created_at FROM vbooking_request_logs WHERE ${conds.join(' AND ')} ORDER BY created_at DESC LIMIT $${params.length-1} OFFSET $${params.length}`,params);
+      logs=r.rows;
+    }catch(e){console.warn('logs query warn:',e.message);}
+  }
+  if(!logs.length){
+    let f=[...vbookingLogsStore];
+    if(status_code) f=f.filter(l=>String(l.status_code)===String(status_code));
+    if(client_id) f=f.filter(l=>(l.client_id||'').includes(client_id));
+    if(endpoint) f=f.filter(l=>(l.endpoint||'').includes(endpoint));
+    logs=f.slice(off,off+Number(limit));
+  }
+  return res.json({ status:'success', page:Number(page), limit:Number(limit), count:logs.length, logs });
+});
+
+// ─────────────────────────────────────────
 
 // Serve static built frontend files for production
 const distPath = path.join(__dirname, 'dist');
