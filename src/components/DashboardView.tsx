@@ -1019,7 +1019,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             </button>
                           )}
 
-                          {b.status === 'Scheduled' && (
+                          {b.status === 'Scheduled' && assignedTech && (
                             <button
                               onClick={() => onDispatchToKanna(b.id)}
                               className="px-2 py-1 rounded bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[10px] transition flex items-center space-x-1 shadow-sm border-0 cursor-pointer"

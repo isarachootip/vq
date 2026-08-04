@@ -1,0 +1,12 @@
+[
+  {
+    "id": "CLIENT_TEST_PARTNER_SYS_8DF9BB",
+    "name": "Test Partner System",
+    "api_key_hash": "194f79ecee1551fb9aa3c9a33ac0c5f397a76e56f07d4c43073abbbf4ad7a855",
+    "api_key_prefix": "vbk_S_8DF9BB_bef",
+    "rate_limit_per_min": 100,
+    "daily_quota": 5000,
+    "status": "ACTIVE",
+    "created_at": "2026-08-04T04:00:31.296Z"
+  }
+]

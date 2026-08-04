@@ -210,6 +210,29 @@ export const KmHubView: React.FC = () => {
               '  - **ระยะเวลาการสไลด์แบนเนอร์หน้าร้าน (Banner Slide Delay)**: ตั้งเวลาสไลด์ภาพโปรโมชันหน้าร้าน (เช่น 3 วินาที)\n\n' +
               '• 🔌 **4. ที่อยู่เชื่อมต่อ API ระบบองค์กร (API Gateways)**:\n' +
               '  - สำหรับระบุ URL Endpoint ของระบบ BuildFlow, STS Check-in, QC Audit Inspector, E-CN ERP Billing, และ Google Maps API Key'
+    },
+    {
+      id: 'faq-buildflow-dispatch-process',
+      question: 'ขั้นตอนและเงื่อนไขการเชื่อมโยงข้อมูลส่งต่อไปยังระบบ BuildFlow (BuildFlow System Dispatch) มีกระบวนการอย่างไร?',
+      category: 'integration',
+      answer: 'กระบวนการส่งต่อข้อมูลลูกค้าและงานติดตั้งไปยังระบบ BuildFlow เพื่อจ่ายงานให้ช่างมีรายละเอียดดังนี้:\n\n' +
+              '• ⚠️ **เงื่อนไขสำคัญก่อนส่ง (Pre-requisites)**: ใบจองคิวติดตั้งต้องมีสถานะเป็น **Scheduled** และ**ต้องได้รับการจัดสรรทีมช่างเรียบร้อยแล้ว** (มีประวัติช่างปรากฏชัดเจน) หากช่างยังว่างอยู่ ระบบจะซ่อนปุ่มส่ง เพื่อป้องกันการส่ง payload ที่มีข้อมูลช่างไม่สมบูรณ์ไปยัง BuildFlow\n\n' +
+              '• 🔄 **ขั้นตอนการทำงาน (Workflow Step-by-Step)**:\n' +
+              '  1. แอดมินกดปุ่มสีม่วง **"ส่ง BuildFlow"** บนแถวรายการคิวติดตั้งหน้า Dashboard หรือหน้า Zone Manager\n' +
+              '  2. ระบบจะเรียกใช้ API **`/api/buildflow/dispatch`** (หรือ URL สำรองตามที่ตั้งไว้ในระบบ Configs)\n' +
+              '  3. ระบบหลังบ้าน (Server-side) จะแปลงโครงสร้างข้อมูลลูกค้าและช่างให้เป็นรูปแบบมาตรฐานของ BuildFlow และยิงต่อแบบ Server-to-Server ไปยัง BuildFlow API ที่ `https://buildflowx.online/api/leads` เพื่อเลี่ยงปัญหา CORS\n' +
+              '  4. เมื่อปลายทางตอบรับสำเร็จ สถานะในระบบ VQ จะอัปเดตเป็น **"Dispatched to BuildFlow"** ทันที\n\n' +
+              '• 📊 **โครงสร้างข้อมูลนำส่ง (Data Mapping Specifications)**:\n' +
+              '  - `customerName` ➔ `customer_name` (ชื่อลูกค้า)\n' +
+              '  - `customerPhone` ➔ `customer_phone` (เบอร์ติดต่อกลับ)\n' +
+              '  - `customerAddress` ➔ `customer_address` (ที่อยู่ติดตั้ง)\n' +
+              '  - `latitude`/`longitude` ➔ `customer_latitude`/`customer_longitude` (พิกัด GIS ในรูปของ Number)\n' +
+              '  - `map_url` ➔ ลิงก์แผนที่นำทาง Google Maps (หากระบบได้รับ Lat/Lng จะสร้างลิงก์ให้โดยอัตโนมัติ)\n' +
+              '  - `job_type` ➔ `job_type` (ประเภทงาน เช่น งานครัว, งานไฟฟ้า)\n' +
+              '  - `notes` ➔ บันทึกระบุหมายเลขอ้างอิงและทีมช่างที่ได้รับมอบหมาย ในรูปแบบ: `[Ticket: BK-XXX] [Zone: Zone X] [Tech: ชื่อทีมช่าง]`\n\n' +
+              '• 💾 **การจัดเก็บข้อมูลสำรอง (Logs & Database Fallback)**:\n' +
+              '  - ข้อมูลจะถูกบันทึกลงในตาราง `integration_logs` และตาราง `leads` ของฐานข้อมูล PostgreSQL (`buildflowdb`) โดยตรง\n' +
+              '  - กรณีที่เชื่อมต่อฐานข้อมูลไม่ได้ ระบบจะทำการสำรองประวัติการยิง API ลงในไฟล์ `./data/integration_logs.json` ของฝั่งเซิร์ฟเวอร์โดยอัตโนมัติ'
     }
   ];
 

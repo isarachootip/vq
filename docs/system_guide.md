@@ -98,3 +98,56 @@ npm run db:seed
   3. ตรวจสอบสถานะ Build บน Coolify Dashboard
   4. ทำการ **Hard Refresh (`Ctrl + F5` หรือ `Cmd + Shift + R`)** บนหน้าเว็บเบราว์เซอร์เพื่อดึงไฟล์ Build ล่าสุดเสมอ
 
+---
+
+## 🔗 6. การเชื่อมโยงข้อมูลกับระบบ BuildFlow (BuildFlow System Integration)
+
+ระบบ VQ ทำงานร่วมกับระบบ **BuildFlow** (`buildflowx.online`) เพื่อใช้ในการจัดส่งใบสั่งงานและข้อมูลลูกค้าไปยังห้องแชทสื่อสารของช่างสนาม โดยมีการทำงานที่เป็นเอกภาพและปลอดภัยผ่าน API
+
+### 6.1 เงื่อนไขและกฎธุรกิจในการจ่ายงาน (Business Rules)
+* **การป้องกันข้อมูลไม่สมบูรณ์ (Data Quality Guard):** คิวงานที่จะนำส่งระบบ BuildFlow ต้องมีสถานะเป็น **`Scheduled`** และ**ต้องจัดสรรทีมช่างหน้างานเป็นที่เรียบร้อยแล้วเท่านั้น (มีข้อมูล `assignedTech` ที่ตรงกัน)**
+* **มาตรการควบคุมบน UI:** หากระบบตรวจพบว่าสถานะไม่ตรง หรือทีมช่างในใบสั่งงานเป็นค่าว่าง/ไม่มีตัวตนอยู่จริง ปุ่ม **"ส่ง BuildFlow" (สีม่วง)** จะถูกซ่อนโดยอัตโนมัติบนหน้าจอ Dashboard เพื่อควบคุมความถูกต้องของข้อมูล (ป้องกันไม่ให้มีการจ่ายตั๋วงานไร้คนรับผิดชอบเข้าระบบปลายทาง)
+
+### 6.2 สถาปัตยกรรมและทางเดินข้อมูล (Data Architecture Flow)
+```mermaid
+sequenceDiagram
+    autonumber
+    participant UI as 🖥️ หน้าจอ VQ Dashboard
+    participant Backend as ⚙️ VQ Express Backend (/api/buildflow/dispatch)
+    participant PostgreSQL as 🗄️ PostgreSQL (buildflowdb)
+    participant BuildFlow as 🌐 BuildFlow API (buildflowx.online)
+
+    UI->>Backend: POST /api/buildflow/dispatch (ข้อมูลดิบของใบจอง)
+    Note over Backend: แปลงข้อมูลเป็น Payload ตามสเปก BuildFlow
+    
+    par บันทึกประวัติ & ยิงตรงฐานข้อมูลปลายทาง
+        Backend->>PostgreSQL: INSERT INTO integration_logs & leads
+    and ซิงก์ผ่าน API (Server-to-Server)
+        Backend->>BuildFlow: POST /api/leads (Header X-User-Id: admin)
+    end
+
+    BuildFlow-->>Backend: 200 OK หรือ 201 Created
+    Backend-->>UI: ตอบกลับสถานะความสำเร็จ (อัปเดต UI เป็น Dispatched)
+```
+
+### 6.3 ตารางการแปลงพัสดุข้อมูล (Data Mapping Specs)
+
+ระบบหลังบ้านของ VQ จะทำหน้าที่เป็น Relay Proxy แปลงข้อมูลและยิงต่อไปยัง API ปลายทางของ BuildFlow (`POST /api/leads`) โดยจับคู่ฟิลด์ดังนี้:
+
+| ฟิลด์ต้นทาง (VQ Schema) | ฟิลด์ปลายทาง (BuildFlow Schema) | ประเภทข้อมูล | คำอธิบาย / กฎการประมวลผล |
+| :--- | :--- | :---: | :--- |
+| `customerName` | `customer_name` | `String` | ชื่อลูกค้าผู้รับบริการติดตั้ง |
+| `customerPhone` | `customer_phone` | `String` | เบอร์ติดต่อลูกค้า |
+| `customerAddress` \| `addressZone` | `customer_address` | `Text` | ที่อยู่ในการเข้าไปดำเนินงาน |
+| `latitude` | `customer_latitude` | `Numeric` | พิกัดละติจูด (แปลงเป็น Number) |
+| `longitude` | `customer_longitude` | `Numeric` | พิกัดลองจิจูด (แปลงเป็น Number) |
+| - | `map_url` | `Text` | สร้างอัตโนมัติ: `https://www.google.com/maps?q={lat},{lng}` (ถ้ามีพิกัด) |
+| `installationTypeName` \| `job_type` | `job_type` | `String` | ประเภทของงานบริการติดตั้ง |
+| - | `status` | `String` | กำหนดค่าเริ่มต้นเป็น `"New"` เสมอ |
+| - | `notes` | `Text` | รวมรหัสตั๋ว เขตพื้นที่ และชื่อช่าง: `[Ticket: {ticketNo}] [Zone: {zone}] [Tech: {techName}]` |
+
+### 6.4 ระบบสำรองข้อมูลเมื่อระบบขัดข้อง (Fail-Safe Logs)
+* เมื่อส่งสำเร็จ ข้อมูลประวัติการส่งจะถูกบันทึกลงฐานข้อมูล PostgreSQL ตาราง `integration_logs` และบันทึกลงตาราง `leads` ของฐานข้อมูล `buildflowdb` เพื่อเป็น Single Source of Truth
+* หากเกิดกรณีเครือข่ายขัดข้อง หรือฐานข้อมูลไม่พร้อมทำงาน ระบบหลังบ้านจะเซฟประวัติเป็น JSON ล็อคเก็บในไฟล์ `./data/integration_logs.json` เป็น Fallback สำรองทันที ช่วยการันตีว่าข้อมูลการจ่ายงานติดตั้งจะไม่สูญหายแน่นอน
+
+

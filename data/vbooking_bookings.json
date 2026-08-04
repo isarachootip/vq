@@ -1,0 +1,28 @@
+[
+  {
+    "id": "bk_1785816031324_317284",
+    "booking_ref": "BK-2026-031324",
+    "hold_token": "HOLD_3B54515F130ECC69",
+    "client_id": "CLIENT_TEST_PARTNER_SYS_8DF9BB",
+    "client_ref_id": null,
+    "tech_id": "tech-072",
+    "tech_name": "บริษัท สรพงษ์ เอ็นจิเนียริ่ง จำกัด",
+    "service_category": null,
+    "service_sub_category": "AC_INSTALL_12000BTU",
+    "booking_date": "2026-08-10",
+    "time_slot": "08:00-12:00",
+    "est_duration_hours": 3,
+    "customer_name": "Somsak Test",
+    "customer_phone": "0812345678",
+    "customer_email": null,
+    "location": {
+      "postal_code": "10110"
+    },
+    "payment_status": "PAID",
+    "payment_ref": "TX-1002",
+    "status": "CONFIRMED",
+    "notes": null,
+    "created_at": "2026-08-04T04:00:31.324Z",
+    "updated_at": "2026-08-04T04:00:31.324Z"
+  }
+]
