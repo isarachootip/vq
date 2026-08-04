@@ -22,7 +22,7 @@ const thaiNames = [
   'คุณเกรียงไกร สมบูรณ์',
   'คุณวิลาวัลย์ เจริญสุข',
   'คุณชัยสิทธิ์ โปรเซอร์วิส',
-  'คุณนลินี แสงสุวรรณ'
+  'คุณนลินี แสนสุวรรณ'
 ];
 
 // Tech mapping
@@ -69,8 +69,6 @@ const timeSlots = [
   '09:00 - 17:00 (Full Day)'
 ];
 
-const statuses = ['Pending Dispatch', 'Scheduled', 'Dispatched to BuildFlow', 'Passed (Closed)'];
-
 const generatedBookings = [];
 let idCounter = 1015;
 
@@ -92,18 +90,8 @@ for (let day = 5; day <= 30; day++) {
     const job = jobs[(day + k * 11) % jobs.length];
     const timeSlot = timeSlots[(day + k * 5) % timeSlots.length];
     
-    // Choose status based on date vs current date (Aug 4)
-    // All of these are after August 4th, so they are future bookings.
-    // They can be Pending Dispatch or Scheduled. Let's make some already Dispatched to BuildFlow for testing.
-    let status = 'Pending Dispatch';
-    if (day % 3 === 0) {
-      status = 'Scheduled';
-    } else if (day % 5 === 0) {
-      status = 'Dispatched to BuildFlow';
-    } else if (day % 7 === 0) {
-      status = 'Passed (Closed)';
-    }
-
+    // Status can only be 'Pending Dispatch' or 'Scheduled' (so not yet dispatched)
+    const status = (day + k) % 2 === 0 ? 'Pending Dispatch' : 'Scheduled';
     const tech = techs[(day + k * 9) % techs.length];
     
     const bookingObj = {
@@ -123,7 +111,7 @@ for (let day = 5; day <= 30; day++) {
       branchId: tech.branchId
     };
 
-    if (status !== 'Pending Dispatch') {
+    if (status === 'Scheduled') {
       bookingObj.assignedTechTeamId = tech.id;
       bookingObj.assignedTechTeamName = tech.name;
     }
@@ -136,31 +124,41 @@ for (let day = 5; day <= 30; day++) {
 console.log(`Generated ${generatedBookings.length} bookings for August 5 - 30, 2026.`);
 
 // Find where INITIAL_BOOKINGS ends in mockData.ts
+// We want to discard the previously appended bookings and restore to original + new ones
+// The original bookings end with bk-1014:
 const startIndex = mockDataText.indexOf('export const INITIAL_BOOKINGS: QueueBooking[] = [');
 if (startIndex === -1) {
   console.error('Could not find INITIAL_BOOKINGS start');
   process.exit(1);
 }
 
-const endMarker = '];';
-const searchSlice = mockDataText.slice(startIndex);
-const endIndexInSlice = searchSlice.indexOf(endMarker);
-if (endIndexInSlice === -1) {
-  console.error('Could not find INITIAL_BOOKINGS end marker');
+// Find index of bk-1014 to ensure we reset from the original list of 14 bookings
+const marker1014 = 'bk-1014';
+const markerIndex = mockDataText.indexOf(marker1014);
+if (markerIndex === -1) {
+  console.error('Could not find bk-1014 marker');
   process.exit(1);
 }
 
-const fullEndIndex = startIndex + endIndexInSlice + endMarker.length;
+// Find the first closing '];' after bk-1014
+const searchSlice = mockDataText.slice(markerIndex);
+const closingIndex = searchSlice.indexOf('];');
+if (closingIndex === -1) {
+  console.error('Could not find closing marker');
+  process.exit(1);
+}
 
-// Extract existing bookings text
-const existingBookingsText = mockDataText.substring(startIndex, fullEndIndex);
+const fullEndIndex = markerIndex + closingIndex + 2;
 
-// Parse or modify existingBookingsText by replacing the closing '];' with our new bookings
+// The text up to fullEndIndex is the original 14 bookings. We can slice it out and parse it.
+const originalBookingsText = mockDataText.substring(startIndex, fullEndIndex);
+
+// Let's strip the closing '];' and replace it with our new generated bookings
 const newBookingsStr = generatedBookings.map(b => '  ' + JSON.stringify(b, null, 4).replace(/\n/g, '\n  ')).join(',\n') + '\n];';
-const modifiedBookingsText = existingBookingsText.replace(/\n\];$/, ',\n' + newBookingsStr);
+const modifiedBookingsText = originalBookingsText.replace(/\n\];$/, ',\n' + newBookingsStr);
 
 // Assemble new mockData.ts content
 const newMockDataText = mockDataText.substring(0, startIndex) + modifiedBookingsText + mockDataText.substring(fullEndIndex);
 
 fs.writeFileSync(mockDataPath, newMockDataText);
-console.log('Successfully updated src/mockData.ts!');
+console.log('Successfully updated src/mockData.ts with non-dispatched bookings!');
