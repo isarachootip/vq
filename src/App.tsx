@@ -275,6 +275,7 @@ export function App() {
 
   const [bookings, setBookings] = useState<QueueBooking[]>(() => {
     const loaded = loadState<QueueBooking[]>('vfixq_bookings', INITIAL_BOOKINGS);
+    if (!loaded || loaded.length < 30) return INITIAL_BOOKINGS;
     return (loaded || []).map((b) => ({
       ...b,
       status: (b.status as string) === 'Dispatched to KANNA' ? 'Dispatched to BuildFlow' : b.status,
