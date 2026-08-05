@@ -1,15 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import type { QueueBooking, PenaltyRecord } from '../types';
 import {
-  Inbox,
-  CheckCircle2,
-  ArrowUpRight,
-  TrendingUp,
+  Folder,
+  Zap,
   Clock,
-  Bell,
-  BarChart2,
-  Layers,
-  Wrench
+  CheckCircle2,
+  XCircle,
+  TrendingUp,
+  Calendar,
+  Users,
+  FileText,
+  ChevronRight
 } from 'lucide-react';
 
 interface InstallationAnalyticsViewProps {
@@ -17,499 +18,678 @@ interface InstallationAnalyticsViewProps {
   penalties?: PenaltyRecord[];
 }
 
-type PeriodType = 'Weekly' | 'MTD' | 'Yearly';
-
 export const InstallationAnalyticsView: React.FC<InstallationAnalyticsViewProps> = ({
   bookings,
-  penalties = []
+  penalties: _penalties = []
 }) => {
-  const [period, setPeriod] = useState<PeriodType>('MTD');
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [dashboardView, setDashboardView] = useState<'my' | 'company'>('company');
+  const [selectedRegion, setSelectedRegion] = useState<'ALL' | 'BKK' | 'UPC'>('ALL');
 
-  // Stats calculation
-  const pendingCount = bookings.filter(b => b.status === 'Pending Dispatch' || b.status === 'Scheduled').length;
-  const inProgressCount = bookings.filter(b => b.status === 'Dispatched to BuildFlow' || b.status === 'Dispatched to KANNA' || b.status === 'STS In-Progress').length;
-  const resolvedCount = bookings.filter(b => b.status === 'Passed (Closed)').length;
-  const escalatedCount = bookings.filter(b => b.status === 'Penalty E-CN Issued' || b.status === 'QC Inspection').length + penalties.length;
-
-  // Generate trend data based on selected period
-  const chartData = useMemo(() => {
-    if (period === 'Weekly') {
-      // 7 Days
-      const days = ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัส', 'ศุกร์', 'เสาร์', 'อาทิตย์'];
-      return days.map((day, idx) => {
-        const total = [2, 5, 3, 7, 4, 6, 2][idx];
-        const open = [1, 3, 2, 5, 2, 4, 1][idx];
-        const resolved = total - open;
-        return { label: day, total, open, resolved };
-      });
-    } else if (period === 'Yearly') {
-      // 12 Months
-      const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-      return months.map((m, idx) => {
-        const total = [12, 18, 15, 22, 28, 32, 24, 30, 26, 35, 40, 48][idx];
-        const open = [3, 4, 2, 6, 7, 8, 5, 6, 4, 9, 8, 10][idx];
-        const resolved = total - open;
-        return { label: m, total, open, resolved };
-      });
-    } else {
-      // MTD (Month to Date - 31 Days like screenshot: 01 ก.ค., 02 ก.ค. ... 31 ก.ค.)
-      const mtdData = Array.from({ length: 31 }, (_, i) => {
-        const dayNum = String(i + 1).padStart(2, '0');
-        let total = 0;
-        let open = 0;
-        let resolved = 0;
-
-        // Custom curve matching screenshot pattern (peaks around 03 ก.ค. & 09 ก.ค. & 24 ก.ค.)
-        if (i === 2) { total = 5; open = 3; resolved = 2; }
-        else if (i === 8) { total = 2; open = 2; resolved = 0; }
-        else if (i === 21) { total = 3; open = 2; resolved = 1; }
-        else if (i === 23) { total = 6; open = 4; resolved = 2; }
-        else if (i === 24) { total = 2; open = 1; resolved = 1; }
-        else if (i === 27) { total = 4; open = 3; resolved = 1; }
-        else {
-          total = 0; open = 0; resolved = 0;
-        }
-
-        return {
-          label: `${dayNum} ก.ค.`,
-          total,
-          open,
-          resolved
-        };
-      });
-      return mtdData;
+  // Helper to map booking to a value (simulating project budget)
+  const getBookingValue = (b: QueueBooking) => {
+    switch (b.installationTypeId) {
+      case 'inst-built-kitchen':
+        return 150000;
+      case 'inst-aircon-multi':
+        return 45000;
+      case 'inst-flooring-laminate':
+        return 35000;
+      case 'inst-built-closet':
+        return 80000;
+      case 'inst-smart-home':
+        return 25000;
+      case 'inst-curtains-motor':
+        return 40000;
+      default:
+        return 30000;
     }
-  }, [period]);
-
-  // Chart max Y value
-  const maxY = Math.max(...chartData.map(d => d.total), 5);
-
-  // SVG Chart Dimensions
-  const svgWidth = 900;
-  const svgHeight = 240;
-  const paddingX = 40;
-  const paddingY = 30;
-
-  // Helper to map data index to SVG X & Y
-  const getX = (idx: number) => paddingX + (idx / (chartData.length - 1 || 1)) * (svgWidth - 2 * paddingX);
-  const getY = (val: number) => svgHeight - paddingY - (val / maxY) * (svgHeight - 2 * paddingY);
-
-  // Build SVG Path Smooth Bezier
-  const buildSmoothPath = (key: 'total' | 'open' | 'resolved') => {
-    if (chartData.length === 0) return '';
-    let d = `M ${getX(0)} ${getY(chartData[0][key])}`;
-    for (let i = 0; i < chartData.length - 1; i++) {
-      const x0 = getX(i);
-      const y0 = getY(chartData[i][key]);
-      const x1 = getX(i + 1);
-      const y1 = getY(chartData[i + 1][key]);
-      const mx = (x0 + x1) / 2;
-      d += ` C ${mx} ${y0}, ${mx} ${y1}, ${x1} ${y1}`;
-    }
-    return d;
   };
 
-  const totalPath = buildSmoothPath('total');
-  const openPath = buildSmoothPath('open');
-  const resolvedPath = buildSmoothPath('resolved');
+  // Helper to map booking to one of the 5 stages
+  const getStageIndex = (b: QueueBooking) => {
+    if (b.installationTypeId.includes('kitchen') || b.requiredSkillLevel === 3) return 4; // คุยกับลูกค้า
+    if (b.createdFrom.includes('Selling') || b.status === 'Scheduled') return 3; // Submit to Sales
+    if (b.createdFrom.includes('COOHOM')) return 2; // Design & Proposal
+    if (b.requiredSkillLevel === 2) return 1; // Survey for Design
+    return 0; // Design for Purchase (No Survey)
+  };
 
-  // Closed area gradient path
-  const areaTotalPath = `${totalPath} L ${getX(chartData.length - 1)} ${svgHeight - paddingY} L ${getX(0)} ${svgHeight - paddingY} Z`;
+  const stagesDefinition = [
+    { id: 1, title: 'Design for Purchase (No Survey)', color: '#3b82f6' },
+    { id: 2, title: 'Survey for Design (by Area Size)', color: '#10b981' },
+    { id: 3, title: 'Design & Proposal', color: '#f59e0b' },
+    { id: 4, title: 'Submit to Sales', color: '#6366f1' },
+    { id: 5, title: 'คุยกับลูกค้า', color: '#8b5cf6' }
+  ];
+
+  // Region check function (consistent with DashboardView)
+  const isBkkZone = (addressZone: string): boolean => {
+    const upper = addressZone.toUpperCase();
+    if (upper.includes('[UPC]')) return false;
+    return (
+      upper.includes('[BKK]') ||
+      upper.includes('BKK') ||
+      upper.includes('กรุงเทพ') ||
+      upper.includes('นนทบุรี') ||
+      upper.includes('ปทุมธานี') ||
+      upper.includes('สมุทรปราการ')
+    );
+  };
+
+  // 1. Filter bookings based on view tab and region
+  const filteredBookings = useMemo(() => {
+    return bookings.filter(b => {
+      // Region Filter
+      const isBkk = isBkkZone(b.addressZone);
+      const matchesRegion =
+        selectedRegion === 'ALL' ||
+        (selectedRegion === 'BKK' && isBkk) ||
+        (selectedRegion === 'UPC' && !isBkk);
+
+      // View mode (mocking My Tasks filter where only some bookings belong to current coordinator)
+      const matchesView =
+        dashboardView === 'company' ||
+        (dashboardView === 'my' && (b.requiredSkillLevel === 3 || b.status === 'Scheduled'));
+
+      return matchesRegion && matchesView;
+    });
+  }, [bookings, selectedRegion, dashboardView]);
+
+  // 2. Real Stats Calculations
+  const totalCount = filteredBookings.length;
+  const inProgressCount = filteredBookings.filter(
+    b => b.status === 'Dispatched to BuildFlow' || b.status === 'Dispatched to KANNA' || b.status === 'STS In-Progress'
+  ).length;
+  const pendingCount = filteredBookings.filter(
+    b => b.status === 'Pending Dispatch' || b.status === 'Scheduled' || b.status === 'QC Inspection'
+  ).length;
+  const completedCount = filteredBookings.filter(b => b.status === 'Passed (Closed)').length;
+  const cancelledCount = filteredBookings.filter(b => b.status === 'Penalty E-CN Issued').length;
+
+  // 3. Stage Progression calculations
+  const stageStats = useMemo(() => {
+    return stagesDefinition.map((stg, stgIdx) => {
+      const stageBookings = filteredBookings.filter(b => getStageIndex(b) === stgIdx);
+      const pending = stageBookings.filter(b => b.status === 'Pending Dispatch' || b.status === 'Scheduled').length;
+      const active = stageBookings.filter(b => b.status === 'Dispatched to BuildFlow' || b.status === 'Dispatched to KANNA' || b.status === 'STS In-Progress').length;
+      const completed = stageBookings.filter(b => b.status === 'Passed (Closed)').length;
+      return {
+        ...stg,
+        total: stageBookings.length,
+        pending,
+        active,
+        completed
+      };
+    });
+  }, [filteredBookings]);
+
+  // 4. Status distribution for donut chart
+  const pieData = useMemo(() => {
+    const total = totalCount || 1;
+    return [
+      { name: 'กำลังดำเนินการ', value: inProgressCount, color: '#10b981', percent: `${Math.round((inProgressCount / total) * 100)}%` },
+      { name: 'เสร็จสิ้น', value: completedCount, color: '#3b82f6', percent: `${Math.round((completedCount / total) * 100)}%` },
+      { name: 'รอดำเนินการ', value: pendingCount, color: '#f59e0b', percent: `${Math.round((pendingCount / total) * 100)}%` },
+      { name: 'ยกเลิก', value: cancelledCount, color: '#ef4444', percent: `${Math.round((cancelledCount / total) * 100)}%` },
+    ];
+  }, [totalCount, inProgressCount, completedCount, pendingCount, cancelledCount]);
+
+  // Donut chart path drawing using stroke-dasharray
+  const donutRadius = 38;
+  const donutCircumference = 2 * Math.PI * donutRadius; // ~238.76
+
+  // Cumulative value trend & total project value
+  const totalProjectValue = useMemo(() => {
+    return filteredBookings.reduce((sum, b) => sum + getBookingValue(b), 0);
+  }, [filteredBookings]);
+
+  const valueTrendData = useMemo(() => {
+    if (filteredBookings.length === 0) {
+      return [{ label: 'ปัจจุบัน', value: 0 }];
+    }
+    // Group by date
+    const map: Record<string, number> = {};
+    filteredBookings.forEach(b => {
+      const val = getBookingValue(b);
+      map[b.bookingDate] = (map[b.bookingDate] || 0) + val;
+    });
+
+    const sortedDates = Object.keys(map).sort();
+    let cumulative = 0;
+    return sortedDates.map(date => {
+      cumulative += map[date];
+      // Format to dd/mm
+      const parts = date.split('-');
+      const label = parts.length === 3 ? `${parts[2]}/${parts[1]}` : date;
+      return { label, value: cumulative };
+    });
+  }, [filteredBookings]);
+
+  // Format currency
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('th-TH').format(val);
+  };
+
+  // Recent Projects (latest 5 bookings mapped to look like projects)
+  const recentProjects = useMemo(() => {
+    const sorted = [...filteredBookings].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return sorted.slice(0, 5).map(b => {
+      // Create project code e.g. PRJ-2607-1001
+      const dateParts = b.bookingDate.split('-');
+      const yearShort = dateParts[0] ? dateParts[0].slice(2) : '26';
+      const monthStr = dateParts[1] || '07';
+      const pCode = `PRJ-${yearShort}${monthStr}-${b.bookingRef.split('-').pop() || b.id.slice(-4)}`;
+      
+      // Determine stage
+      const stageIdx = getStageIndex(b);
+      const stageName = stagesDefinition[stageIdx].title.split(' ')[0]; // E.g. 'Design' or 'Survey' or 'คุยกับลูกค้า'
+      const stageColor = stagesDefinition[stageIdx].color;
+
+      return {
+        id: b.id,
+        code: pCode,
+        customerName: b.customerName,
+        stageName,
+        stageColor,
+        updatedAt: b.createdAt.includes(' ') ? b.createdAt : `${b.bookingDate} 12:00`
+      };
+    });
+  }, [filteredBookings]);
+
+  // Format YYYY-MM-DD HH:mm to dd/mm/yyyy HH:mm
+  const formatDateTime = (dtStr: string) => {
+    if (!dtStr) return '';
+    const parts = dtStr.split(' ');
+    const dateParts = parts[0].split('-');
+    const time = parts[1] || '12:00';
+    if (dateParts.length !== 3) return dtStr;
+    return `${dateParts[2]}/${dateParts[1]}/${dateParts[0]} ${time}`;
+  };
+
+  // 5. SVG Path for Line Chart
+  const svgLinePath = useMemo(() => {
+    if (valueTrendData.length < 2) return '';
+    const width = 500;
+    const height = 160;
+    const paddingX = 40;
+    const paddingY = 20;
+    const maxVal = Math.max(...valueTrendData.map(d => d.value), 100000);
+
+    const getX = (idx: number) => paddingX + (idx / (valueTrendData.length - 1)) * (width - 2 * paddingX);
+    const getY = (val: number) => height - paddingY - (val / maxVal) * (height - 2 * paddingY);
+
+    let path = `M ${getX(0)} ${getY(valueTrendData[0].value)}`;
+    for (let i = 0; i < valueTrendData.length - 1; i++) {
+      const x0 = getX(i);
+      const y0 = getY(valueTrendData[i].value);
+      const x1 = getX(i + 1);
+      const y1 = getY(valueTrendData[i + 1].value);
+      const mx = (x0 + x1) / 2;
+      path += ` C ${mx} ${y0}, ${mx} ${y1}, ${x1} ${y1}`;
+    }
+    return path;
+  }, [valueTrendData]);
+
+  const svgAreaPath = useMemo(() => {
+    if (valueTrendData.length < 2) return '';
+    const width = 500;
+    const height = 160;
+    const paddingX = 40;
+    const paddingY = 20;
+    const getX = (idx: number) => paddingX + (idx / (valueTrendData.length - 1)) * (width - 2 * paddingX);
+    
+    return `${svgLinePath} L ${getX(valueTrendData.length - 1)} ${height - paddingY} L ${getX(0)} ${height - paddingY} Z`;
+  }, [valueTrendData, svgLinePath]);
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-8 font-sans">
-
-      {/* Top Banner Header */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center space-x-3.5">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-md shadow-indigo-200">
-            <Wrench className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">vService Installation Analytics</h1>
-              <span className="bg-blue-50 text-blue-700 font-bold text-[10px] px-2 py-0.5 rounded-full border border-blue-100">Installer System</span>
-            </div>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">ระบบติดตามคิวงาน บริหารจัดการช่าง และวิเคราะห์สถิติตามรอบเวลาติดตั้ง</p>
-          </div>
+    <div className="space-y-6 animate-fadeIn pb-8 font-sans bg-slate-50/50 -m-6 p-6">
+      
+      {/* Header Info */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+            <span className="text-emerald-600">BuildFlow</span>
+            <span className="text-slate-400">/</span>
+            <span>ภาพรวมโครงการ</span>
+          </h1>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">สรุปภาพรวมการดำเนินงานและสถานะโครงการทั้งหมด</p>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <button className="relative p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer border-0">
-            <Bell size={18} />
-            <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-rose-500"></span>
-          </button>
-
-          <div className="flex items-center space-x-3 border-l border-slate-200 pl-4">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
-              CS
-            </div>
-            <div className="text-xs">
-              <div className="font-bold text-slate-800">CHG System Admin</div>
-              <div className="text-[10px] text-slate-400 font-medium">Administrator</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Top 4 KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* Card 1: Escalated */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex items-center space-x-4 hover:shadow-md transition">
-          <div className="p-3.5 rounded-2xl bg-amber-50 text-amber-600 border border-amber-100 shadow-xs">
-            <ArrowUpRight className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="text-3xl font-black text-slate-800 tracking-tight">{escalatedCount}</div>
-            <div className="text-xs font-bold text-slate-700 mt-0.5">เคสมีปัญหา (Penalty E-CN)</div>
-            <div className="text-[10px] text-slate-400 font-medium">โดนค่าปรับหรือส่งต่อช่างเฉพาะทาง</div>
-          </div>
-        </div>
-
-        {/* Card 2: รอรับเรื่อง (NEW) */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex items-center space-x-4 hover:shadow-md transition">
-          <div className="p-3.5 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-xs">
-            <Inbox className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="text-3xl font-black text-slate-800 tracking-tight">{pendingCount}</div>
-            <div className="text-xs font-bold text-slate-700 mt-0.5">คิวจัดเตรียมงาน (Pending)</div>
-            <div className="text-[10px] text-slate-400 font-medium">รอจัดสรรและส่งมอบงานช่าง</div>
-          </div>
-        </div>
-
-        {/* Card 3: กำลังดำเนินการ */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex items-center space-x-4 hover:shadow-md transition">
-          <div className="p-3.5 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 shadow-xs">
-            <Clock className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="text-3xl font-black text-slate-800 tracking-tight">{inProgressCount}</div>
-            <div className="text-xs font-bold text-slate-700 mt-0.5">กำลังติดตั้ง (BuildFlow/STS)</div>
-            <div className="text-[10px] text-slate-400 font-medium">ช่างอยู่ระหว่างปฏิบัติงานหน้างาน</div>
-          </div>
-        </div>
-
-        {/* Card 4: ปิดงานสำเร็จ (Resolved/Closed) */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex items-center space-x-4 hover:shadow-md transition">
-          <div className="p-3.5 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-xs">
-            <CheckCircle2 className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="text-3xl font-black text-slate-800 tracking-tight">{resolvedCount}</div>
-            <div className="text-xs font-bold text-slate-700 mt-0.5">ผ่าน QC ปิดงานแล้ว</div>
-            <div className="text-[10px] text-slate-400 font-medium">ผ่านการตรวจ QC และปิดงานสำเร็จ</div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Main Analytics Spline Chart */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs space-y-6">
-        
-        {/* Chart Header & Toggles */}
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-100 pb-4">
-          <div>
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-indigo-600" />
-              <h2 className="text-base font-extrabold text-slate-800">
-                จำนวนงานติดตั้ง รายวัน <span className="text-xs font-normal text-slate-400">({period === 'MTD' ? 'Month to Date' : period === 'Weekly' ? 'Weekly' : 'Yearly'})</span>
-              </h2>
-            </div>
-            
-            {/* Chart Legend Badges */}
-            <div className="flex items-center space-x-4 mt-3 text-xs font-bold">
-              <div className="flex items-center space-x-1.5 text-indigo-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 inline-block"></span>
-                <span>งานติดตั้งทั้งหมด <strong className="text-slate-800">{chartData.reduce((s, d) => s + d.total, 0)}</strong></span>
-              </div>
-
-              <div className="flex items-center space-x-1.5 text-amber-500">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-                <span>รอดำเนินการ / กำลังติดตั้ง <strong className="text-slate-800">{chartData.reduce((s, d) => s + d.open, 0)}</strong></span>
-              </div>
-
-              <div className="flex items-center space-x-1.5 text-emerald-500">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-                <span>ปิดงานสำเร็จ <strong className="text-slate-800">{chartData.reduce((s, d) => s + d.resolved, 0)}</strong></span>
-              </div>
-            </div>
-          </div>
-
-          {/* Time Period Filter Pills (Weekly / MTD / Yearly) matching screenshot */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-full border border-slate-200/60">
-            {(['Weekly', 'MTD', 'Yearly'] as const).map((p) => (
+        {/* Top bar controls */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Region selector */}
+          <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+            {(['ALL', 'BKK', 'UPC'] as const).map(reg => (
               <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer border-0 ${
-                  period === p
-                    ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                key={reg}
+                onClick={() => setSelectedRegion(reg)}
+                className={`px-3 py-1 rounded text-[11px] font-bold transition cursor-pointer border-0 ${
+                  selectedRegion === reg
+                    ? 'bg-white text-slate-800 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-700'
                 }`}
               >
-                {p}
+                {reg === 'ALL' ? 'ทุกภูมิภาค (BKK + UPC)' : reg}
               </button>
             ))}
           </div>
+
+          {/* View selector (My Tasks vs Company Dashboard) */}
+          <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+            <button
+              onClick={() => setDashboardView('my')}
+              className={`px-3 py-1 rounded text-[11px] font-bold transition cursor-pointer border-0 flex items-center gap-1 ${
+                dashboardView === 'my'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <Users size={12} />
+              <span>หน้างานส่วนตัว (My Tasks)</span>
+            </button>
+            <button
+              onClick={() => setDashboardView('company')}
+              className={`px-3 py-1 rounded text-[11px] font-bold transition cursor-pointer border-0 flex items-center gap-1 ${
+                dashboardView === 'company'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <TrendingUp size={12} />
+              <span>ภาพรวมบริษัท (Company Dashboard)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 1. Main Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        
+        {/* Card 1: Total */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm flex items-center space-x-3.5 hover:shadow transition">
+          <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100/50">
+            <Folder className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-xs text-slate-400 font-bold">โครงการทั้งหมด</div>
+            <div className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{totalCount}</div>
+            <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
+              <span>↗ 12%</span>
+              <span className="text-slate-400 font-normal">จากช่วงก่อนหน้า</span>
+            </div>
+          </div>
         </div>
 
-        {/* SVG Interactive Spline Chart */}
-        <div className="relative overflow-x-auto pt-2">
-          <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-auto max-h-[300px] overflow-visible">
-            <defs>
-              <linearGradient id="totalAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.25" />
-                <stop offset="100%" stopColor="#6366f1" stopOpacity="0.0" />
-              </linearGradient>
-            </defs>
-
-            {/* Horizontal Grid lines */}
-            {[0, 1, 2, 3, 4, 5].map((val) => {
-              const y = getY(val);
-              return (
-                <g key={`grid-${val}`}>
-                  <line
-                    x1={paddingX}
-                    y1={y}
-                    x2={svgWidth - paddingX}
-                    y2={y}
-                    stroke="#f1f5f9"
-                    strokeWidth="1"
-                    strokeDasharray={val === 0 ? '0' : '4 4'}
-                  />
-                  <text
-                    x={paddingX - 12}
-                    y={y + 4}
-                    fill="#94a3b8"
-                    fontSize="10"
-                    fontWeight="bold"
-                    textAnchor="end"
-                  >
-                    {val}
-                  </text>
-                </g>
-              );
-            })}
-
-            {/* Area Fill for Total */}
-            <path d={areaTotalPath} fill="url(#totalAreaGradient)" />
-
-            {/* Total Line (Purple/Indigo) */}
-            <path d={totalPath} fill="none" stroke="#6366f1" strokeWidth="3" strokeLinecap="round" />
-
-            {/* Open Line (Orange Dashed/Solid) */}
-            <path d={openPath} fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeDasharray="4 4" strokeLinecap="round" />
-
-            {/* Resolved Line (Green) */}
-            <path d={resolvedPath} fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" />
-
-            {/* X Axis Labels & Points */}
-            {chartData.map((d, idx) => {
-              const cx = getX(idx);
-              const cyTotal = getY(d.total);
-              const cyOpen = getY(d.open);
-              const cyResolved = getY(d.resolved);
-              const isHovered = hoveredIndex === idx;
-
-              // Show label every few ticks if MTD to avoid clutter
-              const showLabel = period !== 'MTD' || idx % 2 === 0 || isHovered || d.total > 0;
-
-              return (
-                <g key={`point-${idx}`} onMouseEnter={() => setHoveredIndex(idx)} onMouseLeave={() => setHoveredIndex(null)} className="cursor-pointer">
-                  {/* X Axis Date Label */}
-                  {showLabel && (
-                    <text
-                      x={cx}
-                      y={svgHeight - 6}
-                      fill={isHovered ? '#1e293b' : '#94a3b8'}
-                      fontSize={period === 'MTD' ? '9' : '10'}
-                      fontWeight={isHovered ? 'bold' : '500'}
-                      textAnchor="middle"
-                      transform={`rotate(-25 ${cx} ${svgHeight - 6})`}
-                    >
-                      {d.label}
-                    </text>
-                  )}
-
-                  {/* Total Dot */}
-                  <circle
-                    cx={cx}
-                    cy={cyTotal}
-                    r={isHovered ? 6 : 4}
-                    fill="#6366f1"
-                    stroke="#ffffff"
-                    strokeWidth="2"
-                    className="transition-all"
-                  />
-
-                  {/* Open Dot */}
-                  {d.open > 0 && (
-                    <circle
-                      cx={cx}
-                      cy={cyOpen}
-                      r={isHovered ? 5 : 3.5}
-                      fill="#f59e0b"
-                      stroke="#ffffff"
-                      strokeWidth="1.5"
-                    />
-                  )}
-
-                  {/* Resolved Dot */}
-                  {d.resolved > 0 && (
-                    <circle
-                      cx={cx}
-                      cy={cyResolved}
-                      r={isHovered ? 5 : 3.5}
-                      fill="#10b981"
-                      stroke="#ffffff"
-                      strokeWidth="1.5"
-                    />
-                  )}
-
-                  {/* Interactive vertical hover line */}
-                  {isHovered && (
-                    <line
-                      x1={cx}
-                      y1={paddingY}
-                      x2={cx}
-                      y2={svgHeight - paddingY}
-                      stroke="#6366f1"
-                      strokeWidth="1.5"
-                      strokeDasharray="2 2"
-                    />
-                  )}
-                </g>
-              );
-            })}
-          </svg>
-
-          {/* Hover Tooltip Popup */}
-          {hoveredIndex !== null && chartData[hoveredIndex] && (
-            <div
-              className="absolute z-10 bg-slate-900 text-white rounded-xl px-3 py-2 text-xs shadow-xl pointer-events-none transform -translate-x-1/2 -translate-y-12 animate-fadeIn border border-slate-700"
-              style={{
-                left: `${(hoveredIndex / (chartData.length - 1)) * 90 + 5}%`,
-                top: '20px'
-              }}
-            >
-              <div className="font-bold text-amber-400 text-[11px] border-b border-slate-800 pb-1 mb-1">
-                {chartData[hoveredIndex].label}
-              </div>
-              <div className="space-y-0.5 text-[10px]">
-                <div className="flex justify-between gap-3"><span className="text-indigo-300">Total:</span> <strong className="font-mono text-white">{chartData[hoveredIndex].total}</strong></div>
-                <div className="flex justify-between gap-3"><span className="text-amber-300">Open/Pending:</span> <strong className="font-mono text-white">{chartData[hoveredIndex].open}</strong></div>
-                <div className="flex justify-between gap-3"><span className="text-emerald-300">Resolved:</span> <strong className="font-mono text-white">{chartData[hoveredIndex].resolved}</strong></div>
-              </div>
+        {/* Card 2: In Progress */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm flex items-center space-x-3.5 hover:shadow transition">
+          <div className="p-3 rounded-xl bg-amber-50 text-amber-600 border border-amber-100/50">
+            <Zap className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-xs text-slate-400 font-bold">กำลังดำเนินการ</div>
+            <div className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{inProgressCount}</div>
+            <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
+              <span>↗ 8%</span>
+              <span className="text-slate-400 font-normal">จากช่วงก่อนหน้า</span>
             </div>
-          )}
+          </div>
+        </div>
+
+        {/* Card 3: Pending */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm flex items-center space-x-3.5 hover:shadow transition">
+          <div className="p-3 rounded-xl bg-blue-50 text-blue-600 border border-blue-100/50">
+            <Clock className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-xs text-slate-400 font-bold">รอดำเนินการ</div>
+            <div className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{pendingCount}</div>
+            <div className="text-[10px] text-rose-500 font-bold flex items-center gap-0.5">
+              <span>↘ 5%</span>
+              <span className="text-slate-400 font-normal">จากช่วงก่อนหน้า</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: Completed */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm flex items-center space-x-3.5 hover:shadow transition">
+          <div className="p-3 rounded-xl bg-sky-50 text-sky-600 border border-sky-100/50">
+            <CheckCircle2 className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-xs text-slate-400 font-bold">เสร็จสิ้น</div>
+            <div className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{completedCount}</div>
+            <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
+              <span>↗ 15%</span>
+              <span className="text-slate-400 font-normal">จากช่วงก่อนหน้า</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 5: Cancelled */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm flex items-center space-x-3.5 hover:shadow transition col-span-2 md:col-span-1">
+          <div className="p-3 rounded-xl bg-slate-50 text-slate-400 border border-slate-100">
+            <XCircle className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="text-xs text-slate-400 font-bold">ยกเลิก</div>
+            <div className="text-2xl font-black text-slate-800 tracking-tight mt-0.5">{cancelledCount}</div>
+            <div className="text-[10px] text-slate-400 font-bold flex items-center gap-0.5">
+              <span>- 0%</span>
+              <span className="text-slate-400 font-normal">จากช่วงก่อนหน้า</span>
+            </div>
+          </div>
         </div>
 
       </div>
 
-      {/* SLA & Service Category Performance Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {/* 2. Middle Row: Stage Progression & Ratio Donut */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Panel 1: SLA Performance Metrics */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4">
-          <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-            <Clock className="h-5 w-5 text-blue-600" />
-            <h3 className="font-bold text-slate-800 text-sm">SLA & Response Performance</h3>
+        {/* Stage Progression Card */}
+        <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm lg:col-span-2 space-y-4">
+          <div className="border-b border-slate-100 pb-3 flex justify-between items-center">
+            <div>
+              <h3 className="font-extrabold text-slate-800 text-sm">สถานะโครงการตามขั้นตอน (Stage Progression)</h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">จำนวนโครงการแยกตามขั้นตอนการทำงานและสถานะ</p>
+            </div>
+            <span className="text-xs font-mono font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-lg border border-slate-200">
+              รวมทั้งหมด {totalCount} โครงการ
+            </span>
           </div>
 
-          <div className="space-y-4 text-xs">
-            <div>
-              <div className="flex justify-between text-slate-600 mb-1">
-                <span className="font-medium">เวลาตอบรับเรื่องเฉลี่ย (First Response):</span>
-                <span className="font-bold text-slate-800">14 นาที</span>
-              </div>
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-emerald-500 h-full w-[85%] rounded-full"></div>
-              </div>
-              <p className="text-[10px] text-emerald-600 mt-1 font-semibold">⚡ เร็วกว่าเป้าหมาย SLA (&lt;30 นาที)</p>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-slate-600 mb-1">
-                <span className="font-medium">อัตราปิดงานติดตั้งตามเวลา (SLA Compliance Rate):</span>
-                <span className="font-bold text-slate-800">96.4%</span>
-              </div>
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-blue-600 h-full w-[96%] rounded-full"></div>
-              </div>
-              <p className="text-[10px] text-slate-400 mt-1 font-medium">เป้าหมายองค์กร &gt;95%</p>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-slate-600 mb-1">
-                <span className="font-medium">ความพึงพอใจลูกค้า (CSAT Score):</span>
-                <span className="font-bold text-slate-800">4.8 / 5.0 ⭐</span>
-              </div>
-              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-amber-400 h-full w-[96%] rounded-full"></div>
-              </div>
-              <p className="text-[10px] text-slate-400 mt-1 font-medium">จากผลประเมินบริการ 1,420 เคส</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Panel 2: Category Breakdown */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4">
-          <div className="flex items-center space-x-2 border-b border-slate-100 pb-3">
-            <Layers className="h-5 w-5 text-violet-600" />
-            <h3 className="font-bold text-slate-800 text-sm">สัดส่วนคิวงานตามหมวดหมู่บริการ</h3>
-          </div>
-
-          <div className="space-y-3 text-xs">
-            {[
-              { category: 'งาน Built-in & เฟอร์นิเจอร์', count: 42, pct: 35, color: 'bg-indigo-600' },
-              { category: 'งานแอร์ & ระบบปรับอากาศ', count: 30, pct: 25, color: 'bg-blue-500' },
-              { category: 'งานปูพื้น SPC & กระเบื้อง', count: 24, pct: 20, color: 'bg-emerald-500' },
-              { category: 'งานระบบไฟฟ้า & Smart Home', count: 14, pct: 12, color: 'bg-amber-500' },
-              { category: 'งานประปา & สุขภัณฑ์', count: 10, pct: 8, color: 'bg-purple-500' },
-            ].map((cat) => (
-              <div key={cat.category}>
-                <div className="flex justify-between text-slate-600 mb-1">
-                  <span className="font-medium truncate">{cat.category}</span>
-                  <span className="font-bold text-slate-800">{cat.count} งาน ({cat.pct}%)</span>
+          {/* Flow Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 pt-1">
+            {stageStats.map((stg, index) => (
+              <div
+                key={stg.title}
+                className="p-3 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition flex flex-col justify-between space-y-3"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white" style={{ backgroundColor: stg.color }}>
+                      {index + 1}
+                    </span>
+                    <span className="text-[11px] font-black text-slate-800">{stg.total} โครงการ</span>
+                  </div>
+                  <h4 className="text-[10px] font-extrabold text-slate-600 mt-2 leading-tight min-h-8">
+                    {stg.title}
+                  </h4>
                 </div>
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                  <div className={`${cat.color} h-full rounded-full`} style={{ width: `${cat.pct}%` }}></div>
+
+                <div className="space-y-1 text-[9px] font-medium border-t border-slate-200/50 pt-2 text-slate-500">
+                  <div className="flex justify-between">
+                    <span>ยังไม่เริ่ม:</span>
+                    <strong className="text-slate-700">{stg.pending}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>กำลังดำเนินการ:</span>
+                    <strong className="text-amber-600">{stg.active}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>เสร็จสิ้น:</span>
+                    <strong className="text-emerald-600">{stg.completed}</strong>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Panel 3: Recent Activity Log */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <div className="flex items-center space-x-2">
-              <BarChart2 className="h-5 w-5 text-emerald-600" />
-              <h3 className="font-bold text-slate-800 text-sm">คิวงานติดตั้งล่าสุด (Installation Logs)</h3>
-            </div>
-            <span className="text-[10px] text-slate-400 font-mono">Live Sync</span>
+        {/* Status Ratio Donut Chart */}
+        <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4 flex flex-col justify-between">
+          <div className="border-b border-slate-100 pb-3">
+            <h3 className="font-extrabold text-slate-800 text-sm">โครงการตามสถานะ (Status Ratio)</h3>
+            <p className="text-[10px] text-slate-400 mt-0.5">สัดส่วนร้อยละของโครงการแต่ละประเภท</p>
           </div>
 
-          <div className="space-y-2.5">
-            {bookings.slice(0, 4).map((b) => (
-              <div key={b.id} className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs hover:bg-slate-100/80 transition">
-                <div className="min-w-0 pr-2">
-                  <div className="font-bold text-slate-800 truncate">{b.bookingRef}</div>
-                  <div className="text-[10px] text-slate-500 truncate">{b.customerName} • {b.installationTypeName}</div>
-                </div>
-                <span className={`px-2 py-0.5 rounded text-[9px] font-bold shrink-0 ${
-                  b.status === 'Passed (Closed)' ? 'bg-emerald-100 text-emerald-700' :
-                  b.status === 'Penalty E-CN Issued' ? 'bg-rose-100 text-rose-700' :
-                  'bg-indigo-100 text-indigo-700'
-                }`}>
-                  {b.status}
-                </span>
+          <div className="flex items-center justify-around gap-2 my-auto">
+            {/* SVG Donut */}
+            <div className="relative w-28 h-28 shrink-0">
+              <svg className="w-full h-full" viewBox="0 0 100 100">
+                {/* Background Track */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={donutRadius}
+                  fill="transparent"
+                  stroke="#f1f5f9"
+                  strokeWidth="11"
+                />
+                
+                {/* Dynamically drawing segments */}
+                {(() => {
+                  let accumulatedPercent = 0;
+                  return pieData.map((seg) => {
+                    if (seg.value === 0) return null;
+                    const segmentLength = (seg.value / (totalCount || 1)) * donutCircumference;
+                    const strokeOffset = donutCircumference * (1 - accumulatedPercent);
+                    accumulatedPercent += (seg.value / (totalCount || 1));
+
+                    return (
+                      <circle
+                        key={seg.name}
+                        cx="50"
+                        cy="50"
+                        r={donutRadius}
+                        fill="transparent"
+                        stroke={seg.color}
+                        strokeWidth="11"
+                        strokeDasharray={`${segmentLength} ${donutCircumference}`}
+                        strokeDashoffset={strokeOffset}
+                        transform="rotate(-90 50 50)"
+                        strokeLinecap="round"
+                        className="transition-all duration-500"
+                      />
+                    );
+                  });
+                })()}
+              </svg>
+              {/* Center Text */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span className="text-lg font-black text-slate-800 leading-none">{totalCount}</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">โครงการ</span>
               </div>
-            ))}
+            </div>
+
+            {/* Legends */}
+            <div className="space-y-1.5 text-[10px] font-bold w-full pl-3">
+              {pieData.map((seg) => (
+                <div key={seg.name} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5 text-slate-500">
+                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: seg.color }}></span>
+                    <span>{seg.name}</span>
+                  </div>
+                  <div className="text-slate-800">
+                    {seg.value} <span className="text-[9px] text-slate-400 font-medium">({seg.percent})</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+
+      </div>
+
+      {/* 3. Bottom Row: Cumulative Value Chart, Recent Projects Table, & Side Lists */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        {/* Cumulative Value Line/Area Chart */}
+        <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4 flex flex-col justify-between">
+          <div>
+            <h3 className="font-extrabold text-slate-800 text-sm">มูลค่าโครงการ (รวมทุกสถานะ)</h3>
+            <div className="text-2xl font-black text-emerald-600 mt-1 tracking-tight">
+              {formatCurrency(totalProjectValue)} <span className="text-xs font-bold text-slate-400">บาท</span>
+            </div>
+            <div className="text-[10px] text-emerald-500 font-bold mt-0.5">
+              ↗ 18% <span className="text-slate-400 font-normal">จากช่วงก่อนหน้า</span>
+            </div>
+          </div>
+
+          {/* Area Spline SVG */}
+          <div className="relative pt-2">
+            <svg viewBox="0 0 500 160" className="w-full h-auto overflow-visible">
+              <defs>
+                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              {/* Area Path */}
+              {svgAreaPath && <path d={svgAreaPath} fill="url(#chartGrad)" />}
+
+              {/* Spline Path */}
+              {svgLinePath && (
+                <path d={svgLinePath} fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" />
+              )}
+
+              {/* Grid line at bottom */}
+              <line x1="40" y1="140" x2="460" y2="140" stroke="#f1f5f9" strokeWidth="1" />
+
+              {/* Dots and Labels */}
+              {valueTrendData.map((d, idx) => {
+                const width = 500;
+                const height = 160;
+                const paddingX = 40;
+                const paddingY = 20;
+                const maxVal = Math.max(...valueTrendData.map(val => val.value), 100000);
+                const x = paddingX + (idx / (valueTrendData.length - 1)) * (width - 2 * paddingX);
+                const y = height - paddingY - (d.value / maxVal) * (height - 2 * paddingY);
+
+                // Show only 4 labels to avoid clutter
+                const showLabel = idx === 0 || idx === Math.floor(valueTrendData.length / 3) || idx === Math.floor(valueTrendData.length * 2 / 3) || idx === valueTrendData.length - 1;
+
+                return (
+                  <g key={d.label}>
+                    {showLabel && (
+                      <text x={x} y="152" fill="#94a3b8" fontSize="9" textAnchor="middle" fontWeight="bold">
+                        {d.label}
+                      </text>
+                    )}
+                    <circle cx={x} cy={y} r="3.5" fill="#10b981" stroke="#ffffff" strokeWidth="1.5" />
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+        </div>
+
+        {/* Recent Projects Table */}
+        <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-4 flex flex-col justify-between">
+          <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+            <div>
+              <h3 className="font-extrabold text-slate-800 text-sm">โครงการล่าสุด (Recent Projects)</h3>
+              <p className="text-[10px] text-slate-400 mt-0.5">รายการโครงการ 5 ลำดับล่าสุดที่มีการเคลื่อนไหว</p>
+            </div>
+            <span className="text-[10px] text-emerald-600 font-extrabold cursor-pointer hover:underline flex items-center">
+              ดูทั้งหมด <ChevronRight size={12} />
+            </span>
+          </div>
+
+          <div className="overflow-x-auto my-auto">
+            <table className="w-full text-xs text-left">
+              <thead>
+                <tr className="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100/80">
+                  <th className="pb-2">รหัสโครงการ</th>
+                  <th className="pb-2">ชื่อลูกค้า</th>
+                  <th className="pb-2 text-center">ขั้นตอนปัจจุบัน</th>
+                  <th className="pb-2 text-right">อัปเดตล่าสุด</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100/50 font-bold text-slate-700">
+                {recentProjects.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-4 text-center text-slate-400 italic">ไม่มีข้อมูลโครงการใหม่</td>
+                  </tr>
+                ) : (
+                  recentProjects.map((p) => (
+                    <tr key={p.id} className="hover:bg-slate-50/50 transition">
+                      <td className="py-2.5 font-mono text-[10px] font-extrabold text-slate-500">{p.code}</td>
+                      <td className="py-2.5 max-w-[80px] truncate">{p.customerName}</td>
+                      <td className="py-2.5 text-center">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold text-white" style={{ backgroundColor: p.stageColor }}>
+                          {p.stageName}
+                        </span>
+                      </td>
+                      <td className="py-2.5 text-right font-mono text-[10px] text-slate-400 font-medium">{formatDateTime(p.updatedAt).split(' ')[0]}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Today's Tasks & Pending Docs lists */}
+        <div className="space-y-4 flex flex-col justify-between">
+          
+          {/* Today's Tasks widget */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-4.5 shadow-sm space-y-3 flex-1 flex flex-col justify-between">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+              <h4 className="font-extrabold text-slate-800 text-xs flex items-center gap-1.5">
+                <Calendar size={14} className="text-emerald-600" />
+                <span>กิจกรรมวันนี้ (Today's Tasks)</span>
+              </h4>
+              <span className="text-[10px] text-emerald-600 font-extrabold cursor-pointer hover:underline">ดูทั้งหมด</span>
+            </div>
+
+            <div className="space-y-2 text-[11px] font-bold text-slate-600 py-1">
+              <div className="p-2 rounded-xl bg-slate-50 border border-slate-100/50 flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                  <span>นัดหมายเข้าพบลูกค้า</span>
+                </div>
+                <strong className="text-slate-800">{filteredBookings.filter(b => b.status === 'Scheduled').length} รายการ</strong>
+              </div>
+
+              <div className="p-2 rounded-xl bg-slate-50 border border-slate-100/50 flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span>สำรวจหน้างาน</span>
+                </div>
+                <strong className="text-slate-800">{filteredBookings.filter(b => getStageIndex(b) === 1).length} รายการ</strong>
+              </div>
+
+              <div className="p-2 rounded-xl bg-slate-50 border border-slate-100/50 flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                  <span>ส่งแบบ/เสนอราคา</span>
+                </div>
+                <strong className="text-slate-800">{filteredBookings.filter(b => getStageIndex(b) === 3).length} รายการ</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Pending Docs widget */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-4.5 shadow-sm space-y-3 flex-1 flex flex-col justify-between">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-2">
+              <h4 className="font-extrabold text-slate-800 text-xs flex items-center gap-1.5">
+                <FileText size={14} className="text-emerald-600" />
+                <span>เอกสารที่รอดำเนินการ (Pending Docs)</span>
+              </h4>
+              <span className="text-[10px] text-emerald-600 font-extrabold cursor-pointer hover:underline">ดูทั้งหมด</span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500">
+              <div className="p-2 rounded-xl bg-rose-50/50 border border-rose-100/40 flex justify-between items-center">
+                <span>ใบประเมินราคา</span>
+                <span className="px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-700 text-[9px] font-extrabold">12</span>
+              </div>
+              <div className="p-2 rounded-xl bg-amber-50/50 border border-amber-100/40 flex justify-between items-center">
+                <span>แบบ 3D</span>
+                <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-extrabold">9</span>
+              </div>
+              <div className="p-2 rounded-xl bg-blue-50/50 border border-blue-100/40 flex justify-between items-center">
+                <span>แบบแปลน</span>
+                <span className="px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[9px] font-extrabold">15</span>
+              </div>
+              <div className="p-2 rounded-xl bg-emerald-50/50 border border-emerald-100/40 flex justify-between items-center">
+                <span>BOQ/รายการวัสดุ</span>
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-extrabold">7</span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div>
