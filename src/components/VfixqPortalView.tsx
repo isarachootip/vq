@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Branch, QueueBooking, PortalBanner, ServiceItem, Zone } from '../types';
 import { CustomDateInput } from './CustomDateInput';
+import { HouseLogo } from './HouseLogo';
 import { SERVICE_ZONES } from '../mockData';
 import { 
   ShoppingBag, 
@@ -276,11 +277,11 @@ export const VfixqPortalView: React.FC<VfixqPortalViewProps> = ({
       {/* 1. CUSTOM STICKY PORTAL HEADER */}
       <header className="v-panel p-4 bg-white flex items-center justify-between border border-slate-200">
         <div className="flex items-center space-x-2.5">
-          <div className="bg-amber-500 text-slate-900 font-black px-2.5 py-1 rounded-md text-sm md:text-base tracking-widest shadow-md flex items-center gap-1.5 animate-pulse">
-            <ShoppingBag className="h-4.5 w-4.5 stroke-[2.5]" />
-            <span>vService Portal</span>
+          <div className="bg-amber-500 text-white font-black px-2.5 py-1 rounded-md text-sm md:text-base tracking-wider shadow-md flex items-center gap-1.5">
+            <HouseLogo size={36} color="white" />
+            <span>PMT Design &amp; Renovate</span>
           </div>
-          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest hidden sm:inline">| Vfixq Engine</span>
+          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest hidden sm:inline">| Portal</span>
         </div>
 
         <div className="relative max-w-xs flex-1 mx-4 hidden sm:block">

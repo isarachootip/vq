@@ -1,4 +1,4 @@
-import { BuildFlowIcon } from './BuildFlowIcon';
+import { HouseLogo } from './HouseLogo';
 import { Calendar, ShieldAlert, Award, RefreshCw, LayoutDashboard, Cpu, Users, AlertCircle } from 'lucide-react';
 
 interface HeaderProps {
@@ -35,21 +35,21 @@ export const Header: React.FC<HeaderProps> = ({
           
           {/* Logo & Title */}
           <div className="flex items-center space-x-3">
-            <div className="h-10 w-10 rounded-xl bg-purple-900/40 border border-purple-500/30 flex items-center justify-center shadow-lg shadow-purple-500/20 p-2">
-              <BuildFlowIcon className="h-6 w-6" />
+            <div className="h-10 w-16 rounded-xl bg-purple-900/40 border border-purple-500/30 flex items-center justify-center shadow-lg shadow-purple-500/20 p-1">
+              <HouseLogo size={52} color="white" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <h1 className="text-xl font-bold bg-gradient-to-r from-white via-purple-100 to-purple-300 bg-clip-text text-transparent">
-                  Installer Management System
+                  PMT - Installer Management System
                 </h1>
                 <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center gap-1">
-                  <BuildFlowIcon className="h-3 w-3" />
-                  <span>BuildFlow Integrated</span>
+                  <HouseLogo size={18} color="currentColor" />
+                  <span>PMT Integrated</span>
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                ระบบจอง จัดคิว ประเมินทักษะ และลงโทษช่างตามสถาปัตยกรรม (E-ordering ↔ BuildFlow ↔ STS ↔ QC ↔ E-CN)
+                ระบบจอง จัดคิว ประเมินทักษะ และลงโทษช่างตามสถาปัตยกรรม (E-ordering ↔ PMT ↔ STS ↔ QC ↔ E-CN)
               </p>
             </div>
           </div>
