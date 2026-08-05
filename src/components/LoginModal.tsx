@@ -7,8 +7,6 @@ import {
   Eye,
   EyeOff,
   LogIn,
-  ShieldCheck,
-  Building,
   ShieldAlert,
   ArrowLeft
 } from 'lucide-react';
@@ -47,7 +45,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       const matched = users.find(
         (u) =>
           (u.username.toLowerCase() === cleanUser || u.email.toLowerCase() === cleanUser) &&
-          (u.password === password || password === 'p123' || password === 'Password@123')
+          u.password === password
       );
 
       if (matched) {
@@ -64,15 +62,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }, 400);
   };
 
-  const handleDemoLogin = (demoUsername: string, demoPass: string) => {
-    setUsername(demoUsername);
-    setPassword(demoPass);
-    setErrorMsg('');
-    const matched = users.find((u) => u.username === demoUsername || u.id === demoUsername);
-    if (matched) {
-      onLoginSuccess(matched);
-    }
-  };
 
   return (
     <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-fadeIn font-sans">
@@ -160,58 +149,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
           </button>
         </form>
 
-        {/* Demo Accounts Quick Login */}
-        <div className="pt-4 border-t border-slate-100 space-y-2">
-          <p className="text-[11px] font-bold text-slate-400 text-center uppercase tracking-wider">
-            ⚡ ปุ่มลัดเข้าสู่ระบบทดสอบ (Demo Accounts)
-          </p>
-
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
-            <button
-              onClick={() => handleDemoLogin('sysadmin', 'Password@123')}
-              className="p-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-900 font-bold border border-purple-200 transition flex items-center justify-between cursor-pointer text-left"
-            >
-              <div className="flex items-center space-x-1.5">
-                <ShieldCheck className="h-3.5 w-3.5 text-purple-600" />
-                <span>sysadmin</span>
-              </div>
-              <span className="text-[9px] text-purple-600 font-mono">Password@123</span>
-            </button>
-
-            <button
-              onClick={() => handleDemoLogin('admin_center', 'Password@123')}
-              className="p-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-900 font-bold border border-indigo-200 transition flex items-center justify-between cursor-pointer text-left"
-            >
-              <div className="flex items-center space-x-1.5">
-                <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
-                <span>admin_center</span>
-              </div>
-              <span className="text-[9px] text-indigo-600 font-mono">Password@123</span>
-            </button>
-
-            <button
-              onClick={() => handleDemoLogin('cs_rama9', 'Password@123')}
-              className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 font-bold border border-emerald-200 transition flex items-center justify-between cursor-pointer text-left"
-            >
-              <div className="flex items-center space-x-1.5">
-                <Building className="h-3.5 w-3.5 text-emerald-600" />
-                <span>cs_rama9</span>
-              </div>
-              <span className="text-[9px] text-emerald-600 font-mono">Password@123</span>
-            </button>
-
-            <button
-              onClick={() => handleDemoLogin('tech_t-silv-001', 'p123')}
-              className="p-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold border border-amber-200 transition flex items-center justify-between cursor-pointer text-left"
-            >
-              <div className="flex items-center space-x-1.5">
-                <Wrench className="h-3.5 w-3.5 text-amber-600" />
-                <span>tech_t-silv-001</span>
-              </div>
-              <span className="text-[9px] text-amber-700 font-mono font-bold">p123</span>
-            </button>
-          </div>
-        </div>
 
       </div>
     </div>
