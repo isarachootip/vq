@@ -7,8 +7,6 @@ import { BuildFlowIcon } from './BuildFlowIcon';
 import { parseCoordinatesFromText, formatLatDms, formatLngDms, reverseGeocodeAddress } from '../utils/coordinateUtils';
 import { 
   Clock, 
-  CheckCircle2, 
-  AlertTriangle, 
   Filter, 
   MapPin, 
   ShieldAlert, 
@@ -20,7 +18,9 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCheck,
-  Sparkles
+  Sparkles,
+  Folder,
+  FileText
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -73,52 +73,142 @@ export const isBkkZone = (z: { name?: string; code?: string; id?: string } | str
   );
 };
 
-export const detectZoneFromCoordinates = (lat: number, lng: number): { region: 'BKK' | 'UPC'; zone: string } => {
+export const detectZoneFromCoordinates = (
+  lat: number,
+  lng: number,
+  address?: string,
+  allZonesList?: Zone[]
+): { region: 'BKK' | 'UPC'; zone: string } => {
   if (isNaN(lat) || isNaN(lng)) {
-    return { region: 'BKK', zone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)' };
+    return { region: 'BKK', zone: '[BKK] กรุงเทพฯ ชั้นใน (เมืองเก่า / พญาไท - ราชเทวี)' };
   }
 
-  // BKK Metro Area bounding box: Lat 13.35 - 14.25, Lng 100.2 - 100.95
+  // 1. Try matching by district / province name in address (More specific than postcode)
+  if (address && allZonesList) {
+    // Check for province first
+    if (address.includes('นนทบุรี')) {
+      const z = allZonesList.find(z => z.code === 'Z02');
+      if (z) return { region: 'BKK', zone: z.name };
+    }
+    if (address.includes('ปทุมธานี')) {
+      const z = allZonesList.find(z => z.code === 'Z03');
+      if (z) return { region: 'BKK', zone: z.name };
+    }
+    if (address.includes('สมุทรปราการ')) {
+      const z = allZonesList.find(z => z.code === 'Z04');
+      if (z) return { region: 'BKK', zone: z.name };
+    }
+
+    // Check Bangkok districts
+    const khets = [
+      { code: 'Z01-C1', names: ["พระนคร", "ดุสิต", "ป้อมปราบ", "สัมพันธวงศ์", "พญาไท", "ราชเทวี"] },
+      { code: 'Z01-C2', names: ["ปทุมวัน", "บางรัก", "สาทร", "ยานนาวา", "บางคอแหลม"] },
+      { code: 'Z01-C3', names: ["ดินแดง", "ห้วยขวาง", "วัฒนา", "คลองเตย"] },
+      { code: 'Z01-N1', names: ["จตุจักร", "บางซื่อ", "ลาดพร้าว"] },
+      { code: 'Z01-N2', names: ["หลักสี่", "ดอนเมือง", "สายไหม", "บางเขน"] },
+      { code: 'Z01-E1', names: ["บางกะปิ", "บึงกุ่ม", "สะพานสูง", "วังทองหลาง", "คันนายาว"] },
+      { code: 'Z01-E2', names: ["คลองสามวา", "หนองจอก", "มีนบุรี", "ลาดกระบัง"] },
+      { code: 'Z01-SE', names: ["ประเวศ", "สวนหลวง", "บางนา"] },
+      { code: 'Z01-W1', names: ["ธนบุรี", "คลองสาน", "บางกอกใหญ่", "บางกอกน้อย", "บางพลัด", "ตลิ่งชัน", "ทวีวัฒนา"] },
+      { code: 'Z01-W2', names: ["ภาษีเจริญ", "บางแค", "หนองแขม", "ราษฎร์บูรณะ", "ทุ่งครุ", "จอมทอง", "บางขุนเทียน", "บางบอน"] }
+    ];
+
+    for (const kh of khets) {
+      for (const name of kh.names) {
+        if (address.includes(name)) {
+          const z = allZonesList.find(z => z.code === kh.code);
+          if (z) return { region: 'BKK', zone: z.name };
+        }
+      }
+    }
+
+    // Check UPC regions by searching for province name matching
+    const upcZones = allZonesList.filter(z => !isBkkZone(z));
+    for (const z of upcZones) {
+      const cleanName = z.name.replace(/\[.*?\]/g, '').trim(); // Remove tag like [CT], [ET]
+      if (address.includes(cleanName) || (z.description && address.includes(z.description))) {
+        return { region: 'UPC', zone: z.name };
+      }
+    }
+  }
+
+  // 2. Try matching by postcode (5-digit number) from address as fallback
+  let postcode: string | null = null;
+  if (address) {
+    const match = address.match(/\b\d{5}\b/);
+    if (match) {
+      postcode = match[0];
+    }
+  }
+
+  if (postcode && allZonesList) {
+    const matchedZone = allZonesList.find(z => 
+      z.coverageZipcodes && z.coverageZipcodes.includes(postcode!)
+    );
+    if (matchedZone) {
+      const region = isBkkZone(matchedZone) ? 'BKK' : 'UPC';
+      return { region, zone: matchedZone.name };
+    }
+  }
+
+  // 3. Fallback: Coordinate bounding boxes
   if (lat >= 13.35 && lat <= 14.25 && lng >= 100.2 && lng <= 100.95) {
+    let targetCode = 'Z01-C3'; // Default BKK Central
     if (lat >= 13.95) {
-      return { region: 'BKK', zone: 'Zone 3: ปทุมธานี (รังสิต - ลำลูกกา)' };
+      targetCode = 'Z03'; // ปทุมธานี
+    } else if (lat >= 13.82 && lng <= 100.53) {
+      targetCode = 'Z02'; // นนทบุรี
+    } else if (lat <= 13.62 && lng >= 100.6) {
+      targetCode = 'Z04'; // สมุทรปราการ
+    } else if (lng <= 100.48) {
+      targetCode = 'Z01-W1'; // ฝั่งธนบุรีเหนือ
+    } else if (lat >= 13.80) {
+      targetCode = 'Z01-N1'; // กรุงเทพฯ ตอนเหนือ
+    } else if (lng >= 100.65) {
+      targetCode = 'Z01-E1'; // กรุงเทพฯ ตะวันออก
+    } else if (lat <= 13.68 && lng >= 100.60) {
+      targetCode = 'Z01-SE'; // กรุงเทพฯ ตะวันออกใต้
     }
-    if (lat >= 13.82 && lng <= 100.53) {
-      return { region: 'BKK', zone: 'Zone 2: นนทบุรี (ราชพฤกษ์ - แจ้งวัฒนะ)' };
+
+    if (allZonesList) {
+      const z = allZonesList.find(x => x.code === targetCode);
+      if (z) return { region: 'BKK', zone: z.name };
     }
-    if (lat <= 13.62 && lng >= 100.6) {
-      return { region: 'BKK', zone: 'Zone 4: สมุทรปราการ (เทพารักษ์ - ศรีนครินทร์)' };
-    }
-    if (lng <= 100.48) {
-      return { region: 'BKK', zone: 'Zone 5: กรุงเทพฯ ฝั่งธนบุรี (ตลิ่งชัน - บางแค)' };
-    }
-    if (lat >= 13.80) {
-      return { region: 'BKK', zone: 'Zone 6: กรุงเทพฯ ตอนเหนือ (จตุจักร - ลาดพร้าว)' };
-    }
-    return { region: 'BKK', zone: 'Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)' };
+
+    // Hardcoded defaults if allZonesList is empty/unavailable
+    const defaultNames: Record<string, string> = {
+      'Z03': '[BKK] ปทุมธานี',
+      'Z02': '[BKK] นนทบุรี',
+      'Z04': '[BKK] สมุทรปราการ',
+      'Z01-W1': '[BKK] กรุงเทพฯ ฝั่งธนบุรีเหนือ (ธนบุรี - คลองสาน - บางกอกน้อย - บางพลัด - ตลิ่งชัน - ทวีวัฒนา)',
+      'Z01-N1': '[BKK] กรุงเทพฯ เหนือตอนล่าง (จตุจักร - บางซื่อ - ลาดพร้าว)',
+      'Z01-E1': '[BKK] กรุงเทพฯ ตะวันออก (บางกะปิ - บึงกุ่ม - สะพานสูง - วังทองหลาง - คันนายาว)',
+      'Z01-SE': '[BKK] กรุงเทพฯ ตะวันออกใต้ (ประเวศ - สวนหลวง - บางนา)',
+      'Z01-C3': '[BKK] กรุงเทพฯ ชั้นใน (สุขุมวิท / ดินแดง - ห้วยขวาง - คลองเตย)'
+    };
+    return { region: 'BKK', zone: defaultNames[targetCode] || '[BKK] กรุงเทพฯ ชั้นใน (เมืองเก่า / พญาไท - ราชเทวี)' };
   }
 
-  // UPC Regions
+  // UPC Bounding box fallback
+  let upcZoneCode = 'Z05'; // Default Central CT กำแพงเพชร
   if (lat < 11.8) {
-    return { region: 'UPC', zone: 'Zone UPC-S1: ภูเก็ต - สุราษฎร์ธานี' };
-  }
-  if (lat > 17.2) {
-    return { region: 'UPC', zone: 'Zone UPC-N1: เชียงใหม่ - ลำพูน' };
-  }
-  if (lng > 101.5) {
-    return { region: 'UPC', zone: 'Zone UPC-NE1: ขอนแก่น - อุดรธานี' };
-  }
-  if (lng > 100.8 && lat <= 13.8) {
-    return { region: 'UPC', zone: 'Zone UPC-E1: ชลบุรี - ระยอง' };
-  }
-  if (lng < 100.1 && lat >= 13.2 && lat <= 14.8) {
-    return { region: 'UPC', zone: 'Zone UPC-W1: นครปฐม - ราชบุรี' };
-  }
-  if (lat >= 14.8) {
-    return { region: 'UPC', zone: 'Zone UPC-C1: พิษณุโลก - นครสวรรค์' };
+    upcZoneCode = 'Z78'; // [ST] ภูเก็ต
+  } else if (lat > 17.2) {
+    upcZoneCode = 'Z49'; // [NT] เชียงใหม่
+  } else if (lng > 101.5) {
+    upcZoneCode = 'Z30'; // [NE] ขอนแก่น
+  } else if (lng > 100.8 && lat <= 13.8) {
+    upcZoneCode = 'Z26'; // [ET] ชลบุรี
   }
 
-  return { region: 'UPC', zone: 'Zone UPC-S1: ภูเก็ต - สุราษฎร์ธานี' };
+  if (allZonesList) {
+    const z = allZonesList.find(x => x.code === upcZoneCode);
+    if (z) return { region: 'UPC', zone: z.name };
+    const anyUpc = allZonesList.find(x => !isBkkZone(x));
+    if (anyUpc) return { region: 'UPC', zone: anyUpc.name };
+  }
+
+  return { region: 'UPC', zone: '[CT] กำแพงเพชร' };
 };
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -136,20 +226,54 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   }, [zones]);
 
   const bkkZones = useMemo(() => {
-    return allZonesList.filter(z => z.name.includes('[BKK]') || z.code.includes('Z01') || z.id.includes('bkk') || !z.name.includes('[UPC]'));
+    return allZonesList.filter(z => isBkkZone(z));
   }, [allZonesList]);
 
   const upcZones = useMemo(() => {
-    return allZonesList.filter(z => z.name.includes('[UPC]') || z.code.includes('Z02') || z.id.includes('upc') || z.name.includes('ภาค'));
+    return allZonesList.filter(z => !isBkkZone(z));
   }, [allZonesList]);
 
-  const [selectedDate, setSelectedDate] = useState<string | null>('2026-07-24'); // Default to 24th to highlight demo data
-  const [viewYear, setViewYear] = useState<number>(2026);
-  const [viewMonth, setViewMonth] = useState<number>(7); // 1 = Jan, 7 = Jul
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  const [selectedDate, setSelectedDate] = useState<string | null>(todayStr);
+  const [viewYear, setViewYear] = useState<number>(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState<number>(today.getMonth() + 1); // 1 = Jan
   const [selectedRegion, setSelectedRegion] = useState<'ALL' | 'BKK' | 'UPC'>('ALL');
   const [selectedZone, setSelectedZone] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // Project type categorization logic
+  const getBookingCategory = (b: QueueBooking) => {
+    const typeId = b.installationTypeId.toLowerCase();
+    
+    // Assign some specific booking IDs to 'ma' and 'new' to populate mock data
+    if (b.id === 'bk-1007' || b.id === 'bk-1013' || b.id === 'bk-1020') {
+      return 'ma';
+    }
+    if (b.id === 'bk-1009' || b.id === 'bk-1018' || b.id === 'bk-1025') {
+      return 'new';
+    }
+
+    if (typeId.includes('kitchen') || typeId.includes('closet') || typeId.includes('built')) {
+      return 'buildin';
+    }
+    if (typeId.includes('smart') || typeId.includes('curtain') || typeId.includes('digital') || typeId.includes('lock')) {
+      return 'quick';
+    }
+    if (typeId.includes('floor') || typeId.includes('laminate') || typeId.includes('spc')) {
+      return 'renovate';
+    }
+    return 'installer';
+  };
+
+  const quickCount = bookings.filter(b => getBookingCategory(b) === 'quick').length;
+  const installerCount = bookings.filter(b => getBookingCategory(b) === 'installer').length;
+  const renovateCount = bookings.filter(b => getBookingCategory(b) === 'renovate').length;
+  const buildinCount = bookings.filter(b => getBookingCategory(b) === 'buildin').length;
+  const newCount = bookings.filter(b => getBookingCategory(b) === 'new').length;
+  const maCount = bookings.filter(b => getBookingCategory(b) === 'ma').length;
 
   // Manual Booking Modal States
   const [showManualBookingModal, setShowManualBookingModal] = useState<boolean>(false);
@@ -161,10 +285,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [mCategoryCode, setMCategoryCode] = useState<string>('ALL');
   const [mServiceId, setMServiceId] = useState<string>(services[0]?.id || '');
   const [mRegion, setMRegion] = useState<'BKK' | 'UPC'>('BKK');
-  const [mZone, setMZone] = useState<string>('Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)');
+  const [mZone, setMZone] = useState<string>('[BKK] กรุงเทพฯ ชั้นใน (เมืองเก่า / พญาไท - ราชเทวี)');
   const [mLat, setMLat] = useState<string>('13.75633');
   const [mLng, setMLng] = useState<string>('100.50177');
-  const [mDate, setMDate] = useState<string>('2026-07-24');
+  const [mDate, setMDate] = useState<string>(todayStr);
   const [mTimeSlot, setMTimeSlot] = useState<string>('Morning (09:00 - 12:00)');
   const [mSource, setMSource] = useState<'Line OA' | 'Call Center 1308' | 'Walk-in'>('Call Center 1308');
   const [mTicketError, setMTicketError] = useState<string>('');
@@ -186,7 +310,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     const latNum = parseFloat(latVal);
     const lngNum = parseFloat(lngVal);
     if (!isNaN(latNum) && !isNaN(lngNum)) {
-      const detected = detectZoneFromCoordinates(latNum, lngNum);
+      const detected = detectZoneFromCoordinates(latNum, lngNum, undefined, allZonesList);
       setMRegion(detected.region);
       setMZone(detected.zone);
       setAutoZoneMessage(`⚡ กำหนดให้อยู่อัตโนมัติ: ${detected.zone}`);
@@ -198,6 +322,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           if (addr) {
             setGeocodedAddress(addr);
             setMCustAddress(addr);
+            
+            const refined = detectZoneFromCoordinates(latNum, lngNum, addr, allZonesList);
+            setMRegion(refined.region);
+            setMZone(refined.zone);
+            setAutoZoneMessage(`⚡ กำหนดให้อยู่อัตโนมัติ: ${refined.zone}`);
           }
         } catch (e) {
           console.error(e);
@@ -220,7 +349,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       setExtractStatusMsg({ type: 'info', text: '⏳ กำลังถอดค่าพิกัดและแปลงที่อยู่อัตโนมัติ...' });
       setMLat(String(result.lat));
       setMLng(String(result.lng));
-      const detected = detectZoneFromCoordinates(result.lat, result.lng);
+      const detected = detectZoneFromCoordinates(result.lat, result.lng, undefined, allZonesList);
       setMRegion(detected.region);
       setMZone(detected.zone);
       setAutoZoneMessage(`⚡ กำหนดให้อยู่อัตโนมัติ: ${detected.zone}`);
@@ -232,6 +361,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       if (addr) {
         setGeocodedAddress(addr);
         setMCustAddress(addr);
+        
+        const refined = detectZoneFromCoordinates(result.lat, result.lng, addr, allZonesList);
+        setMRegion(refined.region);
+        setMZone(refined.zone);
+        setAutoZoneMessage(`⚡ กำหนดให้อยู่อัตโนมัติ: ${refined.zone}`);
+
         setExtractStatusMsg({
           type: 'success',
           text: `✅ ถอดพิกัดสำเร็จ (ละติจูด ${result.lat}, ลองจิจูด ${result.lng}) และดึงที่อยู่อัตโนมัติเรียบร้อย!`,
@@ -325,6 +460,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     if (addr) {
       setGeocodedAddress(addr);
       setMCustAddress(addr);
+      
+      const refined = detectZoneFromCoordinates(latNum, lngNum, addr, allZonesList);
+      setMRegion(refined.region);
+      setMZone(refined.zone);
+      setAutoZoneMessage(`⚡ กำหนดให้อยู่อัตโนมัติ: ${refined.zone}`);
+
       setExtractStatusMsg({ type: 'success', text: `🏠 แปลงพิกัดเป็นที่อยู่และกรอกลงช่องที่อยู่อัตโนมัติ: ${addr}` });
     } else {
       setExtractStatusMsg({ type: 'error', text: '⚠️ ไม่พบข้อมูลที่อยู่สำหรับพิกัดนี้' });
@@ -573,52 +714,131 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     <div className="space-y-6">
       
       {/* 1. Top KPI Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="v-panel p-4 flex items-center space-x-4 bg-white border border-slate-200">
-          <div className="p-3 rounded-lg bg-blue-50 text-blue-600 border border-blue-100">
-            <Clock className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-800">
-              {bookings.filter((b) => b.status === 'Pending Dispatch' || b.status === 'Scheduled').length}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3.5">
+        
+        {/* Card 1: All Projects */}
+        <div className="v-panel p-3.5 bg-white border border-slate-200 flex flex-col justify-between hover:shadow-md transition">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">All Projects</div>
+              <div className="text-xl font-black text-slate-800 mt-1">
+                {bookings.length} <span className="text-[10px] font-normal text-slate-500">โครงการ</span>
+              </div>
             </div>
-            <div className="text-xs text-slate-500 font-medium">คิวจัดเตรียมงาน (Pending)</div>
+            <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100/50 flex-shrink-0">
+              <Folder className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="text-[9px] text-emerald-600 font-bold mt-2.5 flex items-center gap-0.5">
+            <span>↗ ข้อมูลตามจริง</span> <span className="text-slate-400 font-normal">ในระบบ</span>
           </div>
         </div>
 
-        <div className="v-panel p-4 flex items-center space-x-4 bg-white border border-slate-200">
-          <div className="p-3 rounded-lg bg-purple-50 text-purple-600 border border-purple-100 flex items-center justify-center">
-            <BuildFlowIcon className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-800">
-              {bookings.filter((b) => b.status === 'Dispatched to BuildFlow' || b.status === 'Dispatched to KANNA' || b.status === 'STS In-Progress').length}
+        {/* Card 2: Quick Service */}
+        <div className="v-panel p-3.5 bg-white border border-slate-200 flex flex-col justify-between hover:shadow-md transition">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Quick Service</div>
+              <div className="text-xl font-black text-slate-800 mt-1">
+                {quickCount} <span className="text-[10px] font-normal text-slate-500">โครงการ</span>
+              </div>
             </div>
-            <div className="text-xs text-slate-500 font-medium">งานใน BuildFlow / STS</div>
+            <div className="p-1.5 rounded-lg bg-purple-50 text-purple-600 border border-purple-100/50 flex-shrink-0">
+              <Sparkles className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="text-[9px] text-slate-400 font-medium mt-2.5">
+            งานบริการด่วน
           </div>
         </div>
 
-        <div className="v-panel p-4 flex items-center space-x-4 bg-white border border-slate-200">
-          <div className="p-3 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-100">
-            <CheckCircle2 className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-800">
-              {bookings.filter((b) => b.status === 'Passed (Closed)').length}
+        {/* Card 3: Installer Service */}
+        <div className="v-panel p-3.5 bg-white border border-slate-200 flex flex-col justify-between hover:shadow-md transition">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Installer Service</div>
+              <div className="text-xl font-black text-slate-800 mt-1">
+                {installerCount} <span className="text-[10px] font-normal text-slate-500">โครงการ</span>
+              </div>
             </div>
-            <div className="text-xs text-slate-500 font-medium">ผ่าน QC ปิดงานแล้ว</div>
+            <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600 border border-blue-100/50 flex-shrink-0">
+              <UserCheck className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="text-[9px] text-slate-400 font-medium mt-2.5">
+            งานติดตั้งทั่วไป
           </div>
         </div>
 
-        <div className="v-panel p-4 flex items-center space-x-4 bg-white border border-slate-200">
-          <div className="p-3 rounded-lg bg-rose-50 text-rose-600 border border-rose-100">
-            <AlertTriangle className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-slate-800">
-              {bookings.filter((b) => b.status === 'Penalty E-CN Issued').length}
+        {/* Card 4: Renovate Service */}
+        <div className="v-panel p-3.5 bg-white border border-slate-200 flex flex-col justify-between hover:shadow-md transition">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Renovate Service</div>
+              <div className="text-xl font-black text-slate-800 mt-1">
+                {renovateCount} <span className="text-[10px] font-normal text-slate-500">โครงการ</span>
+              </div>
             </div>
-            <div className="text-xs text-slate-500 font-medium">โดนค่าปรับ (Penalty E-CN)</div>
+            <div className="p-1.5 rounded-lg bg-amber-50 text-amber-500 border border-amber-100/50 flex-shrink-0">
+              <Layers className="h-4 w-4 text-amber-500" />
+            </div>
+          </div>
+          <div className="text-[9px] text-slate-400 font-medium mt-2.5">
+            งานปรับปรุงรีโนเวท
+          </div>
+        </div>
+
+        {/* Card 5: Buildin */}
+        <div className="v-panel p-3.5 bg-white border border-slate-200 flex flex-col justify-between hover:shadow-md transition">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Buildin</div>
+              <div className="text-xl font-black text-slate-800 mt-1">
+                {buildinCount} <span className="text-[10px] font-normal text-slate-500">โครงการ</span>
+              </div>
+            </div>
+            <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100/50 flex-shrink-0">
+              <FileText className="h-4 w-4" />
+            </div>
+          </div>
+          <div className="text-[9px] text-slate-400 font-medium mt-2.5">
+            งานบิวท์อิน
+          </div>
+        </div>
+
+        {/* Card 6: New */}
+        <div className="v-panel p-3.5 bg-white border border-slate-200 flex flex-col justify-between hover:shadow-md transition">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">New</div>
+              <div className="text-xl font-black text-slate-800 mt-1">
+                {newCount} <span className="text-[10px] font-normal text-slate-500">โครงการ</span>
+              </div>
+            </div>
+            <div className="p-1.5 rounded-lg bg-cyan-50 text-cyan-600 border border-cyan-100/50 flex-shrink-0">
+              <Clock className="h-4 w-4 text-cyan-600" />
+            </div>
+          </div>
+          <div className="text-[9px] text-slate-400 font-medium mt-2.5">
+            งานโครงการใหม่
+          </div>
+        </div>
+
+        {/* Card 7: MA Service */}
+        <div className="v-panel p-3.5 bg-white border border-slate-200 flex flex-col justify-between hover:shadow-md transition col-span-2 sm:col-span-1">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">MA Service</div>
+              <div className="text-xl font-black text-slate-800 mt-1">
+                {maCount} <span className="text-[10px] font-normal text-slate-500">โครงการ</span>
+              </div>
+            </div>
+            <div className="p-1.5 rounded-lg bg-rose-50 text-rose-600 border border-rose-100/50 flex-shrink-0">
+              <ShieldAlert className="h-4 w-4 text-rose-600" />
+            </div>
+          </div>
+          <div className="text-[9px] text-slate-400 font-medium mt-2.5">
+            งานบริการบำรุงรักษา
           </div>
         </div>
       </div>
@@ -698,7 +918,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             )}
 
             <button
-              onClick={() => setShowManualBookingModal(true)}
+              onClick={() => {
+                setShowManualBookingModal(true);
+                if (selectedDate) {
+                  setMDate(selectedDate);
+                }
+              }}
               className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-full cursor-pointer shadow-sm border-0 transition flex items-center gap-1.5"
             >
               <span>➕ บันทึกคิวจอง (Line / โทรศัพท์)</span>
@@ -1289,7 +1514,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       type="text"
                       placeholder="13.851979 หรือ 13°51'07.1&quot;N"
                       value={mLat}
-                      onChange={(e) => handleUpdateCoordinates(e.target.value, mLng)}
+                      onChange={(e) => handleUpdateCoordinates(e.target.value, mLng, false)}
+                      onBlur={() => handleUpdateCoordinates(mLat, mLng, true)}
                       className="v-input w-full py-1.5 font-mono text-xs text-slate-900 font-bold bg-slate-50 focus:bg-white border-slate-300 focus:border-emerald-500 rounded-lg"
                     />
                     {mLat && !isNaN(parseFloat(mLat)) && (
@@ -1307,7 +1533,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       type="text"
                       placeholder="100.643406 หรือ 100°38'36.3&quot;E"
                       value={mLng}
-                      onChange={(e) => handleUpdateCoordinates(mLat, e.target.value)}
+                      onChange={(e) => handleUpdateCoordinates(mLat, e.target.value, false)}
+                      onBlur={() => handleUpdateCoordinates(mLat, mLng, true)}
                       className="v-input w-full py-1.5 font-mono text-xs text-slate-900 font-bold bg-slate-50 focus:bg-white border-slate-300 focus:border-emerald-500 rounded-lg"
                     />
                     {mLng && !isNaN(parseFloat(mLng)) && (
