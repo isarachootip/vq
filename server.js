@@ -225,6 +225,7 @@ async function initDbTables() {
   const STANDARD_COSTS_FILE = path.join(DATA_DIR, 'standard_costs.json');
   const INTEGRATION_LOGS_FILE = path.join(DATA_DIR, 'integration_logs.json');
   const CONFIG_FILE = path.join(DATA_DIR, 'line_config.json');
+  const BRANCHES_FILE = path.join(DATA_DIR, 'branches.json');
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -510,6 +511,14 @@ app.get('/api/zones', async (req, res) => {
   }
   const fallbackZones = loadJson(ZONES_FILE, []);
   return res.json({ status: 'success', source: 'json_file', zones: fallbackZones });
+});
+
+// ----------------------------------------------------
+// BRANCH API ENDPOINTS
+// ----------------------------------------------------
+app.get('/api/branches', async (req, res) => {
+  const branches = loadJson(BRANCHES_FILE, []);
+  return res.json({ status: 'success', source: 'json_file', branches });
 });
 
 app.post('/api/zones/bulk', async (req, res) => {
