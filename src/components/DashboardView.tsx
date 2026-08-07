@@ -83,39 +83,41 @@ export const detectZoneFromCoordinates = (
     return { region: 'BKK', zone: '[BKK] กรุงเทพฯ ชั้นใน (เมืองเก่า / พญาไท - ราชเทวี)' };
   }
 
+  const addrLower = (address || '').toLowerCase();
+
   // 1. Try matching by district / province name in address (More specific than postcode)
   if (address && allZonesList) {
     // Check for province first
-    if (address.includes('นนทบุรี')) {
+    if (addrLower.includes('นนทบุรี') || addrLower.includes('nonthaburi')) {
       const z = allZonesList.find(z => z.code === 'Z02');
       if (z) return { region: 'BKK', zone: z.name };
     }
-    if (address.includes('ปทุมธานี')) {
+    if (addrLower.includes('ปทุมธานี') || addrLower.includes('pathum thani')) {
       const z = allZonesList.find(z => z.code === 'Z03');
       if (z) return { region: 'BKK', zone: z.name };
     }
-    if (address.includes('สมุทรปราการ')) {
+    if (addrLower.includes('สมุทรปราการ') || addrLower.includes('samut prakan') || addrLower.includes('samutprakan')) {
       const z = allZonesList.find(z => z.code === 'Z04');
       if (z) return { region: 'BKK', zone: z.name };
     }
 
-    // Check Bangkok districts
+    // Check Bangkok districts (Thai & English support)
     const khets = [
-      { code: 'Z01-C1', names: ["พระนคร", "ดุสิต", "ป้อมปราบ", "สัมพันธวงศ์", "พญาไท", "ราชเทวี"] },
-      { code: 'Z01-C2', names: ["ปทุมวัน", "บางรัก", "สาทร", "ยานนาวา", "บางคอแหลม"] },
-      { code: 'Z01-C3', names: ["ดินแดง", "ห้วยขวาง", "วัฒนา", "คลองเตย"] },
-      { code: 'Z01-N1', names: ["จตุจักร", "บางซื่อ", "ลาดพร้าว"] },
-      { code: 'Z01-N2', names: ["หลักสี่", "ดอนเมือง", "สายไหม", "บางเขน"] },
-      { code: 'Z01-E1', names: ["บางกะปิ", "บึงกุ่ม", "สะพานสูง", "วังทองหลาง", "คันนายาว"] },
-      { code: 'Z01-E2', names: ["คลองสามวา", "หนองจอก", "มีนบุรี", "ลาดกระบัง"] },
-      { code: 'Z01-SE', names: ["ประเวศ", "สวนหลวง", "บางนา"] },
-      { code: 'Z01-W1', names: ["ธนบุรี", "คลองสาน", "บางกอกใหญ่", "บางกอกน้อย", "บางพลัด", "ตลิ่งชัน", "ทวีวัฒนา"] },
-      { code: 'Z01-W2', names: ["ภาษีเจริญ", "บางแค", "หนองแขม", "ราษฎร์บูรณะ", "ทุ่งครุ", "จอมทอง", "บางขุนเทียน", "บางบอน"] }
+      { code: 'Z01-C1', names: ["พระนคร", "ดุสิต", "ป้อมปราบ", "สัมพันธวงศ์", "พญาไท", "ราชเทวี", "phra nakhon", "dusit", "pom prap", "samphanthawong", "phaya thai", "ratchathewi"] },
+      { code: 'Z01-C2', names: ["ปทุมวัน", "บางรัก", "สาทร", "ยานนาวา", "บางคอแหลม", "pathum wan", "bang rak", "sathon", "yan nawa", "bang kho laem"] },
+      { code: 'Z01-C3', names: ["ดินแดง", "ห้วยขวาง", "วัฒนา", "คลองเตย", "din daeng", "huai khwang", "watthana", "khlong toei"] },
+      { code: 'Z01-N1', names: ["จตุจักร", "บางซื่อ", "ลาดพร้าว", "chatuchak", "bang sue", "lat phrao"] },
+      { code: 'Z01-N2', names: ["หลักสี่", "ดอนเมือง", "สายไหม", "บางเขน", "lak si", "don mueang", "sai mai", "bang khen"] },
+      { code: 'Z01-E1', names: ["บางกะปิ", "บึงกุ่ม", "สะพานสูง", "วังทองหลาง", "คันนายาว", "bang kapi", "bueng kum", "saphan sung", "wang thonglang", "khannayao", "khhan na yao"] },
+      { code: 'Z01-E2', names: ["คลองสามวา", "หนองจอก", "มีนบุรี", "ลาดกระบัง", "khlong sam wa", "nong chok", "min buri", "lat krabang"] },
+      { code: 'Z01-SE', names: ["ประเวศ", "สวนหลวง", "บางนา", "prawet", "suan luang", "bang na"] },
+      { code: 'Z01-W1', names: ["ธนบุรี", "คลองสาน", "บางกอกใหญ่", "บางกอกน้อย", "บางพลัด", "ตลิ่งชัน", "ทวีวัฒนา", "thon buri", "khlong san", "bang kok yai", "bang kok noi", "bang phlat", "taling chan", "thawi watthana"] },
+      { code: 'Z01-W2', names: ["ภาษีเจริญ", "บางแค", "หนองแขม", "ราษฎร์บูรณะ", "ทุ่งครุ", "จอมทอง", "บางขุนเทียน", "บางบอน", "phasi charoen", "bang khae", "nong khaem", "rat burana", "thung khru", "chom thong", "bang khun thian", "bang bon"] }
     ];
 
     for (const kh of khets) {
       for (const name of kh.names) {
-        if (address.includes(name)) {
+        if (addrLower.includes(name.toLowerCase())) {
           const z = allZonesList.find(z => z.code === kh.code);
           if (z) return { region: 'BKK', zone: z.name };
         }
@@ -126,7 +128,7 @@ export const detectZoneFromCoordinates = (
     const upcZones = allZonesList.filter(z => !isBkkZone(z));
     for (const z of upcZones) {
       const cleanName = z.name.replace(/\[.*?\]/g, '').trim(); // Remove tag like [CT], [ET]
-      if (address.includes(cleanName) || (z.description && address.includes(z.description))) {
+      if (addrLower.includes(cleanName.toLowerCase()) || (z.description && addrLower.includes(z.description.toLowerCase()))) {
         return { region: 'UPC', zone: z.name };
       }
     }
@@ -164,7 +166,7 @@ export const detectZoneFromCoordinates = (
       targetCode = 'Z01-W1'; // ฝั่งธนบุรีเหนือ
     } else if (lat >= 13.80) {
       targetCode = 'Z01-N1'; // กรุงเทพฯ ตอนเหนือ
-    } else if (lng >= 100.65) {
+    } else if (lng >= 100.60) { // Expanded slightly to include Bueng Kum/Bang Kapi boundary
       targetCode = 'Z01-E1'; // กรุงเทพฯ ตะวันออก
     } else if (lat <= 13.68 && lng >= 100.60) {
       targetCode = 'Z01-SE'; // กรุงเทพฯ ตะวันออกใต้
@@ -1595,7 +1597,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       type="button"
                       onClick={() => {
                         setMRegion('BKK');
-                        setMZone('Zone 1: กรุงเทพฯ (สุขุมวิท - บางนา)');
+                        setMZone('[BKK] กรุงเทพฯ ชั้นใน (เมืองเก่า / พญาไท - ราชเทวี)');
                         setAutoZoneMessage('');
                       }}
                       className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-xs border cursor-pointer transition ${
@@ -1610,7 +1612,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                       type="button"
                       onClick={() => {
                         setMRegion('UPC');
-                        setMZone('Zone UPC-N1: เชียงใหม่ - ลำพูน');
+                        setMZone('[CT] กำแพงเพชร');
                         setAutoZoneMessage('');
                       }}
                       className={`flex-1 py-1.5 px-2 rounded-lg font-bold text-xs border cursor-pointer transition ${
