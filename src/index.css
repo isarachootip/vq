@@ -13,19 +13,22 @@
   --color-slate-800: #212529;
   --color-slate-900: #111115;
   
-  /* Primary Accent: Gold-Yellow */
-  --color-blue-600: #ffb200;
+  /* Primary Accent: Maroon Red (previously Gold-Yellow) */
+  --color-blue-600: #8B0000;
+  --color-blue-700: #700000;
   
-  /* Badge/Status Bright Theme Mappings */
-  --color-amber-50: #fffbeb;
-  --color-amber-200: #fde68a;
-  --color-amber-700: #b45309;
-  --color-amber-800: #92400e;
+  /* Badge/Status Theme Mappings for Maroon Red */
+  --color-amber-50: #FFF5F5;
+  --color-amber-100: #FFE3E3;
+  --color-amber-200: #FFC9C9;
+  --color-amber-500: #8B0000;
+  --color-amber-600: #700000;
+  --color-amber-700: #8B0000;
+  --color-amber-800: #700000;
   
   --color-blue-50: #eff6ff;
   --color-blue-100: #dbeafe;
   --color-blue-200: #bfdbfe;
-  --color-blue-700: #1d4ed8;
   --color-blue-800: #1e40af;
   
   --color-indigo-50: #e0e7ff;
@@ -38,10 +41,14 @@
   --color-cyan-200: #a5f3fc;
   --color-cyan-700: #0e7490;
   
-  --color-purple-50: #faf5ff;
-  --color-purple-100: #f3e8ff;
-  --color-purple-200: #e9d5ff;
-  --color-purple-700: #6b21a8;
+  /* Purple mapping for header elements to rose/crimson gradient */
+  --color-purple-50: #FFF5F5;
+  --color-purple-100: #FFE3E3;
+  --color-purple-200: #FFC9C9;
+  --color-purple-300: #FFA4A4;
+  --color-purple-500: #BE123C;
+  --color-purple-700: #8B0000;
+  --color-purple-900: #4A0202;
   
   --color-emerald-50: #ecfdf5;
   --color-emerald-100: #d1fae5;
@@ -75,8 +82,8 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .v-panel-hover:hover {
-  border-color: #dfb750;
-  box-shadow: 0 10px 20px -10px rgba(184, 145, 48, 0.15);
+  border-color: #BE123C;
+  box-shadow: 0 10px 20px -10px rgba(186, 28, 60, 0.15);
   transform: translateY(-2px);
 }
 
@@ -87,7 +94,7 @@
 }
 .v-table th {
   background-color: #f8f9fa;
-  color: #b89130;
+  color: #8B0000;
   font-weight: 700;
   border-bottom: 2px solid #e9ecef;
   font-size: 0.8rem;
@@ -99,7 +106,7 @@
   color: #343a40;
 }
 .v-table tr:hover {
-  background-color: rgba(184, 145, 48, 0.04);
+  background-color: #f8f9fa;
 }
 
 /* Sidebar Specifics */
@@ -121,7 +128,7 @@
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #b89130;
+  background: #8B0000;
 }
 
 /* Form Controls */
@@ -135,27 +142,27 @@
   transition: all 0.2s ease-in-out;
 }
 .v-input:focus {
-  border-color: #b89130;
+  border-color: #8B0000;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(184, 145, 48, 0.15);
+  box-shadow: 0 0 0 2px rgba(139, 0, 0, 0.15);
 }
 
 .v-btn-primary {
-  background-color: #ffb200;
-  color: #111115;
+  background-color: #8B0000;
+  color: #ffffff;
   font-weight: 700;
   border-radius: 6px;
   padding: 0.5rem 1.25rem;
-  box-shadow: 0 4px 12px rgba(255, 178, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.15);
   transition: all 0.25s ease-in-out;
-  border: 1px solid #ffb200;
+  border: 1px solid #8B0000;
   cursor: pointer;
 }
 .v-btn-primary:hover {
-  background-color: #111115;
-  color: #ffb200;
-  border-color: #111115;
-  box-shadow: 0 6px 15px rgba(17, 17, 21, 0.15);
+  background-color: #700000;
+  color: #ffffff;
+  border-color: #700000;
+  box-shadow: 0 6px 15px rgba(112, 0, 0, 0.15);
   transform: translateY(-1px);
 }
 
@@ -171,8 +178,8 @@
 }
 .v-btn-secondary:hover {
   background-color: #f8f9fa;
-  border-color: #ffb200;
-  color: #ffb200;
+  border-color: #8B0000;
+  color: #8B0000;
 }
 
 /* Leaflet Map (Bright Mode matches bright gold-yellow theme) */
@@ -181,7 +188,7 @@
 }
 .leaflet-bar a {
   background-color: #ffffff !important;
-  color: #b89130 !important;
+  color: #8B0000 !important;
   border-bottom: 1px solid #e9ecef !important;
 }
 .leaflet-bar a:hover {

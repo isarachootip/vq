@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { HouseLogo } from './components/HouseLogo';
 import { DashboardView } from './components/DashboardView';
 import { SmartBookingView } from './components/SmartBookingView';
 import { SkillMatrixView } from './components/SkillMatrixView';
@@ -1208,12 +1209,12 @@ export function App() {
         <div>
           {/* Top Logo Panel */}
           <div className="p-5 border-b border-slate-200 flex items-center space-x-2.5">
-            <div className="h-8 w-8 rounded bg-amber-500 flex items-center justify-center shadow-sm">
-              <Wrench className="h-4.5 w-4.5 text-slate-900" />
+            <div className="h-8 w-12 rounded bg-amber-500 flex items-center justify-center shadow-sm p-0.5">
+              <HouseLogo size={36} color="white" />
             </div>
             <div>
-              <h1 className="text-sm font-bold text-slate-800 leading-tight">vService</h1>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Installer System</p>
+              <h1 className="text-sm font-bold text-slate-800 leading-tight">PMT</h1>
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Design & Renovate</p>
             </div>
           </div>
 
